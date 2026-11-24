@@ -38,8 +38,7 @@ USERS = {
     "hr_dept": "audit_hr",
     "info_dept": "audit_info",
     "edu_dept": "audit_edu",
-    "teacher": "audit_teach",
-    "mezmur_dept": "audit_mez",
+    "teacher": "audit_teach": "audit_mez",
 }
 
 
@@ -305,7 +304,7 @@ class Phase1LiveGuards(unittest.TestCase):
     # ── department status ─────────────────────────────────────────
     def test_set_forbidden_for_non_hr_info(self):
         before = db(f"SELECT COUNT(*) FROM member_department_periods WHERE member_id={self.MID}")
-        for role in ["edu_dept", "teacher", "mezmur_dept", "school_admin", "super_admin"]:
+        for role in ["edu_dept", "teacher", "school_admin", "super_admin"]:
             status, data = self.s(role).post_json(
                 "/admin/api_department_status.php",
                 {"action": "set", "member_id": self.MID, "department": "edu", "status": "inactive", "reason": "phase1 test"},
@@ -314,7 +313,7 @@ class Phase1LiveGuards(unittest.TestCase):
         self.assertEqual(db(f"SELECT COUNT(*) FROM member_department_periods WHERE member_id={self.MID}"), before)
 
     def test_reads_allowed_for_departments_and_admins(self):
-        for role in ["edu_dept", "mezmur_dept", "school_admin", "super_admin", "hr_dept", "info_dept"]:
+        for role in ["edu_dept", "school_admin", "super_admin", "hr_dept", "info_dept"]:
             status, data = self.s(role).get_json(f"/admin/api_department_status.php?action=status&member_id={self.MID}")
             self.assertEqual(status, 200, (role, data))
             self.assertEqual(data["statuses"]["edu"]["status"], "active", role)
@@ -335,7 +334,7 @@ class Phase1LiveGuards(unittest.TestCase):
             self.assertEqual(status, code, (payload, status, data))
 
     def test_deactivate_excludes_from_edu_roster_only_and_reactivation_restores(self):
-        hr, info, edu, mez = self.s("hr_dept"), self.s("info_dept"), self.s("edu_dept"), self.s("mezmur_dept")
+        hr, info, edu = self.s("hr_dept"), self.s("info_dept"), self.s("edu_dept")
         today = date.today().isoformat()
         yesterday = (date.today() - timedelta(days=1)).isoformat()
 
@@ -351,16 +350,7 @@ class Phase1LiveGuards(unittest.TestCase):
             rows = data.get("students") or data.get("data") or data.get("roster") or []
             return {int(r.get("member_id") or r.get("id")) for r in rows}
 
-        def mezmur_ids(d):
-            status, data = mez.get_json(f"/admin/api_mezmur.php?action=sheet&date={d}")
-            self.assertEqual(data.get("status"), "success", data)
-            ids = set()
-            for members in (data.get("sections") or {}).values():
-                ids |= {int(m["id"]) for m in members}
-            return ids
-
         self.assertIn(self.MID, edu_ids(today))
-        self.assertIn(self.MID, mezmur_ids(today))
 
         status, data = hr.post_json(
             "/admin/api_department_status.php",
@@ -370,16 +360,6 @@ class Phase1LiveGuards(unittest.TestCase):
         self.assertNotIn(self.MID, edu_ids(today), "inactive in Education → off today's roster")
         self.assertNotIn(self.MID, taker_ids(today))
         self.assertIn(self.MID, edu_ids(yesterday), "status as of yesterday still active")
-        self.assertIn(self.MID, mezmur_ids(today), "Mezmur is independent")
-
-        # Mezmur deactivation by Information, Education untouched for 900002
-        status, data = info.post_json(
-            "/admin/api_department_status.php",
-            {"action": "set", "member_id": 900002, "department": "mezmur", "status": "inactive", "reason": "choir leave"},
-        )
-        self.assertEqual((status, data.get("changed")), (200, True), data)
-        self.assertNotIn(900002, mezmur_ids(today))
-        self.assertIn(900002, edu_ids(today))
 
         # idempotent + history + audit
         status, data = hr.post_json(
@@ -435,7 +415,7 @@ class Phase1LiveGuards(unittest.TestCase):
     def test_policy_roles_and_validation(self):
         good = {"action": "save", "department": "edu", "consecutive_threshold": 4, "prolonged_threshold": 7,
                 "critical_threshold": 9, "auto_deactivate": 0, "low_rate_threshold": 70, "min_sessions": 2}
-        for role in ["hr_dept", "info_dept", "edu_dept", "mezmur_dept", "super_admin"]:
+        for role in ["hr_dept", "info_dept", "edu_dept", "super_admin"]:
             status, data = self.s(role).post_json("/admin/api_attendance_policy.php", good)
             self.assertEqual(status, 403, (role, status, data))
         status, data = self.s("teacher").get_json("/admin/api_attendance_policy.php?action=get")

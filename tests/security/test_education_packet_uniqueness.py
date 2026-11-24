@@ -36,8 +36,7 @@ Lock checks resolve the packet with `ORDER BY id DESC LIMIT 1`
     the inbox as a permanently-"submitted" ghost.
 
 Both sibling modules enforce exactly this concept with a real constraint —
-`uq_hr_submissions_date_section` (sql/026) and
-`uq_mezmur_submissions_date_section` (sql/024) — so the intended rule is not
+`uq_hr_submissions_date_section` (sql/026) — so the intended rule is not
 being invented here.
 
 THE FIX

@@ -16,11 +16,9 @@ $supportedProfileRoles = [
     'edu_dept',
     'finance_dept',
     'material_dept',
-    'mezmur_dept',
     'hr_dept',
     'teacher',
     'attendance_taker',
-    'mezmur_attendance_taker',
     'hr_attendance_taker',
     'content_editor',
 ];

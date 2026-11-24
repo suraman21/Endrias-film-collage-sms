@@ -11,7 +11,6 @@ import 'app_update_service.dart';
 import 'app_navigator.dart';
 import 'catalog_service.dart';
 import 'comm_outbox_service.dart';
-import 'hymn_store.dart';
 import 'local_db.dart';
 import 'notification_service.dart';
 import 'profile_cache.dart';
@@ -34,7 +33,6 @@ class SessionCoordinator extends ChangeNotifier with WidgetsBindingObserver {
     SyncService().activeSessionGate = () => isActive;
     SyncService().sessionGenerationProvider = () => _generation;
     SyncService().drainEnabledGate =
-        () => AppUpdateService().backgroundDrainsEnabled;
     CommOutboxService.instance.activeSessionGate = () => isActive;
     CommOutboxService.instance.sessionGenerationProvider = () => _generation;
     CommOutboxService.instance.drainEnabledGate =
@@ -45,9 +43,6 @@ class SessionCoordinator extends ChangeNotifier with WidgetsBindingObserver {
     CatalogService().sessionGenerationProvider = () => _generation;
     WarmStore().activeSessionGate = () => isActive;
     WarmStore().sessionGenerationProvider = () => _generation;
-    HymnStore().activeSessionGate = () => isActive;
-    HymnStore().sessionGenerationProvider = () => _generation;
-    HymnStore().drainEnabledGate =
         () => AppUpdateService().backgroundDrainsEnabled;
     WidgetsBinding.instance.addObserver(this);
   }
@@ -701,7 +696,6 @@ class SessionCoordinator extends ChangeNotifier with WidgetsBindingObserver {
     await _db.resumeLegacyPausedAuthentication(
       ownerUserId: bundle.userId,
       authorizationVersion: bundle.authorizationVersion,
-      resumeSharedHymnOperations: HymnStore().canEdit,
     );
     _inventory = await _loadInventory();
   }

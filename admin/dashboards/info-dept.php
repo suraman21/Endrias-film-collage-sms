@@ -157,10 +157,10 @@ require_once __DIR__ . '/../backend/services/MemberCategory.php';
 // Attendance alerting Phase 2: open warnings per department (server-side, cheap GROUP BY).
 require_once __DIR__ . '/../backend/services/AttendanceWarningService.php';
 require_once __DIR__ . '/../backend/services/AttendanceMonthRollupService.php';
-// Attendance alerting Phase 4: current EC month roll-up (Education + Mezmur) for the "Monthly Attendance" card.
-$attendanceMonthCard = \App\Services\AttendanceMonthRollupService::dashboardCard($conn, ['edu', 'mezmur']);
+// Attendance alerting Phase 4: current EC month roll-up (Education) for the "Monthly Attendance" card.
+$attendanceMonthCard = \App\Services\AttendanceMonthRollupService::dashboardCard($conn, ['edu']);
 $attendanceWarningsAvailable = false;
-$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0], 'mezmur' => ['total' => 0, 'critical' => 0]];
+$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0]];
 try {
     $attendanceWarningsAvailable = \App\Services\AttendanceWarningService::available($conn);
     if ($attendanceWarningsAvailable) {
@@ -766,11 +766,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         </div>
                         <?php if ($attendanceWarningsAvailable): ?>
                         <div class="mt-2 text-2xl sm:text-3xl font-bold" data-aw-total>
-                            <?= (int)$attendanceWarningCounts['edu']['total'] + (int)$attendanceWarningCounts['mezmur']['total'] ?>
+                            <?= (int)$attendanceWarningCounts['edu']['total'] ?>
                         </div>
                         <div class="mt-1 text-[11px] sm:text-xs opacity-90 flex gap-3 flex-wrap">
                             <span>Education <b data-aw-edu><?= (int)$attendanceWarningCounts['edu']['total'] ?></b><?php if ((int)$attendanceWarningCounts['edu']['critical'] > 0): ?> <span class="opacity-80">(<?= (int)$attendanceWarningCounts['edu']['critical'] ?> critical)</span><?php endif; ?></span>
-                            <span>Mezmur <b data-aw-mezmur><?= (int)$attendanceWarningCounts['mezmur']['total'] ?></b><?php if ((int)$attendanceWarningCounts['mezmur']['critical'] > 0): ?> <span class="opacity-80">(<?= (int)$attendanceWarningCounts['mezmur']['critical'] ?> critical)</span><?php endif; ?></span>
                         </div>
                         <?php else: ?>
                         <div class="mt-2 text-2xl sm:text-3xl font-bold">—</div>
@@ -790,7 +789,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         <div class="mt-1 text-[11px] sm:text-xs opacity-90 flex gap-3 flex-wrap">
                             <span>below threshold</span>
                             <span>Education <b><?= (int)($attendanceMonthCard['per_dept']['edu']['below'] ?? 0) ?></b></span>
-                            <span>Mezmur <b><?= (int)($attendanceMonthCard['per_dept']['mezmur']['below'] ?? 0) ?></b></span>
                             <?php if ($attendanceMonthCard['avg_rate'] !== null): ?><span>avg <b><?= $attendanceMonthCard['avg_rate'] ?>%</b></span><?php endif; ?>
                         </div>
                         <?php else: ?>
@@ -1924,7 +1922,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
             <!-- ════════════════════════════════════════════════════════
                  ANALYTICS HUB — shared read-only analytics over the two
                  independent attendance sources: Education (classes) and
-                 Mezmur (sections). HR attendance retired 2026-10-07; the hub
+                 HR attendance retired 2026-10-07; the hub
                  partial is shared with the HR dashboard. Never merges data.
             ═════════════════════════════════════════════════════════ -->
             <section id="section-analytics" class="content-section">
@@ -1934,7 +1932,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <span class="w-9 h-9 rounded-2xl bg-cyan-100 flex items-center justify-center"><i class="fa-solid fa-chart-column text-cyan-600"></i></span>
                             Analytics Hub
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Shared with the HR department — both analyse the Education and Mezmur attendance; neither records it.</p>
+                        <p class="text-xs text-slate-500 mt-1">Shared with the HR department — both analyse the Education attendance; neither records it.</p>
                     </div>
                 </div>
                 <?php include __DIR__ . '/sections/attendance_analytics_hub.php'; ?>
@@ -2022,7 +2020,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Department</label>
                                 <select id="attRiskDept" class="px-3 py-2 rounded-xl border border-slate-200 text-sm" onchange="loadAtRiskMonths().then(loadAtRisk)">
                                     <option value="edu" selected>Education</option>
-                                    <option value="mezmur">Mezmur</option>
                                 </select>
                             </div>
                             <div>
@@ -2105,7 +2102,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <div>
                             <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> Attendance PDF Reports</h4>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Read-only reports over Education &amp; Mezmur attendance — rendered with Amharic-capable PDF fonts. Sources stay separate.</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Read-only reports over Education attendance — rendered with Amharic-capable PDF fonts.</p>
                         </div>
                     </div>
 
@@ -2115,7 +2112,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <select id="pdfReportType" onchange="InfoReports.toggleFields()"
                                     class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 <option value="general">General (all departments)</option>
-                                <option value="sections">Section-based (Mezmur)</option>
                                 <option value="classes">Class-based (Education)</option>
                                 <option value="member">Member-based (one member)</option>
                                 <option value="full">Full analysis (combined)</option>
@@ -2125,7 +2121,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Source</label>
                             <select id="pdfReportSource"
                                     class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
-                                <option value="mezmur">Mezmur (sections)</option>
+                                <option value="edu">Education (classes)</option>
                             </select>
                         </div>
                         <div id="pdfMemberWrap" style="display:none">

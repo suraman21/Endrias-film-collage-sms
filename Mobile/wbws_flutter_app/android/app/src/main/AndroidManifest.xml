@@ -2,17 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- P0 background mezmur playback (just_audio_background / audio_service) -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <!-- Target SDK 34+: media playback foreground-service type. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <!-- P7 photo sync: dataSync foreground-service type (Android 14+). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-    <!-- Android 13+: media-session notifications are exempt, but declaring
-         the runtime-notification permission keeps the shutter visible on
-         devices where the exemption is not applied. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- QR-scan attendance taking (Phase 8): camera is used only by the
          in-app scanner (on-device decode, no images leave the phone). -->
     <!-- Pre-Android-10 only: the MediaStore Downloads insert needs this
@@ -62,33 +55,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- P0 background audio: the service keeps playing + exposes the
-             media notification / lock-screen transport while the app is in
-             the background. MainActivity subclasses
-             AudioServiceFragmentActivity (see MainActivity.kt) so the Flutter
-             engine that owns the player stays bound to this service.
-             exported="false": the service is only ever bound from inside
-             this process. Exporting it (the template default) would let any
-             app on the device connect to the MediaBrowserService and drive
-             the media session. Media-button intents arrive through the
-             separate MediaButtonReceiver below, which does need exporting. -->
-        <service
-            android:name="com.ryanheise.audioservice.AudioService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false"
-            tools:ignore="Instantiatable">
-            <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService" />
-            </intent-filter>
-        </service>
-        <receiver
-            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
-            android:exported="true"
-            tools:ignore="Instantiatable">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </receiver>
         <!--
             P7 — photo sync foreground service. Holds the process in the
             "started" state while the Dart PhotoSyncWorker drains the

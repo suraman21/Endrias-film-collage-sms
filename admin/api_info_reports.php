@@ -8,7 +8,7 @@
  * writes nothing), CSRF-free because it mutates nothing.
  *
  *   GET ?type=general|sections|classes|member|full
- *       [&source=mezmur|hr]  (sections template)
+ *       [&source=hr]  (retired)
  *       [&member_id=N]       (member template)
  *       [&from=YYYY-MM-DD&to=YYYY-MM-DD]
  *
@@ -68,10 +68,10 @@ if (!$rlCheck['allowed']) {
 }
 
 $type = (string)($_GET['type'] ?? 'general');
-$source = (string)($_GET['source'] ?? 'mezmur');
+$source = (string)($_GET['source'] ?? 'edu');
 // HR attendance retired (2026-10-07) and removed as a report source (2026-10-18).
 if ($source === 'hr') {
-    info_rp_fail('HR attendance was retired; reports cover Education and Mezmur only.', 410);
+    info_rp_fail('HR attendance was retired; reports cover Education only.', 410);
 }
 $memberId = (int)($_GET['member_id'] ?? 0);
 $from = (string)($_GET['from'] ?? '');

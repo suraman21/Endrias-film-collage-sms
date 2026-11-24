@@ -17,18 +17,9 @@ def rd(p):
 class ReviewGatewayTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.mez = rd("api/v1/routes/mezmur.php")
         cls.hr = rd("api/v1/routes/hr.php")
         cls.grades = rd("api/v1/routes/grades.php")
         cls.members = rd("api/v1/routes/members.php")
-
-    def test_mezmur_review_endpoints_role_gated(self):
-        self.assertIn("GET' && $action === 'submissions'", self.mez)
-        self.assertIn("GET' && $action === 'submission'", self.mez)
-        self.assertIn("POST' && $action === 'submission-review'", self.mez)
-        self.assertIn("MezmurSubmissionService::canReview($auth)", self.mez)
-        self.assertIn("isApiRateLimited('mezmur_submission_review', 30)", self.mez)
-        self.assertIn("MezmurSubmissionService::reviewPacket(", self.mez)
 
     def test_hr_review_endpoints_role_gated(self):
         # HR attendance was RETIRED (2026-10-07) and the history reads were
@@ -84,7 +75,7 @@ class MobileSurfaceTests(unittest.TestCase):
 
     def test_inbox_shared_with_clone_parity(self):
         # One shared inbox parametrized by dept — never three drifts.
-        for dept in ("'edu'", "'mezmur'", "'hr'"):
+        for dept in ("'edu'", "'hr'"):
             self.assertIn(dept, self.inbox)
         self.assertIn("revision_needed", self.inbox)
         # Return requires a reason on-device too.
@@ -95,7 +86,6 @@ class MobileSurfaceTests(unittest.TestCase):
     def test_shell_routes_reviews_by_role(self):
         self.assertIn("case 'reviews':", self.shell)
         self.assertIn("ReviewInboxScreen(dept: 'edu')", self.shell)
-        self.assertIn("ReviewInboxScreen(dept: 'mezmur')", self.shell)
         # HR's mobile review inbox was retired with HR attendance
         # (2026-10-07); reports live on the web dashboard.
         self.assertNotIn("ReviewInboxScreen(dept: 'hr')", self.shell)

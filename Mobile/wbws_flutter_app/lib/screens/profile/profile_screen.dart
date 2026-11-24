@@ -1136,7 +1136,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     final status = _syncStatus ?? _sync.lastStatus;
     final syncing = status.syncing;
     final unresolved = status.privateUnresolvedTotal +
-        status.sharedHymnUnresolvedTotal +
         status.communicationDraftCount;
     final attention =
         status.rejected + status.blockedDependency + status.resolvedConflict;

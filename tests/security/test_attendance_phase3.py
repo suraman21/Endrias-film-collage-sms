@@ -82,7 +82,7 @@ class Phase3StaticGuards(unittest.TestCase):
         body = pol[pol.index("public static function reopenError"):pol.index("public static function isReopenable")]
         self.assertIn("$target === self::STATUS_APPROVED", body)
         self.assertIn("$cur === self::STATUS_SUBMITTED || $cur === self::STATUS_APPROVED", body)
-        for leak in ("grade_submissions", "mezmur_submissions", "mysqli", "edu_dept", "mezmur_dept", "hr_dept"):
+        for leak in ("grade_submissions", "mysqli", "edu_dept", "hr_dept"):
             self.assertNotIn(leak, pol, leak)
 
     def test_education_has_one_shared_decision_path(self):
@@ -110,29 +110,12 @@ class Phase3StaticGuards(unittest.TestCase):
             self.assertNotIn("UPDATE grade_submissions\n            SET status = ?, reviewed_by = ?", src)
         self.assertIn("'mobile'", mob[mob.index("submission-review"):])
 
-    def test_mezmur_reopen_rule_role_and_recalc(self):
-        svc = read("admin/backend/services/MezmurSubmissionService.php")
-        self.assertIn("public const REOPEN_ROLES = ['mezmur_dept'];", svc)
-        body = svc[svc.index("public static function reviewPacket("):svc.index("public static function recalculateAttendanceWarnings")]
-        self.assertIn("ReviewTransitionPolicy::reopenError(", body)
-        self.assertIn("ReviewTransitionPolicy::error(", body)
-        self.assertIn("WHERE id = ? AND status = 'approved'", body)
-        self.assertIn("WHERE id = ? AND status = 'submitted'", body)
-        self.assertIn("AttendanceSubmissionEventService::record(", body)
-        self.assertIn("self::recalculateAttendanceWarnings(", body)
-        # callers pass the actor role so the server, not the client, decides
-        self.assertIn("(string)$mezmurRole,", read("admin/api_mezmur.php"))
-        self.assertIn("(string)($auth['rol'] ?? $auth['role'] ?? ''),", read("api/v1/routes/mezmur.php"))
-
-    def test_submission_steps_are_recorded_on_both_departments(self):
+    def test_submission_steps_are_recorded(self):
         edu = read("admin/backend/services/SubmissionService.php")
-        mez = read("admin/backend/services/MezmurSubmissionService.php")
         self.assertGreaterEqual(edu.count("AttendanceSubmissionEventService::record("), 3)  # update, insert, review
-        self.assertGreaterEqual(mez.count("AttendanceSubmissionEventService::record("), 3)
-        # detail views expose the history + reopen flag for the UIs
-        for src in (edu, mez):
-            self.assertIn("$packet['events'] = AttendanceSubmissionEventService::forPacket(", src)
-            self.assertIn("$packet['can_reopen'] = ReviewTransitionPolicy::isReopenable(", src)
+        # detail views expose the history + reopen flag for the UI
+        self.assertIn("$packet['events'] = AttendanceSubmissionEventService::forPacket(", edu)
+        self.assertIn("$packet['can_reopen'] = ReviewTransitionPolicy::isReopenable(", edu)
 
     def test_recalc_never_writes_members_status(self):
         for rel in ("admin/backend/services/AttendanceSubmissionEventService.php",
@@ -149,12 +132,6 @@ class Phase3StaticGuards(unittest.TestCase):
         self.assertIn("subTabApproved", edu)
         self.assertIn("Reopen for correction", edu)
         self.assertIn("(s.events||[])", edu)
-        mez_js = read("frontend/js/mezmur.js")
-        self.assertIn("function packetHistoryHtml", mez_js)
-        self.assertIn("'approved', 'insights'", mez_js)
-        mez_page = read("frontend/pages/mezmur_dept.php")
-        self.assertIn("mzSubTabApproved", mez_page)
-        self.assertNotIn("style=", mez_page[mez_page.index("mzSubTabApproved") - 200:mez_page.index("mzSubTabApproved") + 300])
         self.assertIn(".packet-history", read("themes/components.css"))
 
     def test_q1_non_approve_decisions_are_department_only(self):
@@ -164,16 +141,12 @@ class Phase3StaticGuards(unittest.TestCase):
         edu = read("admin/backend/services/SubmissionService.php")
         self.assertIn("if ($isAttendance && $newStatus !== 'approved' && !in_array($actorRole, self::ATTENDANCE_REOPEN_ROLES, true))", edu)
         self.assertIn("public const ATTENDANCE_REOPEN_ROLES = ['edu_dept'];", edu)
-        mez = read("admin/backend/services/MezmurSubmissionService.php")
-        self.assertIn("if ($newStatus !== self::STATUS_APPROVED && !in_array($actorRole, self::REOPEN_ROLES, true))", mez)
-        self.assertIn("public const REOPEN_ROLES = ['mezmur_dept'];", mez)
 
     def test_q2_review_bell_targets_one_user_and_deep_links(self):
         """Owner decision Q-2: the teacher / taker gets an in-app bell with
         the reason (target_user_id, never role-broadcast), EC date in the
         text, machine date only in the data block for the deep-link."""
-        for rel, fn, dept in (("admin/backend/services/SubmissionService.php", "notifyTeacherOfReview", "edu_dept"),
-                              ("admin/backend/services/MezmurSubmissionService.php", "notifyTakerOfReview", "mezmur_dept")):
+        for rel, fn, dept in (("admin/backend/services/SubmissionService.php", "notifyTeacherOfReview", "edu_dept"),):
             src = read(rel)
             self.assertIn("REVIEW_NOTIFICATION_TYPE = 'attendance_submission_review'", src)
             self.assertIn(f"public static function {fn}(", src)
@@ -191,14 +164,12 @@ class Phase3StaticGuards(unittest.TestCase):
         self.assertIn("Map<String, Object>? sheetTarget(Map<String, dynamic> n)", vm)
         nc_dart = (fl / "lib/screens/notifications/notification_center_screen.dart").read_text(encoding="utf-8")
         self.assertIn("final sheet = sheetTarget(n);", nc_dart)
-        self.assertIn("MezmurAttendanceScreen(", nc_dart)
         self.assertIn("initialDate: date.isEmpty ? null : date", nc_dart)
         att = (fl / "lib/screens/attendance/attendance_screen.dart").read_text(encoding="utf-8")
         self.assertIn("final String? initialDate;", att)
         rv = (fl / "lib/screens/reviews/review_inbox_screen.dart").read_text(encoding="utf-8")
         self.assertIn("bool get _canReopenApproved", rv)
         self.assertIn("UserRoles.eduDept", rv)
-        self.assertIn("UserRoles.mezmurDept", rv)
         self.assertIn("Widget _reopenBar()", rv)
         self.assertIn("Widget _historyCard(List events)", rv)
         self.assertIn("'Reopen for correction'", rv)
@@ -206,9 +177,6 @@ class Phase3StaticGuards(unittest.TestCase):
         # audit A-2 / A-3: admins never see return/reject on attendance sheets
         self.assertIn("bool get _canReturnOrReject", rv)
         self.assertIn("if (open && _canReturnOrReject)", rv)
-        mjs = read("frontend/js/mezmur.js")
-        self.assertIn("=== 'mezmur_dept';", mjs)
-        self.assertIn("opt.disabled = !deptOnly; opt.hidden = !deptOnly;", mjs)
         self.assertIn("version: 1.8.5+48", (fl / "pubspec.yaml").read_text(encoding="utf-8"))
 
     def test_php_syntax(self):
@@ -218,9 +186,6 @@ class Phase3StaticGuards(unittest.TestCase):
         for rel in ("admin/backend/services/AttendanceSubmissionEventService.php",
                     "admin/backend/services/ReviewTransitionPolicy.php",
                     "admin/backend/services/SubmissionService.php",
-                    "admin/backend/services/MezmurSubmissionService.php",
-                    "admin/api_communication.php", "admin/api_mezmur.php",
-                    "api/v1/routes/grades.php", "api/v1/routes/mezmur.php",
                     "api/v1/routes/attendance.php", "admin/dashboards/edu_dept.php"):
             r = subprocess.run([php, "-l", str(ROOT / rel)], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, f"{rel}: {r.stdout}{r.stderr}")
@@ -240,7 +205,6 @@ class Phase3LiveGuards(unittest.TestCase):
     MID = 900002          # class 1 (seed); Phase 2 uses 900001 on other dates
     CLASS_ID = 1
     # Rolling band (attendance_test_dates), older than the Phase 2 band:
-    # mezmur packet + 5 consecutive web saves, always inside the window.
     DATES = [recent(38), recent(37), recent(36), recent(35), recent(34)]
     MEZ_DATE = recent(39)
     MEZ_SECTION = "children"
@@ -254,8 +218,7 @@ class Phase3LiveGuards(unittest.TestCase):
         db(f"DELETE FROM attendance_warnings WHERE member_id={cls.MID}")
         db(f"DELETE FROM notifications WHERE type='attendance_warning' AND JSON_EXTRACT(data,'$.member_id') = {cls.MID}")
         db("DELETE FROM notifications WHERE type='attendance_submission_review' AND JSON_UNQUOTE(JSON_EXTRACT(data,'$.reason')) LIKE 'P3-TEST%'")
-        db(f"DELETE FROM mezmur_submissions WHERE attendance_date='{cls.MEZ_DATE}' AND section='{cls.MEZ_SECTION}'")
-        db("DELETE FROM attendance_submission_events WHERE reason LIKE 'P3-TEST%' OR (department='edu' AND packet_id NOT IN (SELECT id FROM grade_submissions)) OR (department='mezmur' AND packet_id NOT IN (SELECT id FROM mezmur_submissions))")
+        db("DELETE FROM attendance_submission_events WHERE reason LIKE 'P3-TEST%' OR (department='edu' AND packet_id NOT IN (SELECT id FROM grade_submissions))")
         db("UPDATE attendance_policies SET consecutive_threshold=5, prolonged_threshold=8, critical_threshold=10, auto_deactivate=0, low_rate_threshold=75.00, min_sessions=99")
 
     @classmethod
@@ -436,51 +399,3 @@ class Phase3LiveGuards(unittest.TestCase):
         events = data["submission"]["events"]
         self.assertTrue(any(e["event"] == "rejected" and e["reason"] == "P3-TEST duplicate sheet" for e in events), events)
         self.assertTrue(all(not re.search(r"\b\d{4}-\d{2}-\d{2}\b", e["created_ec"]) for e in events), "EC timestamps only")
-
-    # ── 3. Mezmur: same rule for approved packets ──
-    def test_03_mezmur_reopen_rule(self):
-        db(f"INSERT INTO mezmur_submissions (attendance_date, section, taker_id, status, member_count, present_count, late_count, absent_count, excused_count, submitted_at) VALUES ('{self.MEZ_DATE}', '{self.MEZ_SECTION}', 8, 'approved', 0, 0, 0, 0, 0, NOW())")
-        pid = int(db(f"SELECT id FROM mezmur_submissions WHERE attendance_date='{self.MEZ_DATE}' AND section='{self.MEZ_SECTION}' ORDER BY id DESC LIMIT 1"))
-
-        admin = _mobile_token("school_admin")
-        status, data = mobile(admin, "POST", "/api/v1/mezmur/submission-review", {"id": pid, "status": "revision_needed", "notes": "P3-TEST admin tries"})
-        self.assertEqual(status, 403, data)
-
-        mez = _mobile_token("mezmur_dept")
-        status, data = mobile(mez, "POST", "/api/v1/mezmur/submission-review", {"id": pid, "status": "revision_needed", "notes": "x"})
-        self.assertEqual(status, 409, data)  # reason too short (service message, mapped to 409 as before)
-
-        status, data = mobile(mez, "POST", "/api/v1/mezmur/submission-review", {"id": pid, "status": "revision_needed", "notes": "P3-TEST reopen mezmur"})
-        self.assertEqual(status, 200, data)
-        self.assertEqual(db(f"SELECT status FROM mezmur_submissions WHERE id={pid}"), "revision_needed")
-        self.assertIn("approved\trevision_needed\t9\tP3-TEST reopen mezmur\tmobile", self._events("mezmur", pid))
-        # Q-2: taker (user 8) gets the bell with section + EC date
-        bell = db(f"SELECT target_user_id, source_dept, message, data FROM notifications WHERE type='attendance_submission_review' AND JSON_EXTRACT(data,'$.submission_id')={pid} AND JSON_EXTRACT(data,'$.department')='mezmur' ORDER BY id DESC LIMIT 1")
-        self.assertTrue(bell, "taker bell missing")
-        tgt, sdept, message, data_json = bell.split("\t", 3)
-        self.assertEqual((tgt, sdept), ("8", "mezmur_dept"))
-        self.assertIn("P3-TEST reopen mezmur", message)
-        self.assertNotRegex(message, r"\b\d{4}-\d{2}-\d{2}\b")
-        # A-4: canonical section labels in the text (code stays in data)
-        self.assertNotIn(f"for {self.MEZ_SECTION} on", message)
-        self.assertIn("Children", message)
-        payload = json.loads(data_json)
-        self.assertEqual((payload["section"], payload["attendance_date"]), (self.MEZ_SECTION, self.MEZ_DATE))
-
-        # Q-1: a SUBMITTED mezmur packet — admins cannot return/reject it either; the department can
-        db(f"UPDATE mezmur_submissions SET status='submitted' WHERE id={pid}")
-        status, data = mobile(admin, "POST", "/api/v1/mezmur/submission-review", {"id": pid, "status": "rejected", "notes": "P3-TEST admin on submitted"})
-        self.assertEqual(status, 403, data)
-        self.assertEqual(db(f"SELECT status FROM mezmur_submissions WHERE id={pid}"), "submitted")
-        status, data = mobile(mez, "POST", "/api/v1/mezmur/submission-review", {"id": pid, "status": "rejected", "notes": "P3-TEST mezmur rejects submitted"})
-        self.assertEqual(status, 200, data)
-        self.assertEqual(db(f"SELECT status FROM mezmur_submissions WHERE id={pid}"), "rejected")
-
-        # web detail shows history
-        status, data = self.s("mezmur_dept").get_json(f"/admin/api_mezmur.php?action=submission_detail&id={pid}")
-        self.assertEqual(status, 200, data)
-        self.assertTrue(any(e["event"] == "reopened" for e in data["item"]["events"]), data["item"]["events"])
-
-
-if __name__ == "__main__":
-    unittest.main()

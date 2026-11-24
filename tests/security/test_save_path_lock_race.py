@@ -48,7 +48,6 @@ PATHS = {
     "education-attendance": ("admin/backend/services/SubmissionService.php", "upsertAttendance"),
     "education-marklist": ("admin/backend/services/SubmissionService.php", "upsertMarklist"),
     "hr-attendance": ("admin/backend/services/HrSubmissionService.php", "upsert"),
-    "mezmur-attendance": ("admin/backend/services/MezmurSubmissionService.php", "upsert"),
 }
 
 OPEN_SET = "AND status IN ('draft','incomplete','revision_needed')"

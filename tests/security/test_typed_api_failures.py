@@ -1,4 +1,4 @@
-"""Static contracts for typed auth, hymn, communication, and replay errors.
+"""Static contracts for typed auth, communication, and replay errors.
 
 Real database behavior remains a staging integration gate. These pins ensure the
 server exposes stable machine evidence without changing mobile behavior in the
@@ -18,15 +18,6 @@ class TypedApiFailureTests(unittest.TestCase):
         cls.auth_route = (ROOT / "api/v1/routes/auth.php").read_text(encoding="utf-8")
         cls.refresh = (
             ROOT / "admin/backend/services/RefreshTokenService.php"
-        ).read_text(encoding="utf-8")
-        cls.mezmur_route = (ROOT / "api/v1/routes/mezmur.php").read_text(
-            encoding="utf-8"
-        )
-        cls.hymn_service = (
-            ROOT / "admin/backend/services/MezmurHymnService.php"
-        ).read_text(encoding="utf-8")
-        cls.media_service = (
-            ROOT / "admin/backend/services/MezmurMediaService.php"
         ).read_text(encoding="utf-8")
         cls.notifications_route = (
             ROOT / "api/v1/routes/notifications.php"
@@ -89,38 +80,6 @@ class TypedApiFailureTests(unittest.TestCase):
         refresh_block = self.auth_route[self.auth_route.index("$action === 'refresh-token'") :]
         self.assertNotIn("AUTH_SCOPE_CHANGED", refresh_block)
         self.assertIn("$user['authorization_version']", refresh_block)
-
-    def test_mezmur_revision_conflict_is_distinct_and_canonical(self):
-        self.assertIn("function mezmurWriteError(array $result): void", self.mezmur_route)
-        self.assertIn("is_array($item)", self.mezmur_route)
-        self.assertIn("$code === 'REVISION_CONFLICT'", self.mezmur_route)
-        self.assertIn("$isRevisionConflict && !is_array($item)", self.mezmur_route)
-        self.assertIn("Current hymn state could not be loaded. Please retry.", self.mezmur_route)
-        self.assertIn("$code = 'REVISION_CONFLICT'", self.mezmur_route)
-        self.assertIn("$extra['data'] = ['item' => $item]", self.mezmur_route)
-        self.assertIn("$code === 'REVISION_CONFLICT' ? 409", self.mezmur_route)
-        self.assertGreaterEqual(
-            self.hymn_service.count("'code' => 'REVISION_CONFLICT'"), 2
-        )
-        self.assertGreaterEqual(self.mezmur_route.count("mezmurWriteError($result)"), 7)
-
-    def test_mezmur_write_errors_have_stable_operation_codes(self):
-        for code in (
-            "REVISION_CONFLICT",
-            "VALIDATION_FAILED",
-            "TARGET_NOT_FOUND",
-        ):
-            self.assertIn(f"'{code}'", self.mezmur_route)
-        self.assertIn("['code' => 'FORBIDDEN']", self.mezmur_route)
-        self.assertIn("$code === 'TARGET_NOT_FOUND' ? 404 : 422", self.mezmur_route)
-        self.assertGreaterEqual(
-            self.hymn_service.count("'code' => 'TARGET_NOT_FOUND'"), 8
-        )
-        self.assertIn("'code' => 'TARGET_NOT_FOUND'", self.media_service)
-        # Shared middleware 409s keep their own meanings and never flow through
-        # the hymn revision resolver.
-        self.assertIn("'code' => 'IDEMPOTENCY_CONFLICT'", self.middleware)
-        self.assertIn("'code' => 'IDEMPOTENCY_IN_PROGRESS'", self.middleware)
 
     def test_communication_send_statuses_are_typed(self):
         expected = {

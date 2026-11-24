@@ -4,12 +4,12 @@
  * Department status API (Attendance alerting — Phase 1)
  * ============================================================
  *   GET  ?action=status&member_id=N            → both department statuses
- *   GET  ?action=history&member_id=N[&department=edu|mezmur]
+ *   GET  ?action=history&member_id=N[&department=edu]
  *   GET  ?action=summary                       → inactive counts per department
  *   POST action=set {member_id, department, status(active|inactive), reason}
  *        hr_dept / info_dept ONLY (requirements §2, §7). Reason required.
  *
- * Reads: HR, Information, Education, Mezmur, School Admin, Super Admin.
+ * Reads: HR, Information, Education, School Admin, Super Admin.
  * Writes: HR and Information only — enforced here regardless of the page.
  * Until FEATURE_ATTENDANCE_V2 is on and sql/071 is applied every action
  * answers {status:'success', available:false}.
@@ -41,7 +41,7 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
 
-const DS_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'];
+const DS_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'];
 const DS_WRITE_ROLES = ['hr_dept', 'info_dept'];
 if (!in_array($role, DS_READ_ROLES, true)) {
     $fail(403, 'You do not have permission to use this page.');
@@ -137,7 +137,7 @@ switch ($action) {
             $fail(400, 'member_id is required.');
         }
         if (!DepartmentStatusService::isDepartment($dept)) {
-            $fail(400, 'department must be edu or mezmur.');
+            $fail(400, 'department must be edu.');
         }
         if (!in_array($status, DepartmentStatusService::STATUSES, true)) {
             $fail(400, 'status must be active or inactive.');

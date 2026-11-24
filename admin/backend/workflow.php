@@ -50,8 +50,8 @@ $NOTIFICATION_MATRIX = [
     // only — never School Admin / Super Admin. Produced by
     // AttendanceWarningService (direct insert, same table); listed here so the
     // matrix stays the single reference of who may receive which type.
-    'attendance_warning' => ['edu_dept', 'mezmur_dept', 'hr_dept', 'info_dept'],
-    'document_shared' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'mezmur_dept'],
+    'attendance_warning' => ['edu_dept', 'hr_dept', 'info_dept'],
+    'document_shared' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept'],
     'task_assigned' => [], // Specific to target
 ];
 

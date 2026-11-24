@@ -39,13 +39,11 @@ SERVICES = ROOT / "admin" / "backend" / "services"
 
 ENTRY_POINTS = [
     "admin/export_pdf.php",
-    "admin/api_mezmur.php",
     "admin/api_communication.php",
     "admin/api_education.php",
     "admin/api_attendance.php",
     "admin/api_hr_attendance.php",
     "api/v1/routes/hr.php",
-    "api/v1/routes/mezmur.php",
     "api/v1/routes/grades.php",
     "api/v1/routes/attendance.php",
     "api/v1/routes/members.php",

@@ -68,7 +68,6 @@ class Phase0StaticGuards(unittest.TestCase):
             "admin/backend/services/AttendanceRecordService.php",
             "admin/backend/workflow.php",
             "api/v1/routes/attendance.php",
-            "admin/api_mezmur.php",
         ]:
             src = code_lines(read(rel))
             self.assertNotRegex(

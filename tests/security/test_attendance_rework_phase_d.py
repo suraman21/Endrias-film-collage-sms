@@ -14,7 +14,7 @@ Two locked contracts:
    old review console is a READ-ONLY history view (view/export only);
    the taker-management console and QR-roster button are gone
    (DeptTakerService::create refuses new hr_attendance_taker accounts
-   server-side); HR reads COMBINED Education + Mezmur attendance
+   server-side); HR reads Education attendance only
    reports through the new governed read-only endpoint
    api_hr_reports.php, which never touches HR's own retired hr_* tables
    and degrades to zeros when a source table is missing.
@@ -86,22 +86,19 @@ class HrReportsEndpointContracts(unittest.TestCase):
         self.assertNotIn("$conn->query(", self.ep.replace("$conn->query(\"SELECT 1", ""))
 
     def test_combined_sources_and_isolation(self):
-        # Reads Education + Mezmur attendance only. The summary helper
+        # Reads Education attendance only. The summary helper
         # is table-parameterized with FIXED call-site literals; the
         # member-detail queries name the sources directly.
         self.assertIn("FROM `$table`", self.ep)
         self.assertIn("FROM attendance a", self.ep)
-        self.assertIn("FROM mezmur_attendance", self.ep)
         # Never HR's own retired tables.
         for retired in ("hr_attendance", "hr_submissions"):
             self.assertNotIn(retired, self.ep)
         # Source-labelled responses for the dashboard.
         self.assertIn("'education' => hr_reports_summary($conn, 'attendance', $month)", self.ep)
-        self.assertIn("'mezmur' => hr_reports_summary($conn, 'mezmur_attendance', $month)", self.ep)
 
     def test_missing_tables_degrade_to_zeros(self):
-        # Mezmur migration resilience pattern: a missing source table
-        # reports zeros/empty rows, never a 500.
+        # Missing source table resilience: reports zeros/empty rows, never a 500.
         self.assertIn("hr_reports_empty_summary", self.ep)
         self.assertGreaterEqual(self.ep.count("catch (\\Throwable $e)"), 4)
 
@@ -153,8 +150,7 @@ class HrDashboardRetiredContracts(unittest.TestCase):
         self.assertIn("HrReports", self.hr)
         self.assertIn("api_hr_reports.php", self.hr)
         # 2026-10-18: department-level analytics come from the shared hub
-        # (same partial the Information department renders); the per-member
-        # Education + Mezmur view stays HR's own.
+        # (same partial the Information department renders); HR's own member view remains.
         self.assertIn("include __DIR__ . '/sections/attendance_analytics_hub.php'", self.hr)
         self.assertIn("AttendanceHub.init()", self.hr)
         self.assertNotIn("hrRepCards", self.hr)

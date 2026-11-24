@@ -1,7 +1,7 @@
 /**
  * Department status widget (Attendance alerting — Phase 1).
  *
- * Renders the Education / Mezmur status badges, a "Change" action (HR and
+ * Renders the Education status badges, a "Change" action (HR and
  * Information only — the server enforces it) and the period history for a
  * member. Mount it on any container that holds
  *   <div data-dept-status="MEMBER_ID"></div>
@@ -16,7 +16,7 @@
 
     var API = '/admin/api_department_status.php';
     var WARN_API = '/admin/api_attendance_warnings.php';
-    var LABELS = { edu: 'Education', mezmur: 'Mezmur' };
+    var LABELS = { edu: 'Education' };
     var stylesInjected = false;
 
     function csrf() {
@@ -86,7 +86,7 @@
             return;
         }
         html += '<div class="ds-row">';
-        ['edu', 'mezmur'].forEach(function (d) {
+        ['edu'].forEach(function (d) {
             var st = (data.statuses && data.statuses[d]) || { status: 'active' };
             var isActive = st.status === 'active';
             html += '<div class="ds-dept" data-dept="' + d + '">' +

@@ -430,7 +430,7 @@ $arFromApk = ($arRelease['version_source'] ?? '') === 'apk';
                 <label class="ar-label" for="cfg-release-notes">
                     <i class="fa-solid fa-file-lines" style="color:#94a3b8;font-size:0.75rem"></i> Release Notes / Changelog
                 </label>
-                <textarea name="release_notes" id="cfg-release-notes" class="ar-textarea" rows="4" placeholder="• Faster QR attendance&#10;• Offline sync improvements&#10;• Bug fixes in Mezmur player"><?= htmlspecialchars((string)($arRelease['release_notes'] ?? '')) ?></textarea>
+                <textarea name="release_notes" id="cfg-release-notes" class="ar-textarea" rows="4" placeholder="• Faster QR attendance&#10;• Offline sync improvements&#10;• Player bug fixes"><?= htmlspecialchars((string)($arRelease['release_notes'] ?? '')) ?></textarea>
                 <span class="ar-help">Shown directly to teachers and students on the in-app update prompt</span>
             </div>
 

@@ -3,7 +3,7 @@
  * ============================================================================
  * Attendance Warnings — shared page (Attendance alerting — Phase 2)
  * ============================================================================
- * One list for Education, Mezmur, HR and Information (department-scoped on the
+ * One list for Education, HR and Information (department-scoped on the
  * server by admin/api_attendance_warnings.php). School Admin and Super Admin
  * see a read-only list (no close button; the API answers 403 as well).
  * Ethiopian calendar only: every date shown comes pre-formatted from the API.
@@ -26,13 +26,13 @@ if (!in_array($userRole, \App\Services\AttendanceWarningService::READ_ROLES, tru
 }
 $departments = \App\Services\AttendanceWarningService::departmentsForRole($userRole);
 $canClose = [];
-foreach (['edu', 'mezmur'] as $d) {
+foreach (['edu'] as $d) {
     $canClose[$d] = \App\Services\AttendanceWarningService::roleMayClose($userRole, $d);
 }
 $today = new DateTime('now', new DateTimeZone('Africa/Addis_Ababa'));
 $roleLabels = [
     'super_admin' => 'Super Admin', 'school_admin' => 'School Admin', 'info_dept' => 'Information Department',
-    'hr_dept' => 'HR Department', 'edu_dept' => 'Education Department', 'mezmur_dept' => 'Mezmur Department',
+    'hr_dept' => 'HR Department', 'edu_dept' => 'Education Department',
 ];
 $cfg = [
     'api' => '/admin/api_attendance_warnings.php',
@@ -73,7 +73,7 @@ $schoolName = defined('SCHOOL_NAME_SHORT') ? SCHOOL_NAME_SHORT : 'SSMS';
 .aw-table th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--rc-muted)}
 .aw-table tr:hover td{background:#f9fbfd}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
-.pill-edu{background:#dbeafe;color:#1e40af}.pill-mezmur{background:#ede9fe;color:#5b21b6}
+.pill-edu{background:#dbeafe;color:#1e40af}
 .pill-standard{background:#fef3c7;color:#92400e}.pill-prolonged{background:#ffedd5;color:#9a3412}.pill-critical{background:#fee2e2;color:#991b1b}
 .pill-low_month{background:#e0f2fe;color:#075985}.pill-open{background:#dcfce7;color:#166534}.pill-closed{background:#e5e7eb;color:#374151}
 .pill-rollout{background:#f1f5f9;color:#475569;border:1px dashed #94a3b8}.pill-flag{background:#f0fdf4;color:#15803d;border:1px solid #86efac}
@@ -129,7 +129,7 @@ $schoolName = defined('SCHOOL_NAME_SHORT') ? SCHOOL_NAME_SHORT : 'SSMS';
         <select id="aw-department">
           <option value="all">All I can see</option>
           <?php foreach ($departments as $d): ?>
-            <option value="<?= $d ?>"><?= $d === 'edu' ? 'Education' : 'Mezmur' ?></option>
+            <option value="<?= $d ?>">Education</option>
           <?php endforeach; ?>
         </select>
       </label>

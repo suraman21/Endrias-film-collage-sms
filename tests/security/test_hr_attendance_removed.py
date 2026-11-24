@@ -5,11 +5,11 @@ Owner decisions pinned here:
     removed completely (web + mobile read endpoints → 410, like the writes).
   • The hr_* tables stay in the database as an untouched archive — no
     migration, no DDL, no data destroyed.
-  • The Information department's Analytics Hub (Education + Mezmur only) is
+  • The Information department's Analytics Hub (Education only) is
     one shared partial/module rendered by BOTH the Info and HR dashboards;
     hr_dept gets READ access to api_info_analytics / api_info_reports,
     while the rollup refresh stays admin-only.
-  • HR keeps its own per-member Education + Mezmur view (api_hr_reports).
+  • HR keeps its own per-member Education view (api_hr_reports).
 """
 import re
 import unittest
@@ -38,9 +38,9 @@ class SharedHubAssets(unittest.TestCase):
         self.assertNotIn("const InfoHub = (function", self.info)
         self.assertNotIn("window.InfoHub = InfoHub;", self.info)
 
-    def test_partial_is_edu_plus_mezmur_only(self):
+    def test_partial_is_edu_only(self):
         self.assertIn('id="ihSrcEdu"', self.partial)
-        self.assertIn('id="ihSrcMezmur"', self.partial)
+        self.assertNotIn("ihSrcMezmur", self.partial)
         self.assertNotIn("ihSrcHr", self.partial)
         self.assertIn('id="attendanceHub"', self.partial)
         self.assertIn("api_info_analytics.php", self.partial)
@@ -50,7 +50,7 @@ class SharedHubAssets(unittest.TestCase):
         self.assertIn("SSMS_ASSET_VER", self.partial)
 
     def test_module_contract(self):
-        self.assertIn("const SOURCES = ['edu', 'mezmur'];", self.js)
+        self.assertIn("const SOURCES = ['edu'];", self.js)
         self.assertIn("window.AttendanceHub = AttendanceHub;", self.js)
         self.assertIn("window.InfoHub = AttendanceHub;", self.js)
         for fn in ("init", "reload", "setSource", "exportAll", "refresh"):
@@ -66,14 +66,13 @@ class SharedHubAssets(unittest.TestCase):
         for gone in ('id="section-submissions"', 'data-section="submissions"',
                      "HrSub", "hrPacketModal", "api_hr_attendance.php", "hrRepCards"):
             self.assertNotIn(gone, self.hr)
-        # per-member Education + Mezmur view stays
+        # per-member Education view stays
         self.assertIn("api_hr_reports.php", self.hr)
         self.assertIn("HrReports.openMember", self.hr)
         self.assertIn('id="hrRepMonth"', self.hr)
 
     def test_info_exports_drop_hr(self):
         self.assertNotIn('<option value="hr">HR (sections)</option>', self.info)
-        self.assertIn('<option value="sections">Section-based (Mezmur)</option>', self.info)
 
 
 class BackendSources(unittest.TestCase):
@@ -86,7 +85,7 @@ class BackendSources(unittest.TestCase):
         cls.acl = read("admin/access_control.php")
 
     def test_service_sources(self):
-        self.assertIn("public const SOURCES = ['edu', 'mezmur'];", self.svc)
+        self.assertIn("public const SOURCES = ['edu'];", self.svc)
         self.assertNotIn("'hr' => 'HR'", self.svc)
         self.assertNotIn("hr_attendance", self.svc.split("public const SOURCES")[1])
         self.assertNotIn("hr_submissions", self.svc.split("public const SOURCES")[1])
@@ -96,7 +95,7 @@ class BackendSources(unittest.TestCase):
 
     def test_pdf_sources(self):
         self.assertNotIn("FROM hr_attendance", self.pdf)
-        self.assertIn("foreach (['mezmur', 'edu'] as $src)", self.pdf)
+        self.assertIn("foreach (['edu'] as $src)", self.pdf)
         self.assertNotIn("=== 'hr' ? 'hr'", self.pdf)
 
     def test_role_gates(self):
@@ -108,7 +107,7 @@ class BackendSources(unittest.TestCase):
         idx = self.an.index("'refresh'")
         self.assertIn("['super_admin', 'school_admin']", self.an[idx - 1500:idx + 1500])
         # HR has no takers to manage any more
-        self.assertIn("'api_dept_takers.php' => ['super_admin', 'school_admin', 'mezmur_dept']", self.acl)
+        self.assertIn("'api_dept_takers.php' => ['super_admin', 'school_admin']", self.acl)
 
     def test_reports_reject_hr_source(self):
         self.assertIn("if ($source === 'hr')", self.rp)

@@ -127,7 +127,7 @@ void main() {
         clientOpId: 'op-2',
         attemptNumber: 1,
         attemptUid: 'att_y',
-        domain: 'pending_mezmur',
+        domain: 'pending_grades',
         startedAt: DateTime.utc(2026, 3, 1),
       );
       expect(record.executionSource, SyncExecutionSource.foreground);

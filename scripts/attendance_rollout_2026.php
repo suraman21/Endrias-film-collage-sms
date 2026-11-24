@@ -8,7 +8,7 @@ if (PHP_SAPI !== 'cli') {
 /**
  * Attendance alerting — Phase 2 rollout back-fill (run by the owner, in batches).
  *
- * For every non-archived member × department (Education, Mezmur) it computes
+ * For every non-archived member × department (Education) it computes
  * the current consecutive-absence streak and the current Ethiopian month over
  * the current Ethiopian academic year, using exactly the same rules as the
  * live evaluator (AttendanceRiskService / AttendanceWarningService: packet
@@ -30,7 +30,7 @@ if (PHP_SAPI !== 'cli') {
  *   php scripts/attendance_rollout_2026.php --apply --limit=50 --after-id=<printed cursor>   # next batch …
  *
  * Options:
- *   --department=edu|mezmur   one department only (default both)
+ *   --department=edu         one department only
  *   --as-of=YYYY-MM-DD        evaluation date (default today)
  *   --limit=N                 members per batch, ordered by member id (0 = all)
  *   --after-id=N              resume cursor: only members with id > N (printed at the end of each batch)
@@ -70,7 +70,7 @@ $departments = AttendanceRiskService::DEPARTMENTS;
 if (isset($opts['department'])) {
     $d = (string)$opts['department'];
     if (!in_array($d, $departments, true)) {
-        fwrite(STDERR, "--department must be edu or mezmur\n");
+        fwrite(STDERR, "--department must be edu\n");
         exit(2);
     }
     $departments = [$d];
@@ -211,57 +211,6 @@ if ($verify) {
         }
     }
 
-    if (in_array('mezmur', $departments, true)) {
-        $say('');
-        $say('MEZMUR — mezmur_attendance rows in the window');
-        $sectionExpr = MemberCategory::sqlSectionExpr('m');
-        $base = "FROM mezmur_attendance x
-                 LEFT JOIN members m ON m.id = x.member_id
-                 LEFT JOIN mezmur_sessions s ON s.id = x.session_id
-                 LEFT JOIN mezmur_submissions ms ON ms.attendance_date = COALESCE(x.attendance_date, s.session_date) AND ms.section = $sectionExpr
-                 WHERE COALESCE(x.attendance_date, s.session_date) BETWEEN ? AND ?";
-        $t = $q1("SELECT COUNT(*) n,
-                         SUM(CASE WHEN ms.id IS NULL THEN 1 ELSE 0 END) legacy,
-                         SUM(CASE WHEN ms.status IN ('submitted','approved') THEN 1 ELSE 0 END) eligible,
-                         SUM(CASE WHEN ms.id IS NOT NULL AND ms.status NOT IN ('submitted','approved') THEN 1 ELSE 0 END) ignored,
-                         SUM(CASE WHEN x.session_id IS NULL THEN 1 ELSE 0 END) no_session,
-                         MIN(CASE WHEN ms.id IS NULL THEN COALESCE(x.attendance_date, s.session_date) END) legacy_from,
-                         MAX(CASE WHEN ms.id IS NULL THEN COALESCE(x.attendance_date, s.session_date) END) legacy_to,
-                         COUNT(DISTINCT CASE WHEN ms.id IS NULL THEN COALESCE(x.attendance_date, s.session_date) END) legacy_days
-                  $base", 'ss', [$from, $to]);
-        $say(sprintf('  rows %d · with submitted/approved packet %d · legacy (no packet) %d · under draft/rejected packet (ignored) %d · rows without a session link %d',
-            (int)$t['n'], (int)$t['eligible'], (int)$t['legacy'], (int)$t['ignored'], (int)$t['no_session']));
-        if ((int)$t['legacy'] > 0) {
-            $say(sprintf('  legacy rows span %s – %s · %d distinct days',
-                AttendanceRiskService::ecLabel((string)$t['legacy_from']), AttendanceRiskService::ecLabel((string)$t['legacy_to']), (int)$t['legacy_days']));
-        }
-        $say('  checks:');
-        $n = (int)($q1("SELECT COUNT(*) n $base AND COALESCE(x.attendance_date, s.session_date) > ?", 'sss', [$from, $to, $asOf])['n'] ?? 0);
-        $flag($n, "$n rows dated after the as-of date (future dates)");
-        $n = (int)($q1("SELECT COUNT(*) n FROM mezmur_attendance x WHERE x.attendance_date IS NULL AND (x.session_id IS NULL OR NOT EXISTS (SELECT 1 FROM mezmur_sessions s WHERE s.id = x.session_id))")['n'] ?? 0);
-        $flag($n, "$n rows with no usable date (no attendance_date and no session) — invisible to the rollout");
-        $n = (int)($q1("SELECT COUNT(*) n $base AND m.id IS NULL", 'ss', [$from, $to])['n'] ?? 0);
-        $flag($n, "$n rows whose member no longer exists");
-        $n = (int)($q1("SELECT COUNT(*) n $base AND m.status = 'archived'", 'ss', [$from, $to])['n'] ?? 0);
-        $say("  · $n rows belong to archived members (skipped by the rollout, nothing to fix)");
-        $n = (int)($q1("SELECT COUNT(*) n $base AND x.session_id IS NOT NULL AND s.id IS NULL", 'ss', [$from, $to])['n'] ?? 0);
-        $flag($n, "$n rows pointing at a deleted/missing session");
-        $n = (int)($q1("SELECT COUNT(*) n $base AND $sectionExpr = '—'", 'ss', [$from, $to])['n'] ?? 0);
-        $flag($n, "$n rows for members with no Mezmur section (never matched to a packet)");
-        $blank = $qAll("SELECT $sectionExpr sec, COALESCE(x.attendance_date, s.session_date) d, COUNT(*) n
-                        FROM mezmur_attendance x JOIN members m ON m.id = x.member_id LEFT JOIN mezmur_sessions s ON s.id = x.session_id
-                        WHERE COALESCE(x.attendance_date, s.session_date) BETWEEN ? AND ? AND x.status IN ('present','absent','late','excused')
-                        GROUP BY sec, d
-                        HAVING SUM(CASE WHEN x.status = 'absent' THEN 1 ELSE 0 END) = COUNT(*) AND COUNT(*) >= 3
-                        ORDER BY d DESC LIMIT 200", 'ss', [$from, $to]);
-        $flag(count($blank), count($blank) . ' section-days where EVERY member is marked absent (blank sheet or holiday saved as absences?)');
-        foreach (array_slice($blank, 0, 15) as $b) {
-            $say(sprintf('      %s · %s · %d members', (string)$b['sec'], AttendanceRiskService::ecLabel((string)$b['d']), (int)$b['n']));
-        }
-        if (count($blank) > 15) {
-            $say('      … ' . (count($blank) - 15) . ' more');
-        }
-    }
 
     // Which would-open warnings depend on legacy rows? Computed twice per
     // candidate: with legacy rows (production setting) and without.
@@ -315,7 +264,7 @@ if ($verify) {
     if ($flags === 0) {
         $say('VERDICT: no data problems found. Historical rows look valid — proceed with the dry run, then --apply in batches.');
     } else {
-        $say("VERDICT: $flags check(s) flagged. Review them with Education / Mezmur (correct through their screens — this tool never deletes or edits attendance), then re-run --verify. Rollout warnings opened from flagged days can also be closed later with outcome \"Excused\".");
+        $say("VERDICT: $flags check(s) flagged. Review them with Education (correct through their screens — this tool never deletes or edits attendance), then re-run --verify. Rollout warnings opened from flagged days can also be closed later with outcome \"Excused\".");
     }
     flock($lock, LOCK_UN);
     exit($flags === 0 ? 0 : 1);

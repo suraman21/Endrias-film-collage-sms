@@ -7,7 +7,7 @@ BACKDATE_LIMIT once they age out. These helpers compute save dates as fixed
 offsets from the server-timezone "today" so the suites never rot.
 
 Band layout (days before today, Africa/Addis_Ababa), oldest first:
-  Phase 3: 39 (mezmur packet) + 38..34 (web saves, chronological)
+  Phase 3: 39 + 38..34 (web saves, chronological)
   Phase 6: 32 (lesson saves)
   Phase 2: 29..25 (web saves) + 24 (mobile draft) + 23 (mobile submit)
 

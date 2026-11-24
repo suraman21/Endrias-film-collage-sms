@@ -4,7 +4,7 @@
 
    Reads the governed admin/api_info_analytics.php surface over the
    two independent attendance sources: Education (classes, recorded by
-   teachers) and Mezmur (sections, recorded by Mezmur takers). HR's own
+   teachers). HR's own
    attendance was retired on 2026-10-07 and is no longer a source.
    The hub compares departments side-by-side; it never merges their
    data and no analysing department ever writes attendance.
@@ -19,12 +19,12 @@
 const AttendanceHub = (function () {
     'use strict';
 
-    const SOURCES = ['edu', 'mezmur'];
+    const SOURCES = ['edu'];
     const SRC_COLORS = {
         edu:    ['#2563eb', '#3b82f6'],
-        mezmur: ['#7c3aed', '#8b5cf6']
+        edu: ['#0ea5e9', '#38bdf8']
     };
-    const SRC_TAB_ID = { edu: 'ihSrcEdu', mezmur: 'ihSrcMezmur' };
+    const SRC_TAB_ID = { edu: 'ihSrcEdu' };
 
     let api = '';
     let initialized = false;
@@ -288,7 +288,7 @@ const AttendanceHub = (function () {
     // Danger confirmation (LOW). Loads admin/js/danger_confirm.js on demand.
     var dcAskLazy = function (o) { return new Promise(function (res) { function go() { window.DangerConfirm.ask(o).then(res); } if (window.DangerConfirm && window.DangerConfirm.ask) return go(); var sc = document.createElement('script'); sc.src = '/admin/js/danger_confirm.js?v=20261022dc4'; sc.onload = function () { window.DangerConfirm ? go() : res(false); }; sc.onerror = function () { res(false); }; document.head.appendChild(sc); }); };
     async function refresh() {
-        if (!(await dcAskLazy({ tier: 'low', title: 'Rebuild the analytics rollup?', summary: 'The analytics totals are recalculated from the Education and Mezmur attendance records. Attendance itself is not changed. This can take a moment.', confirmLabel: 'Rebuild' }))) return;
+        if (!(await dcAskLazy({ tier: 'low', title: 'Rebuild the analytics rollup?', summary: 'The analytics totals are recalculated from the Education attendance records. Attendance itself is not changed. This can take a moment.', confirmLabel: 'Rebuild' }))) return;
         const fd = new FormData();
         fd.append('action', 'refresh');
         fd.append('csrf_token', (typeof CSRF_TOKEN !== 'undefined') ? CSRF_TOKEN : '');

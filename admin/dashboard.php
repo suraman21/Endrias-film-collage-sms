@@ -108,11 +108,6 @@ switch ($role) {
         require __DIR__ . '/dashboards/material_department.php';
         break;
 
-    case 'mezmur_dept':
-        // ── Separated frontend shell (same pattern as finance) ──
-        header('Location: /frontend/pages/mezmur_dept.php');
-        exit;
-
     case 'teacher':
         require __DIR__ . '/dashboards/teacher.php';
         break;
@@ -120,7 +115,6 @@ switch ($role) {
     case 'attendance_taker':
         require __DIR__ . '/dashboards/attendance_taker.php';
         break;
-    case 'mezmur_attendance_taker':
     case 'hr_attendance_taker':
         // Department-owned takers record from the mobile app; this
         // page is the web landing (account info + guidance).

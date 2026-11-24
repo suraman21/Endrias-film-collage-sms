@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart' show getDatabasesPath;
 import 'services/app_lock_service.dart';
@@ -19,30 +18,16 @@ import 'services/device_tier_service.dart';
 import 'services/telemetry_service.dart';
 import 'services/crash_log_service.dart';
 import 'services/app_navigator.dart';
-import 'services/mezmur_download_manager.dart';
-import 'services/lyrics_reader_settings.dart';
 import 'utils/scrolling.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/session_recovery_screen.dart';
 import 'screens/shell/app_shell.dart';
 import 'screens/update/update_screen.dart';
-import 'screens/mezmur/mezmur_mini_player_host.dart';
 import 'screens/profile/sync_center_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // P0 background mezmur playback: register the single auto-managed
-  // player channel BEFORE runApp so audio_service can connect. Kept
-  // tolerant — on a platform without the plugin the app still starts.
-  try {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'com.arkeonethiopia.fkss.channel.audio',
-      androidNotificationChannelName: 'መዝሙር · FKSS Mezmur',
-      androidNotificationOngoing: true,
-    );
-  } catch (_) {}
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -117,14 +102,6 @@ Future<void> runBootstrap() async {
         }
       } catch (_) {}
     });
-    if (SessionCoordinator().isActive) {
-      Future<void>.delayed(const Duration(seconds: 2), () {
-        if (SessionCoordinator().isActive) {
-          MezmurDownloadManager.instance.boot();
-        }
-      });
-    }
-  });
 }
 
 /// Appends the real error to a log inside the app sandbox and returns a
@@ -371,8 +348,8 @@ class _FKSSAppState extends State<FKSSApp> {
       // P34: the now-playing bar is mounted ABOVE the Navigator so it
       // follows the user across every pushed route and consumes real
       // layout height (never covers FABs or save bars).
-      builder: (context, navigator) =>
-          MezmurMiniPlayerHost(child: navigator ?? const SizedBox.shrink()),
+      builder: (context, navigator) => navigator ?? const SizedBox.shrink(),
+
       routes: {
         '/sync-center': (_) => const SyncCenterScreen(),
       },

@@ -6,7 +6,7 @@
  * ============================================================================
  * ONE derived table (`attendance_month_rollup`, sql/074) that caches the
  * SHARED risk formula of AttendanceRiskService for every member and every
- * Ethiopian month, per department (Education and Mezmur stay separate):
+ * Ethiopian month, per department (Education):
  *
  *   sessions    = eligible rows with status present|absent|late|excused
  *   present_eq  = present + excused + LATE_WEIGHT·late
@@ -145,9 +145,7 @@ final class AttendanceMonthRollupService
             $reset->close();
 
             // 2. Set-based recompute of the shared formula.
-            $src = $dept === 'edu'
-                ? self::eduSourceSql($conn, $ids === null ? '' : sprintf($idSql, 'a.member_id'))
-                : self::mezmurSourceSql($conn, $ids === null ? '' : sprintf($idSql, 'x.member_id'));
+            $src = self::eduSourceSql($conn, $ids === null ? '' : sprintf($idSql, 'a.member_id'));
             $w = AttendanceRiskService::LATE_WEIGHT;
             $bE = AttendanceRiskService::BAND_EXCELLENT;
             $bG = AttendanceRiskService::BAND_GOOD;
@@ -255,7 +253,7 @@ final class AttendanceMonthRollupService
         return $refresh;
     }
 
-    // ── source SQL (mirrors AttendanceRiskService::eduRows / mezmurRows) ──
+    // ── source SQL (mirrors AttendanceRiskService::eduRows) ──
 
     private static function periodExclusionSql(\mysqli $conn, string $dept, string $memberExpr, string $dateExpr): string
     {
@@ -290,28 +288,6 @@ final class AttendanceMonthRollupService
                 GROUP BY a.member_id";
     }
 
-    private static function mezmurSourceSql(\mysqli $conn, string $idFilter): string
-    {
-        $sectionExpr = MemberCategory::sqlSectionExpr('m');
-        $packetFilter = AttendanceRiskService::legacyRowsEligible()
-            ? "(ms.id IS NULL OR ms.status IN ('submitted','approved'))"
-            : "(ms.id IS NOT NULL AND ms.status IN ('submitted','approved'))";
-        $d = 'COALESCE(x.attendance_date, s.session_date)';
-        return "SELECT x.member_id,
-                       COUNT(*) AS sessions,
-                       SUM(x.status = 'present') AS present, SUM(x.status = 'absent') AS absent,
-                       SUM(x.status = 'late') AS late, SUM(x.status = 'excused') AS excused
-                FROM mezmur_attendance x
-                JOIN members m ON m.id = x.member_id
-                LEFT JOIN mezmur_sessions s ON s.id = x.session_id
-                LEFT JOIN mezmur_submissions ms
-                       ON ms.attendance_date = {$d} AND ms.section = {$sectionExpr}
-                WHERE {$d} BETWEEN ? AND ?
-                  AND x.status IN ('present','absent','late','excused')
-                  AND {$packetFilter}" . self::periodExclusionSql($conn, 'mezmur', 'x.member_id', $d) . $idFilter . "
-                GROUP BY x.member_id";
-    }
-
     // ── reads ─────────────────────────────────────────────────────
 
     /**
@@ -325,9 +301,7 @@ final class AttendanceMonthRollupService
         $now = AttendanceRiskService::ecOf($today);
         $oldest = $today;
         try {
-            $sql = $dept === 'edu'
-                ? "SELECT MIN(attendance_date) AS d FROM attendance WHERE status IN ('present','absent','late','excused')"
-                : "SELECT MIN(COALESCE(x.attendance_date, s.session_date)) AS d FROM mezmur_attendance x LEFT JOIN mezmur_sessions s ON s.id = x.session_id";
+            $sql = "SELECT MIN(attendance_date) AS d FROM attendance WHERE status IN ('present','absent','late','excused')";
             $r = $conn->query($sql);
             $row = $r ? $r->fetch_assoc() : null;
             if ($row && !empty($row['d'])) {
@@ -537,7 +511,7 @@ final class AttendanceMonthRollupService
         return $out;
     }
 
-    /** Groups for the filter: Education classes / Mezmur sections present in the month. @return list<array{id:string,label:string}> */
+    /** Groups for the filter: Education classes present in the month. @return list<array{id:string,label:string}> */
     public static function groupsForMonth(\mysqli $conn, string $dept, int $ecYear, int $ecMonth): array
     {
         if (!self::available($conn)) {
@@ -599,7 +573,7 @@ final class AttendanceMonthRollupService
     }
 
     /**
-     * Dashboard card for the CURRENT Ethiopian month (Education / Mezmur / HR /
+     * Dashboard card for the CURRENT Ethiopian month (Education / HR /
      * Information). Lazily refreshes each requested department (10-min bound)
      * and never throws — dashboards must render even when the roll-up is off.
      * @param string[] $departments

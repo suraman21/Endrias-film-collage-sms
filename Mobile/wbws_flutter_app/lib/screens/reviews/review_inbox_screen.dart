@@ -15,8 +15,8 @@ import '../../widgets/paged_list_footer.dart';
 
 /// ════════════════════════════════════════════════════════════
 /// Department review inbox (Phase 9) — the mobile mirror of the
-/// web consoles' Submissions workflow, shared by all three
-/// departments (edu / mezmur / hr) with clone parity.
+/// web consoles' Submissions workflow, shared by the remaining
+/// departments (edu / hr) with clone parity.
 ///
 /// Pattern (research-backed manager-approval UX): inbox list with
 /// status filters → detail with FULL context (roster marks, taker,
@@ -26,7 +26,7 @@ import '../../widgets/paged_list_footer.dart';
 /// ════════════════════════════════════════════════════════════
 /// Phase 3: one page of the review list, whatever the server shape.
 /// edu: data.submissions (+ total/page/total_pages with with_total=1);
-/// mezmur: data.items + total/page/total_pages; old: submissions.items.
+/// hr: data.items + total/page/total_pages; old: submissions.items.
 /// total/totalPages are null when the server did not send them.
 ({List<Map<String, dynamic>> rows, int? total, int page, int? totalPages})
     parseReviewPage(Map<String, dynamic> data) {
@@ -46,16 +46,12 @@ import '../../widgets/paged_list_footer.dart';
 }
 
 class ReviewInboxScreen extends StatefulWidget {
-  /// 'edu' | 'mezmur' | 'hr'
+  /// 'edu' | 'hr'
   final String dept;
 
   const ReviewInboxScreen({super.key, required this.dept});
 
-  String get _title => dept == 'edu'
-      ? 'Education Reviews'
-      : dept == 'hr'
-          ? 'HR Reviews'
-          : 'Mezmur Reviews';
+  String get _title => dept == 'edu' ? 'Education Reviews' : 'HR Reviews';
 
   @override
   State<ReviewInboxScreen> createState() => _ReviewInboxScreenState();
@@ -100,7 +96,7 @@ class _ReviewInboxScreenState extends State<ReviewInboxScreen>
   /// The server's per-filter status windows, reproduced locally.
   /// 'attention' is department-specific by server contract:
   /// edu's SubmissionService uses IN (incomplete, submitted, draft)
-  /// while the mezmur/HR services also include revision_needed.
+  /// while the HR service also includes revision_needed.
   List<String>? _statusWindow(String filter) {
     switch (filter) {
       case 'all':
@@ -191,8 +187,8 @@ class _ReviewInboxScreenState extends State<ReviewInboxScreen>
       if (!mounted) return;
       if (res.success && res.data != null) {
         _fetchedFilters.add(_filter);
-        // Phase 3: mezmur sends data.items (was read as 'submissions'
-        // only, so the mezmur inbox stayed empty); totals per filter.
+        // Phase 3: hr sends data.items (was read as 'submissions'
+        // only, so the hr inbox stayed empty); totals per filter.
         final pg = parseReviewPage(res.data!);
         final rows = pg.rows;
         _srvPage[_filter] = 1;
@@ -857,21 +853,18 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
   bool get _canReopenApproved {
     if (_sub['can_reopen'] != true && _sub['can_reopen'] != 1) return false;
     final role = _api.userRole;
-    return (widget.dept == 'edu' && role == UserRoles.eduDept) ||
-        (widget.dept == 'mezmur' && role == UserRoles.mezmurDept);
+    return widget.dept == 'edu' && role == UserRoles.eduDept;
   }
 
-  /// Owner decision Q-1 (2026-10-19): on an ATTENDANCE sheet (every Mezmur
-  /// packet; Education packets with submission_type == 'attendance') only
-  /// the owning department may return or reject — admins may only approve.
+  /// Owner decision Q-1 (2026-10-19): on an ATTENDANCE sheet (Education
+  /// packets with submission_type == 'attendance') only the owning
+  /// department may return or reject — admins may only approve.
   /// The server refuses anyway; this keeps dead-end buttons off the screen.
   bool get _canReturnOrReject {
-    final isAttendance = widget.dept == 'mezmur' ||
-        '${_sub['submission_type'] ?? ''}' == 'attendance';
+    final isAttendance = '${_sub['submission_type'] ?? ''}' == 'attendance';
     if (!isAttendance) return true;
     final role = _api.userRole;
-    return (widget.dept == 'edu' && role == UserRoles.eduDept) ||
-        (widget.dept == 'mezmur' && role == UserRoles.mezmurDept);
+    return widget.dept == 'edu' && role == UserRoles.eduDept;
   }
 
   Future<void> _askReasonAndDecide(String status, {bool reopen = false}) async {
@@ -1311,7 +1304,6 @@ class ReviewHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final depts = [
       ['edu', 'Education', Icons.school_outlined],
-      ['mezmur', 'Mezmur', Icons.music_note_outlined],
       ['hr', 'HR', Icons.work_outline],
     ];
     return Scaffold(

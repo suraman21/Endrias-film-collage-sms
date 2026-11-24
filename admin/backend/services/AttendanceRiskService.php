@@ -13,7 +13,7 @@
  *      `approved`. Packets in draft / incomplete / revision_needed / rejected
  *      are NOT eligible. Rows without any packet are treated the way the rest
  *      of the system already treats them (SubmissionService /
- *      MezmurSubmissionService `resolved*Status()` => `submitted`): see
+ *      SubmissionService `resolved*Status()` => `submitted`): see
  *      LEGACY_ROWS_ELIGIBLE. This keeps years of web-saved sheets (which never
  *      created packets before Phase 2) countable at rollout.
  *   2. Day outcome: group eligible rows by date; the day is `absent` only when
@@ -43,8 +43,8 @@ if (!function_exists('gregorian_to_ethiopian')) {
 
 final class AttendanceRiskService
 {
-    public const DEPARTMENTS = ['edu', 'mezmur'];
-    public const LABELS = ['edu' => 'Education', 'mezmur' => 'Mezmur'];
+    public const DEPARTMENTS = ['edu'];
+    public const LABELS = ['edu' => 'Education'];
     public const ELIGIBLE_PACKET_STATUSES = ['submitted', 'approved'];
     /** Rows with no packet at all count as submitted (matches resolved*Status()). */
     public const LEGACY_ROWS_ELIGIBLE = true;
@@ -141,9 +141,7 @@ final class AttendanceRiskService
         if (!in_array($dept, self::DEPARTMENTS, true) || $memberId <= 0 || $from > $to) {
             return [];
         }
-        $rows = $dept === 'edu'
-            ? self::eduRows($conn, $memberId, $from, $to)
-            : self::mezmurRows($conn, $memberId, $from, $to);
+        $rows = self::eduRows($conn, $memberId, $from, $to);
         if ($rows === []) {
             return [];
         }
@@ -180,28 +178,6 @@ final class AttendanceRiskService
                   AND a.status IN ('present','absent','late','excused')
                   AND $packetFilter
                 ORDER BY a.attendance_date ASC, a.class_id ASC";
-        return self::fetchRows($conn, $sql, 'iss', [$memberId, $from, $to]);
-    }
-
-    /** @return array<int,array{date:string,status:string,ref:int|string|null}> */
-    private static function mezmurRows(\mysqli $conn, int $memberId, string $from, string $to): array
-    {
-        $sectionExpr = MemberCategory::sqlSectionExpr('m');
-        $packetFilter = self::legacyRowsEligible()
-            ? "(ms.id IS NULL OR ms.status IN ('submitted','approved'))"
-            : "(ms.id IS NOT NULL AND ms.status IN ('submitted','approved'))";
-        $sql = "SELECT COALESCE(x.attendance_date, s.session_date) AS d, x.status AS s, x.session_id AS ref
-                FROM mezmur_attendance x
-                JOIN members m ON m.id = x.member_id
-                LEFT JOIN mezmur_sessions s ON s.id = x.session_id
-                LEFT JOIN mezmur_submissions ms
-                       ON ms.attendance_date = COALESCE(x.attendance_date, s.session_date)
-                      AND ms.section = $sectionExpr
-                WHERE x.member_id = ?
-                  AND COALESCE(x.attendance_date, s.session_date) BETWEEN ? AND ?
-                  AND x.status IN ('present','absent','late','excused')
-                  AND $packetFilter
-                ORDER BY d ASC, x.id ASC";
         return self::fetchRows($conn, $sql, 'iss', [$memberId, $from, $to]);
     }
 

@@ -3,8 +3,8 @@
  * ════════════════════════════════════════════════════════════
  * Attendance PDF Report Service (Information + HR departments)
  * ════════════════════════════════════════════════════════════
- * Generates governed attendance reports over the TWO independent
- * sources (Education classes, Mezmur sections) using the bundled
+ * Generates governed attendance reports over the Education source
+ * (class-based) using the bundled
  * TCPDF engine with an Ethiopic-capable font. HR attendance was
  * retired (2026-10-07) and dropped as a report source (2026-10-18).
  *
@@ -19,7 +19,6 @@
  *
  * Report templates:
  *   general   — KPI band + department comparison (all sources)
- *   sections  — section-based detail (mezmur)
  *   classes   — class-based detail (education)
  *   member    — one member's attendance history per source
  *   full      — combined deep-dive (all of the above)
@@ -73,10 +72,6 @@ class PdfReportService
             case 'general':
                 self::renderGeneral($pdf, $conn, $from, $to);
                 break;
-            case 'sections':
-                // Only Mezmur is section-based now (HR source retired 2026-10-18).
-                self::renderGroupDetail($pdf, $conn, 'mezmur', $from, $to);
-                break;
             case 'classes':
                 self::renderGroupDetail($pdf, $conn, 'edu', $from, $to);
                 break;
@@ -85,7 +80,7 @@ class PdfReportService
                 break;
             case 'full':
                 self::renderGeneral($pdf, $conn, $from, $to);
-                foreach (['mezmur', 'edu'] as $src) {
+                foreach (['edu'] as $src) {
                     $pdf->AddPage();
                     self::renderGroupDetail($pdf, $conn, $src, $from, $to);
                 }
@@ -135,9 +130,8 @@ class PdfReportService
         $pdf->Ln(4);
         $pdf->SetFont(self::FONT, '', 8.5);
         $pdf->MultiCell(0, 5,
-            "Note: each department records attendance with its OWN takers on its OWN tables. " .
-            "Education is class-based (teachers); Mezmur is section-based. HR takes no attendance. " .
-            "Figures are compared side-by-side and are never combined into one total.",
+            "Note: Education records attendance with its OWN teachers on its OWN tables. " .
+            "HR takes no attendance. Figures are per department and are never combined.",
             0, 'L');
     }
 
@@ -236,22 +230,6 @@ class PdfReportService
                  FROM attendance a LEFT JOIN classes c ON c.id = a.class_id
                  WHERE a.member_id = ? AND a.attendance_date BETWEEN ? AND ?
                  ORDER BY a.attendance_date DESC LIMIT " . self::MAX_MEMBER_ROWS,
-                [$memberId, $fromD, $toD]
-            )
-        );
-
-        // Mezmur (section-based) history
-        self::memberSourceTable(
-            $pdf,
-            'Mezmur (section-based, recorded by mezmur takers)',
-            self::fetchHistory(
-                $conn,
-                "SELECT m.attendance_date, m.status,
-                        COALESCE(NULLIF(TRIM(mb.current_section), ''), '—') AS grp, m.notes
-                 FROM mezmur_attendance m
-                 LEFT JOIN members mb ON mb.id = m.member_id
-                 WHERE m.member_id = ? AND m.attendance_date BETWEEN ? AND ?
-                 ORDER BY m.attendance_date DESC LIMIT " . self::MAX_MEMBER_ROWS,
                 [$memberId, $fromD, $toD]
             )
         );

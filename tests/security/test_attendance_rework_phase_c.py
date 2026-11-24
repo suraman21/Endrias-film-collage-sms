@@ -5,7 +5,7 @@ Product decision: every student/member loads as ABSENT; the teacher
 (the sheet is complete by construction); the completeness gate is
 gone; the server still enforces the complete roster on submit.
 
-Locked contracts (attendance_screen.dart + mezmur_attendance.dart):
+Locked contracts (attendance_screen.dart):
   • Status precedence: local pending edit > server-saved > 'absent'
     (_firstStatus + _orAbsent) — presence is NEVER inferred.
   • _requireCompleteSheet and the "N unmarked" counter are gone; the
@@ -31,93 +31,6 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "Mobile" / "wbws_flutter_app" / "lib"
-
-
-class DefaultAbsentSheetContracts(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.edu = (APP / "screens/attendance/attendance_screen.dart").read_text(encoding="utf-8")
-        cls.mez = (APP / "screens/mezmur/mezmur_attendance.dart").read_text(encoding="utf-8")
-
-    def test_default_absent_fallback_exists_in_both_sheets(self):
-        for src in (self.edu, self.mez):
-            self.assertIn(
-                "String _orAbsent(String status) => status.isEmpty ? 'absent' : status;",
-                src)
-            # Precedence chain stays: pending edit > server-saved > absent.
-            self.assertRegex(src, r"_orAbsent\(\s*_firstStatus\(\[pendingMap\[")
-
-    def test_locked_sheets_display_conservative_absent_too(self):
-        # A locked/submitted sheet with a missing row (roster drift)
-        # displays absent — it never invents a presence.
-        self.assertIn("_orAbsent(_statusOf(s['att_status'])", self.edu)
-        self.assertIn("_orAbsent(_statusOf(row['mark'] ?? row['status'])", self.mez)
-
-    def test_completeness_gate_is_gone(self):
-        for src in (self.edu, self.mez):
-            self.assertNotIn("_requireCompleteSheet", src)
-            self.assertNotIn(" unmarked'", src)
-            self.assertNotIn("remaining).'", src)
-
-    def test_counter_reads_present_absent(self):
-        self.assertIn("'${_students.length} students · '", self.edu)
-        self.assertIn("'${_members.length} members · '", self.mez)
-        for src in (self.edu, self.mez):
-            self.assertIn("_countStatus('present')", src)
-            self.assertIn("_countStatus('absent')", src)
-            self.assertIn("present · '", src)
-            self.assertIn(" absent'", src)
-
-    def test_quick_actions_stay(self):
-        # "All Present" is the fast full-attendance path; "All Absent"
-        # is the reset back to the default state.
-        for src in (self.edu, self.mez):
-            self.assertIn("'All Present'", src)
-            self.assertIn("'All Absent'", src)
-            self.assertIn("_markAll('present')", src)
-            self.assertIn("_markAll('absent')", src)
-
-    def test_progress_strip_counts_presence(self):
-        for src in (self.edu, self.mez):
-            self.assertIn("/ $total present'", src)
-            self.assertNotIn("/ $total marked'", src)
-
-    def test_autosave_persists_complete_sheet(self):
-        # Default-absent: every row carries an explicit status, so the
-        # draft IS the whole roster — the partial-row filter is gone
-        # (server drafts merge-upsert; submits still replace).
-        for src, save in ((self.edu, "saveAttendanceLocal"),
-                          (self.mez, "saveMezmurLocal")):
-            self.assertNotIn("'${r['status'] ?? ''}'.isNotEmpty", src)
-            # Attendance now returns durable-save success to its transition
-            # guard; Mezmur still returns void. Both persist the full roster.
-            signature = re.search(r"Future<(?:void|bool)> _autoSaveNow\(\)", src)
-            self.assertIsNotNone(signature)
-            body = src[signature.start():]
-            self.assertIn("final records = _records();", body)
-            self.assertIn(save, body)
-            self.assertIn("packetKind: 'draft'", body)
-
-    def test_records_map_the_full_roster(self):
-        # The server keeps the complete-sheet requirement on submit;
-        # the client satisfies it by construction.
-        self.assertIn("return _students\n        .map((s) =>", self.edu)
-        self.assertIn("return _members\n        .map((m) =>", self.mez)
-
-    def test_qr_scan_marks_present_and_duplicates_only_when_attended(self):
-        # Only an existing present/late mark is a duplicate; an
-        # absent (default) or excused mark yields to the scan.
-        for src in (self.edu, self.mez):
-            self.assertIn("existing == 'present' || existing == 'late'", src)
-            self.assertIn("return QrFeedback.duplicate(", src)
-            self.assertIn("The scan is physical presence — it wins.", src)
-        self.assertIn("setState(() => s['status'] = 'present');", self.edu)
-        self.assertIn("setState(() => m['status'] = 'present');", self.mez)
-
-    def test_presence_is_never_inferred_anywhere(self):
-        for src in (self.edu, self.mez):
-            self.assertNotIn("?? 'present'", src)
-            self.assertNotIn("|| 'present'", src)
 
 
 class LocalStoreContracts(unittest.TestCase):

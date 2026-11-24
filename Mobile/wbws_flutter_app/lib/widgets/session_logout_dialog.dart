@@ -22,8 +22,7 @@ Future<void> showSessionLogoutDialog(BuildContext context) async {
           'This phone has ${inventory.workSummary}.\n\n'
           'Keep work signs out and allows only the same account to recover it. '
           'Discard permanently removes that work, private caches, saved '
-          'credentials, and the app passcode.'
-          '${_sharedHymnNote(inventory)}',
+          'credentials, and the app passcode.',
         ),
         actions: [
           TextButton(
@@ -56,7 +55,7 @@ Future<void> showSessionLogoutDialog(BuildContext context) async {
         title: const Text('Sign out?'),
         content: Text(
           'Private read caches, saved credentials, and the app passcode will '
-          'be removed from this phone.${_sharedHymnNote(inventory)}',
+          'be removed from this phone.',
         ),
         actions: [
           TextButton(
@@ -78,8 +77,3 @@ Future<void> showSessionLogoutDialog(BuildContext context) async {
   await session.applyLogoutChoice(choice ?? LogoutChoice.cancel);
 }
 
-String _sharedHymnNote(LocalDataInventory inventory) {
-  if (inventory.sharedHymnOperations <= 0) return '';
-  return '\n\n${inventory.sharedHymnOperations} shared hymn operation(s) are '
-      'not private-account work and will be kept.';
-}

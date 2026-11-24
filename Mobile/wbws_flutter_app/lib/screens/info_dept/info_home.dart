@@ -112,7 +112,7 @@ class InfoHomeScreenState extends State<InfoHomeScreen> {
         children: [
           FeatureTile(label: 'Members', icon: Icons.people_rounded, color: AppTheme.primary,
               onTap: () => Navigator.of(context).push(SmoothPageRoute(page: const MemberListScreen()))),
-          // Attendance alerting Phase 2 (Education + Mezmur, close with outcome).
+          // Attendance alerting Phase 2 (Education, close with outcome).
           if (AppUpdateService().featureEnabled('attendance_v2', fallback: false))
             FeatureTile(label: 'Warnings', icon: Icons.warning_amber_rounded, color: AppTheme.warning,
                 onTap: () => Navigator.of(context).push(SmoothPageRoute(page: const AttendanceWarningsScreen()))),
@@ -137,8 +137,8 @@ class InfoHomeScreenState extends State<InfoHomeScreen> {
             const Text('Analytics is read-only here', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             const Text(
-              'The Information department views and compares attendance from Education, '
-              'Mezmur and HR — it never records attendance. Full charts, comparisons and '
+              'The Information department views and compares attendance from Education '
+              'and HR — it never records attendance. Full charts, comparisons and '
               'exports live in the Analytics Hub on the website.',
               style: TextStyle(fontSize: 11.5, height: 1.4),
             ),

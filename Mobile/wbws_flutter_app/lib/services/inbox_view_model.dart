@@ -134,14 +134,14 @@ int? warningTargetId(Map<String, dynamic> n) {
 /// `target: {kind: 'attendance_sheet', id, department, class_id, section,
 /// attendance_date}`. Returns null for any other row (callers fall back to
 /// the member target / mark-read behaviour).
-/// Result keys: department ('edu'|'mezmur'), classId (int, 0 = none),
+/// Result keys: department ('edu'), classId (int, 0 = none),
 /// section, date (Gregorian yyyy-MM-dd, '' when missing).
 Map<String, Object>? sheetTarget(Map<String, dynamic> n) {
   final target = n['target'];
   if (target is! Map) return null;
   if ((target['kind'] ?? '').toString() != 'attendance_sheet') return null;
   final dept = (target['department'] ?? '').toString();
-  if (dept != 'edu' && dept != 'mezmur') return null;
+  if (dept != 'edu') return null;
   final rawClass = target['class_id'];
   final classId = rawClass is num ? rawClass.toInt() : int.tryParse('${rawClass ?? ''}') ?? 0;
   final date = (target['attendance_date'] ?? '').toString();

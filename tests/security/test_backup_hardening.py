@@ -90,7 +90,7 @@ class BackupHardeningTests(unittest.TestCase):
         Measured on the 2026-10-02 production export: a plain phpMyAdmin import
         dies at ERROR 1452 line 9746 with 31/42 foreign keys, while an export
         wrapped in FOREIGN_KEY_CHECKS=0 reports a complete 42/42 and still
-        carries 99 orphaned mezmur_hymn_categories rows -- constraints created
+        carries orphaned rows -- constraints created
         while checking is off are never validated.
         """
         runbook = (ROOT / "docs/audits/DEPLOYMENT_RUNBOOK.md").read_text(encoding="utf-8")

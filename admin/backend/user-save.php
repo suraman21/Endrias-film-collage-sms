@@ -97,15 +97,12 @@ $validRoles = [
     'edu_dept',
     'finance_dept',
     'material_dept',
-    'mezmur_dept',
     'teacher',
     'attendance_taker',
     // Website/CMS manager (2026-08-31): created by the super admin here;
     // content editors log in and land on the Website Content dashboard.
     'content_editor',
-    // Department-owned takers (2026-08-28): departments create these
-    // through api_dept_takers.php; admins may also create them here.
-    'mezmur_attendance_taker',
+    // Legacy department taker identifier retained for account compatibility.
     'hr_attendance_taker',
     // ACM console seat (S1): super_admin creates these here; member and
     // parent login roles are deliberately NOT listed — they are
@@ -118,12 +115,8 @@ $rolePermissions = [
     'super_admin' => $validRoles, // Can create all
     'school_admin' => $validRoles, // Can create all
     'edu_dept' => ['teacher'], // Can only create teacher accounts
-    // Department-owned attendance takers (mezmur_attendance_taker /
-    // hr_attendance_taker) are created ONLY through the governed
-    // api_dept_takers.php endpoint — the service layer enforces the
-    // department attribution server-side. (The old entries that let
-    // info/mezmur create shared attendance_takers here were dead code:
-    // ROLE_MAP restricts this file to super_admin.)
+    // Legacy department taker accounts are retained for compatibility;
+    // no department creates them any more.
 ];
 
 // Check if current user can create this role

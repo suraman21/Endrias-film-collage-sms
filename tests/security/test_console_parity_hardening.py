@@ -15,7 +15,7 @@ Born from two production bugs (2026-08):
    HR users only ever saw "You do not have permission".  UX research
    is unanimous: a menu/surface that can never be enabled for a role
    must be hidden, while the server keeps enforcing (defence in
-   depth).  The same rule produced the mezmur Submissions relayout:
+   depth).  The same rule produced the Submissions relayout:
    one review surface that mirrors the Education department exactly
    (header + filters, Drafts/Submitted/Insights tabs, stats strip,
    packet table, insights pane) with no duplicate "confuser" cards.
@@ -92,49 +92,13 @@ class HrConsoleSurfaceTests(unittest.TestCase):
 
     def test_hr_submission_console_removed(self):
         # HR attendance retired (2026-10-07) and its history console removed
-        # (2026-10-18). HR analyses Education + Mezmur via the shared hub.
+        # (2026-10-18). HR analyses Education via the shared hub.
         self.assertNotIn('id="section-submissions"', self.hr)
         self.assertNotIn("HrSub", self.hr)
         self.assertNotIn("api_hr_attendance.php", self.hr)
         self.assertIn("include __DIR__ . '/sections/attendance_analytics_hub.php'", self.hr)
 
 
-class MezmurSubmissionsParityTests(unittest.TestCase):
-    """Mezmur's Submissions section mirrors the Education department
-    layout: one header with filters + Excel/Refresh, the same three
-    tabs, stats strip, packet table and insights pane — and none of
-    the retired duplicate cards."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.mz = (ROOT / "frontend" / "pages" / "mezmur_dept.php").read_text(
-            encoding="utf-8", errors="replace")
-        cls.edu = (ROOT / "admin" / "dashboards" / "edu_dept.php").read_text(
-            encoding="utf-8", errors="replace")
-
-    def test_same_tab_workflow_as_edu(self):
-        # Education reference workflow: Drafts | Submitted | Insights.
-        for tab in ("Drafts", "Submitted", "Insights"):
-            self.assertIn(tab, self.edu)
-            self.assertIn(tab, self.mz)
-        for el in (
-            "mzSubTabDraft", "mzSubTabSubmitted", "mzSubTabInsights",
-            "mzSubTabStatus", "mzSubStatsRow",
-            "mzSubmissionsList", "mzSubTbody", "mzSubInsights",
-        ):
-            self.assertIn(el, self.mz, el)
-
-    def test_filters_live_in_the_header_like_edu(self):
-        head = self.mz[self.mz.find('<div id="mzSessionListView">'):
-                       self.mz.find('class="sub-tabs"')]
-        for el in ("mzSubSection", "mzSubFrom", "mzSubTo",
-                   "exportSubmissions", "loadSubmissions"):
-            self.assertIn(el, head, el)
-
-    def test_retired_confuser_cards_are_gone(self):
-        for marker in (
-            "Review Inbox",
-            "clock-rotate-left",   # retired day-history card icon/title
             "mzSessFrom",
             "mzSessTbody",
             "mzSessPagination",

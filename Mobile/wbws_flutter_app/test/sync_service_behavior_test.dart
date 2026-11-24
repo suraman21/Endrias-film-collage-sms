@@ -34,10 +34,10 @@ import 'package:fkss_app/services/sync_service.dart';
 ///     stays source-verified (python pin + mutation M28). What IS proven here
 ///     is the mechanism that makes it work: the request is emitted with
 ///     `requiresNetwork: true`.
-///   * The real [HymnStore] and [MezmurDownloadManager] singletons are reached
-///     inside `_drain`'s own try/catch and fail there without a database. That
-///     is pre-existing behaviour (finding B-2) and is why these tests assert on
-///     scheduler and claim observations rather than on `failed` counts.
+///   * The drain's own try/catch swallows singleton failures without a
+///     database. That is pre-existing behaviour (finding B-2) and is why
+///     these tests assert on scheduler and claim observations rather than
+///     on `failed` counts.
 
 /// Records what the coordinator asked the platform to do, without doing it.
 class _RecordingScheduler implements BackgroundSyncScheduler {
@@ -151,13 +151,7 @@ class _FakeDb implements LocalDb {
   Future<int> getPendingGradesCount() async => 0;
 
   @override
-  Future<int> getPendingMezmurCount() async => 0;
-
-  @override
   Future<int> getPendingHrCount() async => 0;
-
-  @override
-  Future<int> getPendingHymnOpsCount() async => 0;
 
   @override
   Future<OutboxInventory> getOutboxInventory({DateTime? now}) async =>

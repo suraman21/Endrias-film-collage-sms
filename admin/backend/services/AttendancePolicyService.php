@@ -17,7 +17,7 @@ require_once __DIR__ . '/SecurityAuditService.php';
 final class AttendancePolicyService
 {
     public const TABLE = 'attendance_policies';
-    public const DEPARTMENTS = ['edu', 'mezmur'];
+    public const DEPARTMENTS = ['edu'];
 
     public const DEFAULTS = [
         'consecutive_threshold' => 5,
@@ -227,7 +227,7 @@ final class AttendancePolicyService
     {
         return [
             'department' => $dept,
-            'label' => $dept === 'edu' ? 'Education' : 'Mezmur',
+            'label' => 'Education',
             'consecutive_threshold' => (int)($row['consecutive_threshold'] ?? self::DEFAULTS['consecutive_threshold']),
             'prolonged_threshold' => (int)($row['prolonged_threshold'] ?? self::DEFAULTS['prolonged_threshold']),
             'critical_threshold' => (int)($row['critical_threshold'] ?? self::DEFAULTS['critical_threshold']),

@@ -20,10 +20,9 @@ ROOT CAUSE (proven from the production phpMyAdmin dump):
   • Prior art: scripts/find_stored_mojibake.php (then tools/) already lists
     academic_years.year_name as a historically double-encoded column.
 
-FIX (pinned here):
+    FIX (pinned here):
   • sql/066_academic_year_charset_repair.sql — idempotent CONVERT TO
-    utf8mb4 for academic_years (+ sync_feed_state hygiene), explicitly
-    NOT touching mezmur_hymn_words (binary hex word storage by design).
+    utf8mb4 for academic_years (+ sync_feed_state hygiene).
   • save_academic_year / save_term catch blocks now map mysqli exceptions:
     1062 → friendly duplicate message, 1366 → charset-repair instructions,
     anything else → generic message WITH the reportInternalError log
@@ -59,12 +58,6 @@ class CharsetMigrationPinned(unittest.TestCase):
     def test_sync_feed_state_hygiene_only(self):
         self.assertIn("ALTER TABLE `sync_feed_state`", self.sql)
         self.assertIn("hygiene", self.sql)
-
-    def test_never_touches_mezmur_hymn_words(self):
-        # binary hex word storage — conversion would risk re-encoding
-        self.assertNotIn("ALTER TABLE `mezmur_hymn_words`", self.sql)
-        self.assertIn("mezmur_hymn_words is latin1 on purpose", self.sql)
-
 
 class SavePathHardeningPinned(unittest.TestCase):
     def setUp(self):

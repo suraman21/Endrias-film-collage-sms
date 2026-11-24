@@ -82,14 +82,6 @@ class EcOnlyBrowserExports(unittest.TestCase):
         self.assertIn("map(d=>[fD(d.date)", src)
         self.assertIn("function fDT(d)", src)
 
-    def test_mezmur_exports(self):
-        src = code_lines(read("frontend/js/mezmur.js"))
-        self.assertIn("p.attendance_date ? fmtDate(p.attendance_date, 'medium') : ''", src)
-        self.assertIn("fmtDateTime(p.updated_at)", src)
-        self.assertIn("m.last_attended ? fmtDate(m.last_attended, 'medium') : ''", src)
-        self.assertNotIn("p.attendance_date || ''", src)
-        self.assertNotIn("m.last_attended || ''", src)
-
     def test_school_admin_member_exports(self):
         src = code_lines(read("admin/dashboards/school_admin.php"))
         self.assertEqual(src.count("m.created_at?fmtDate(m.created_at):''"), 2)

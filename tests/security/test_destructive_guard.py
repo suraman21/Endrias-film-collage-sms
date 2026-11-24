@@ -228,7 +228,7 @@ class GuardIsStructurallySound(unittest.TestCase):
         for php in sorted((ROOT / "tests").rglob("*.php")):
             body = php.read_text(encoding="utf-8", errors="replace")
             # Anchor on executed syntax, never on bare prose: this file and
-            # the guard both *describe* DROP TABLE, and mezmur_phase5_smoke
+            # the guard both *describe* DROP TABLE, and phase5_smoke
             # contains a "DROP TABLE" SQL-injection payload inside a string
             # it asserts is safely rejected. None of those are destructive.
             if not executed.search(body):

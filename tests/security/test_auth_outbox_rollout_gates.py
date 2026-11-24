@@ -24,7 +24,6 @@ class Build24ReleaseGateTest(unittest.TestCase):
         cls.session = (MOBILE / "lib/services/session_service.dart").read_text(encoding="utf-8")
         cls.sync = (MOBILE / "lib/services/sync_service.dart").read_text(encoding="utf-8")
         cls.comm = (MOBILE / "lib/services/comm_outbox_service.dart").read_text(encoding="utf-8")
-        cls.hymn = (MOBILE / "lib/services/hymn_store.dart").read_text(encoding="utf-8")
 
     def test_release_version_sources_are_build_42(self):
         # Build 48: adaptive landmark-driven photo capture & offline outbox.
@@ -63,7 +62,7 @@ class Build24ReleaseGateTest(unittest.TestCase):
         self.assertIn("Future<void>? _checkFuture", self.update)
 
     def test_all_outbound_workers_are_gated_between_claims(self):
-        for source in (self.sync, self.comm, self.hymn):
+        for source in (self.sync, self.comm):
             self.assertIn("bool Function()? drainEnabledGate", source)
             self.assertIn("bool get _drainsAllowed", source)
             self.assertIn("_drainsAllowed", source)
@@ -75,10 +74,6 @@ class Build24ReleaseGateTest(unittest.TestCase):
             "claimNextDueHead", 1
         )[0]
         self.assertIn("_drainsAllowed", comm_preclaim)
-        self.assertRegex(
-            self.hymn,
-            r"while \(_ownsGeneration\(generation\) && _drainsAllowed && scans < 100\)",
-        )
 
     def test_release_compile_contracts_match_worker_and_database_helpers(self):
         local_db = (MOBILE / "lib/services/local_db.dart").read_text(encoding="utf-8")
@@ -148,14 +143,13 @@ class Build24ReleaseGateTest(unittest.TestCase):
             "Live role/scope downgrade",
             "Queue policy matrix",
             "Communication FIFO",
-            "Hymn durability/dependencies",
             "Exact legacy-operation races",
             "Explicit logout and forgot PIN",
             "Kill-switch drill",
             "Low-memory hardware",
         ):
             self.assertIn(heading, self.runbook)
-        for operation in ("attendance", "grades", "Mezmur attendance", "HR attendance"):
+        for operation in ("attendance", "grades", "HR attendance"):
             self.assertIn(operation, self.runbook)
 
     def test_runbook_prohibits_sensitive_observability(self):

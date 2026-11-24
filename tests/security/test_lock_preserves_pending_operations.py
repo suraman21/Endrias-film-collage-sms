@@ -50,7 +50,6 @@ class LockPreservesPendingOperations(unittest.TestCase):
         for name in (
             "screens/attendance/attendance_screen.dart",
             "screens/teacher/teacher_grades.dart",
-            "screens/mezmur/mezmur_attendance.dart",
         ):
             with self.subTest(screen=name):
                 source = (LIB / name).read_text(encoding="utf-8")

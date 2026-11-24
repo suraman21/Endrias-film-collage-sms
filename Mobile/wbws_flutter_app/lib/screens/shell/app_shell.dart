@@ -25,10 +25,6 @@ import '../material/material_home.dart';
 // Shared screens
 import '../attendance/attendance_screen.dart';
 import '../members/member_list_screen.dart';
-import '../mezmur/mezmur_home.dart';
-import '../mezmur/mezmur_attendance.dart';
-import '../mezmur/mezmur_hymns.dart';
-import '../mezmur/mezmur_analytics.dart';
 import '../profile/profile_screen.dart';
 
 /// AppShell — Role-based bottom navigation with auto-refresh,
@@ -54,8 +50,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   final _financeHomeKey = GlobalKey<FinanceHomeScreenState>();
   final _materialHomeKey = GlobalKey<MaterialHomeScreenState>();
   final _attendanceKey = GlobalKey<AttendanceScreenState>();
-  final _mezmurHomeKey = GlobalKey<MezmurHomeScreenState>();
-  final _mezmurAttKey = GlobalKey<MezmurAttendanceScreenState>();
   final _gradesKey = GlobalKey<TeacherGradesScreenState>();
   final Map<String, Widget> _openedTabs = {};
 
@@ -103,7 +97,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       _api.userRole,
       attendanceEnabled: config.featureEnabled('attendance'),
       gradesEnabled: config.featureEnabled('grades'),
-      mezmurEnabled: config.featureEnabled('mezmur'),
     );
   }
 
@@ -225,10 +218,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       case UserRoles.materialDept:
         _materialHomeKey.currentState?.refresh();
         break;
-      case UserRoles.mezmurDept:
-      case UserRoles.mezmurTaker:
-        _mezmurHomeKey.currentState?.refresh();
-        break;
       case UserRoles.hrTaker:
         break; // HR attendance was retired (2026-10-07); the taker home is a static notice.
     }
@@ -248,15 +237,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return _buildHomeForRole();
       case 'attendance':
         return AttendanceScreen(key: _attendanceKey);
-      case 'mezmur_attendance':
-        return MezmurAttendanceScreen(key: _mezmurAttKey);
-      case 'mezmur_hymns':
-        // P31: while the hymn library is showing, the library owns the
-        // bottom of the screen — the main bar is hidden and a back
-        // icon in the library's app bar returns here.
-        return MezmurHymnsScreen(onBack: () => _selectTabById('home'));
-      case 'mezmur_analytics':
-        return const MezmurAnalyticsScreen();
       case 'grades':
         return TeacherGradesScreen(key: _gradesKey);
       case 'timetable':
@@ -272,8 +252,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         switch (_api.userRole) {
           case UserRoles.eduDept:
             return const ReviewInboxScreen(dept: 'edu');
-          case UserRoles.mezmurDept:
-            return const ReviewInboxScreen(dept: 'mezmur');
           default:
             return const ReviewHubScreen();
         }
@@ -289,8 +267,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       UserRoles.attendanceTaker: 'attendance',
       UserRoles.financeDept: 'finance',
       UserRoles.materialDept: 'material',
-      UserRoles.mezmurDept: 'mezmur',
-      UserRoles.mezmurTaker: 'mezmur',
     }[_api.userRole];
     if (roleFeature != null
         && !AppUpdateService().featureEnabled(roleFeature)) {
@@ -312,13 +288,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return FinanceHomeScreen(key: _financeHomeKey);
       case UserRoles.materialDept:
         return MaterialHomeScreen(key: _materialHomeKey);
-      case UserRoles.mezmurDept:
-        return MezmurHomeScreen(key: _mezmurHomeKey);
-      case UserRoles.mezmurTaker:
-        // Department-owned mezmur takers use the mezmur home but are
-        // not staff — library curation / analytics / taker management
-        // stay hidden (see MezmurHomeScreen._isStaff).
-        return MezmurHomeScreen(key: _mezmurHomeKey);
       case UserRoles.hrTaker:
         return const HrTakerHomeScreen();
       case UserRoles.hrDept:
@@ -373,17 +342,8 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     }
     if (_currentIndex >= _tabs.length) _currentIndex = 0;
 
-    // P31: the hymn library carries its own bottom navigation, so the
-    // main bar steps aside while that tab is active (no stacked bars).
-    final hideMainNav = _tabs.isNotEmpty &&
-        _currentIndex < _tabs.length &&
-        _tabs[_currentIndex].id == 'mezmur_hymns';
-
     return Scaffold(
       backgroundColor: AppTheme.bgLight,
-      // P34: the now-playing bar now lives above the Navigator
-      // (MezmurMiniPlayerHost in main.dart), so the shell no longer
-      // needs a Stack to overlay it.
       body: Column(
         children: [
           // Unified status strip — single calm line, offline-first.
@@ -405,7 +365,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           ),
         ],
       ),
-      bottomNavigationBar: hideMainNav ? null : SafeArea(
+      bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           decoration: BoxDecoration(

@@ -37,7 +37,7 @@
  *        public render function catches Throwable, reports to
  *        error_log (→ /monitor), and degrades to rendering nothing.
  *        A broken notification UI may never blank a whole dashboard —
- *        the exact regression that took the mezmur & finance shells
+ *        the exact regression that took the finance shell
  *        down ("Call to undefined function e()").
  *     3. Zero host-helper calls: escaping uses the private ncEsc()
  *        instead of the host's e(); CSRF falls back to '' only when

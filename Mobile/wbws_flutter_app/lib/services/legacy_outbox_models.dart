@@ -4,7 +4,6 @@ import 'dart:collection';
 enum LegacyOperationKind {
   attendance,
   grades,
-  mezmur,
   hr,
 }
 

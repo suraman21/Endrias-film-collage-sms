@@ -6,17 +6,12 @@ import 'attendance_delta.dart';
 import 'attendance_original_year.dart';
 import 'attendance_sync_receipt.dart';
 import 'interrupted_database_migration.dart';
-import 'amharic_text.dart' as amharic;
-import 'search_index_policy.dart';
-import 'search_matching.dart';
-import 'synced_lyrics_merge.dart';
 import 'package:path/path.dart';
 
-import 'taxonomy_reconcile.dart';
-import 'hymn_outbox_models.dart';
 import 'legacy_outbox_models.dart';
 import 'local_schema_v34.dart';
 import 'local_schema_v43.dart';
+import 'local_schema_v44.dart';
 import 'sync_attempt_models.dart';
 import 'sync_execution.dart';
 import 'session_models.dart';
@@ -46,8 +41,8 @@ class LocalDb {
   ///
   /// Startup inventory and authorization-scope cleanup must traverse the same
   /// physical tables. Keeping one registry prevents a migration-only staging
-  /// name from being copied into runtime SQL (the schema-v10 staging table is
-  /// renamed to `cached_mezmur_sheet` before that migration completes).
+  /// name from being copied into runtime SQL (a staging table is renamed to
+  /// its final name before that migration completes).
   static const List<String> _privateReadCacheTables = [
     'cached_classes',
     'cached_students',
@@ -57,10 +52,6 @@ class LocalDb {
     'cached_members',
     'cached_attendance',
     'cached_grade_sheets',
-    'cached_mezmur_sheet',
-    'cached_mezmur_sections',
-    'cached_mezmur_days',
-    'cached_mezmur_analytics_last',
     'cached_review_packets',
     'cached_review_packet_details',
     'cached_review_stats',
@@ -133,6 +124,7 @@ class LocalDb {
         await db.execute(gradesSyncReceiptSql);
         await db.execute(gradesSyncReceiptIndexSql);
         await _migrateToV43(db);
+        await _migrateToV44(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -226,77 +218,10 @@ class LocalDb {
             )
           ''');
         }
-        if (oldVersion < 9) {
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS pending_mezmur (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              date TEXT NOT NULL,
-              program TEXT,
-              member_id INTEGER NOT NULL,
-              status TEXT NOT NULL,
-              packet_kind TEXT NOT NULL DEFAULT 'draft',
-              client_op_id TEXT,
-              synced INTEGER NOT NULL DEFAULT 0,
-              created_at TEXT NOT NULL,
-              synced_at TEXT,
-              sync_error TEXT
-            )
-          ''');
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_mezmur_sheet (
-              date TEXT PRIMARY KEY,
-              response_json TEXT NOT NULL,
-              updated_at TEXT
-            )
-          ''');
-        }
-        if (oldVersion < 10) {
-          // Phase 5: mezmur attendance becomes section-scoped (teacher
-          // clone). pending_mezmur gains section + notes; the sheet cache
-          // key becomes (date, section); the section picker gets a cache.
-          try {
-            await db.execute(
-                "ALTER TABLE pending_mezmur ADD COLUMN section TEXT NOT NULL DEFAULT ''");
-          } catch (_) {}
-          try {
-            await db.execute(
-                'ALTER TABLE pending_mezmur ADD COLUMN notes TEXT');
-          } catch (_) {}
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_mezmur_sheet_v2 (
-              date TEXT NOT NULL,
-              section TEXT NOT NULL DEFAULT '',
-              response_json TEXT NOT NULL,
-              updated_at TEXT,
-              PRIMARY KEY (date, section)
-            )
-          ''');
-          // Carry over phase-4 full-roster caches as section ''.
-          await db.execute('''
-            INSERT OR IGNORE INTO cached_mezmur_sheet_v2 (date, section, response_json, updated_at)
-            SELECT date, '', response_json, updated_at FROM cached_mezmur_sheet
-          ''');
-          await db.execute('DROP TABLE IF EXISTS cached_mezmur_sheet');
-          await db.execute(
-              'ALTER TABLE cached_mezmur_sheet_v2 RENAME TO cached_mezmur_sheet');
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_mezmur_sections (
-              id INTEGER PRIMARY KEY CHECK (id = 1),
-              sections_json TEXT NOT NULL,
-              updated_at TEXT
-            )
-          ''');
-        }
-        if (oldVersion < 11) {
-          // Offline-first hymn library (local-first model):
-          // full local copy + mutation outbox + delta-sync cursor.
-          await _createHymnTables(db);
-        }
         if (oldVersion < 12) {
           // Phase B (2026-08): HR department attendance — HR's OWN
-          // section-based domain. Structurally identical to the mezmur
-          // tables but fully separate: HR data never mixes with Mezmur
-          // or Education, on the server or on the phone.
+          // section-based domain with its own tables: HR data never mixes
+          // with Education, on the server or on the phone.
           await db.execute('''
             CREATE TABLE IF NOT EXISTS pending_hr (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -330,130 +255,6 @@ class LocalDb {
             )
           ''');
         }
-        if (oldVersion < 13) {
-          // Mezmur hymns: length + language taxonomy flags (Feature 2).
-          try {
-            await db.execute(
-                "ALTER TABLE cached_hymns ADD COLUMN length TEXT NOT NULL DEFAULT 'long'");
-          } catch (_) {}
-          try {
-            await db.execute(
-                "ALTER TABLE cached_hymns ADD COLUMN language TEXT NOT NULL DEFAULT 'amharic'");
-          } catch (_) {}
-        }
-        if (oldVersion < 14) {
-          // Feature 3: singer catalogue + many-to-many hymn associations.
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_mezmur_zemarians (
-              id INTEGER PRIMARY KEY,
-              name TEXT NOT NULL,
-              name_am TEXT,
-              image_url TEXT NULL,
-              sort_order INTEGER NOT NULL DEFAULT 0,
-              is_active INTEGER NOT NULL DEFAULT 1,
-              updated_at TEXT
-            )
-          ''');
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_hymn_categories (
-              hymn_id INTEGER NOT NULL,
-              category_id INTEGER NOT NULL,
-              PRIMARY KEY (hymn_id, category_id)
-            )
-          ''');
-          await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_chc_category ON cached_hymn_categories (category_id)');
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS cached_hymn_zemarians (
-              hymn_id INTEGER NOT NULL,
-              zemarian_id INTEGER NOT NULL,
-              PRIMARY KEY (hymn_id, zemarian_id)
-            )
-          ''');
-          await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_chz_zemarian ON cached_hymn_zemarians (zemarian_id)');
-        }
-        if (oldVersion < 15) {
-          await _createHymnSearchIndex(db);
-          await _rebuildHymnSearchIndex(db);
-        }
-        if (oldVersion < 17) {
-          // P30: two-level taxonomy — mains parent their subs; covers.
-          try {
-            await db.execute(
-                'ALTER TABLE cached_mezmur_categories ADD COLUMN parent_id INTEGER NULL');
-          } catch (_) {}
-          try {
-            await db.execute(
-                'ALTER TABLE cached_mezmur_categories ADD COLUMN image_url TEXT NULL');
-          } catch (_) {}
-        }
-        if (oldVersion < 19) {
-          // P34: singer cover images.
-          try {
-            await db.execute(
-                'ALTER TABLE cached_mezmur_zemarians ADD COLUMN image_url TEXT NULL');
-          } catch (_) {}
-        }
-        if (oldVersion < 20) {
-          // P0 audio + synced lyrics: metadata-only columns on the hymn
-          // cache. Audio BYTES never live here — this stores the R2
-          // status + public URL so the player can stream directly and
-          // timed LRC text can render offline. Guarded ALTERs (a fresh
-          // v20 install already carries the columns from the DDL).
-          final colDefs = <String, String>{
-            "audio_status": "TEXT NOT NULL DEFAULT 'none'",
-            'audio_url': 'TEXT NULL',
-            'audio_format': 'TEXT NULL',
-            'audio_size': 'INTEGER NULL',
-            'audio_duration_s': 'INTEGER NULL',
-            'audio_updated_at': 'TEXT NULL',
-            'lyrics_synced': 'TEXT NULL',
-            'lyrics_synced_at': 'TEXT NULL',
-          };
-          for (final e in colDefs.entries) {
-            try {
-              await db.execute(
-                  'ALTER TABLE cached_hymns ADD COLUMN ${e.key} ${e.value}');
-            } catch (_) {}
-          }
-        }
-        if (oldVersion < 21) {
-          // P33: Streaming-style offline downloads for mezmur audio.
-          await _createDownloadTables(db);
-        }
-        if (oldVersion < 24) {
-          // P39: substring retrieval. Creating the table is enough —
-          // the analyzer bump to v3 makes the on-open check rebuild
-          // both indexes together.
-          await _createHymnTrigramIndex(db);
-        }
-        if (oldVersion < 25) {
-          // P66 hymn art: per-hymn cover images (Streaming-style). The
-          // server stores square 160/320/640 JPEG renditions and a
-          // dominant color; the URLs are immutable per artwork
-          // (?v=<updated_at>), so the cache is safe to keep forever.
-          final colDefs = {
-            "art_status": "TEXT NOT NULL DEFAULT 'none'",
-            'art_color': 'TEXT NULL',
-            'art_url': 'TEXT NULL',
-            'art_url_medium': 'TEXT NULL',
-            'art_url_small': 'TEXT NULL',
-          };
-          for (final e in colDefs.entries) {
-            try {
-              await db.execute(
-                  'ALTER TABLE cached_hymns ADD COLUMN ${e.key} ${e.value}');
-            } catch (_) {}
-          }
-        }
-        if (oldVersion < 23) {
-          // P38: self-healing index. No rebuild is scheduled here on
-          // purpose — the analyzer stamp is left NULL so the check that
-          // runs on EVERY open notices and repairs, which also covers
-          // interrupted rebuilds and future normaliser changes.
-          await _createSearchMetaTables(db);
-        }
         if (oldVersion < 26) {
           // O1 (offline-first comm): WhatsApp-style local store — the
           // UI reads these tables first; the network only refreshes
@@ -468,15 +269,6 @@ class LocalDb {
           // migration. User-scoped server responses → wiped on
           // logout like every other cache.
           await _createNotificationTables(db);
-        }
-        if (oldVersion < 28) {
-          // P1-C (Mezmur Home local-first): the department-wide
-          // attendance-day aggregate from GET /mezmur/days, verbatim.
-          // Cache starts empty and fills from the first successful
-          // refresh — no data migration, nothing derived from
-          // cached_mezmur_sheet. User-scoped server response → wiped
-          // on logout like every other cache.
-          await _createMezmurDaysTable(db);
         }
         if (oldVersion < 29) {
           // P1-D (Review Inbox local-first): the department review
@@ -518,48 +310,6 @@ class LocalDb {
           // keyed by (teacher_id, academic_year_id). Nothing is derived
           // from or written into member/teacher workflow caches.
           await _createEduTeachersTables(db);
-        }
-        if (oldVersion < 33) {
-          // P1-H (Mezmur Analytics local-first): one bounded, sensitive
-          // last-view row containing the successfully validated member-page
-          // and section-rollup pair. Deliberately NOT derived from attendance
-          // sheets/days/sections or pending Mezmur writes.
-          await _createMezmurAnalyticsTable(db);
-        }
-        if (oldVersion < 22) {
-          // P37: Telegram-style lyrics search. The word index is
-          // rebuilt from scratch because normalisation changed —
-          // every previously indexed word was stored WITHOUT Amharic
-          // homophone folding, so the old rows can never match a
-          // normalised query and must not be left behind.
-          try {
-            await db.execute('DROP TABLE IF EXISTS hymn_search_words');
-          } catch (_) {}
-          await _createHymnSearchIndex(db);
-          await _rebuildHymnSearchIndex(db);
-        }
-        if (oldVersion < 18) {
-          // P32: admin-pinned cover gradient colors.
-          try {
-            await db.execute(
-                'ALTER TABLE cached_mezmur_categories ADD COLUMN gradient_start TEXT NULL');
-          } catch (_) {}
-          try {
-            await db.execute(
-                'ALTER TABLE cached_mezmur_categories ADD COLUMN gradient_end TEXT NULL');
-          } catch (_) {}
-        }
-        if (oldVersion < 16) {
-          // P28 (item 9): single Amharic title. Fold any Amharic title
-          // into the canonical one (the Amharic name IS the hymn's
-          // name), retire reference, and rebuild the word index from
-          // title + lyrics only (stale tokens from the retired fields
-          // would keep matching queries nothing can satisfy).
-          await db.execute(
-              "UPDATE cached_hymns SET title = title_am WHERE IFNULL(title_am, '') <> '' AND title <> title_am");
-          await db.execute(
-              'UPDATE cached_hymns SET title_am = NULL, reference = NULL');
-          await _rebuildHymnSearchIndex(db);
         }
         if (oldVersion < 34) {
           // Risks #1/#9/#8/#10: one coordinated owner/scope/state and
@@ -623,6 +373,9 @@ class LocalDb {
           }
           if (oldVersion < 43) {
             await _migrateToV43(db);
+          }
+          if (oldVersion < 44) {
+            await _migrateToV44(db);
           }
         },
       onOpen: (db) async {
@@ -691,26 +444,6 @@ class LocalDb {
       );
     }
 
-    if (await _tableExists(db, 'pending_hymn_ops')) {
-      await db.rawUpdate(
-        "UPDATE pending_hymn_ops SET sync_state = 'synced' "
-        "WHERE synced = 1 AND sync_state <> 'synced'",
-      );
-      final missingIds = await db.query(
-        'pending_hymn_ops',
-        columns: ['id'],
-        where: "synced = 0 AND (client_op_id IS NULL OR "
-            "TRIM(client_op_id) = '')",
-      );
-      for (final row in missingIds) {
-        await db.update(
-          'pending_hymn_ops',
-          {'client_op_id': newClientOpId()},
-          where: 'id = ?',
-          whereArgs: [row['id']],
-        );
-      }
-    }
 
     if (await _tableExists(db, 'comm_outbox')) {
       // Keep `failed` for the existing bubble UI. The structured metadata
@@ -757,6 +490,16 @@ class LocalDb {
         (id, sync_enabled, allow_cellular, max_concurrency, updated_at)
       VALUES (1, 0, 0, 2, ?)
     ''', [now]);
+  }
+
+  /// v44 (Mezmur department removal): drop every local table the retired
+  /// module owned. Repeat-safe: every statement is DROP TABLE IF EXISTS and
+  /// runs inside sqflite's single onUpgrade transaction. On a fresh install
+  /// the tables are never created, so this is a no-op there.
+  Future<void> _migrateToV44(Database db) async {
+    for (final sql in mezmurRemovalV44Sql) {
+      await db.execute(sql);
+    }
   }
 
   String _legacyBusinessKey(
@@ -1089,21 +832,12 @@ class LocalDb {
     for (final spec in legacyOutboxTableSpecs) {
       if (await _tableExists(db, spec.table)) existingLegacy.add(spec);
     }
-    final hasHymn = await _tableExists(db, 'pending_hymn_ops');
     final hasComm = await _tableExists(db, 'comm_outbox');
     final hasAttemptLedger = await _tableExists(db, 'sync_attempts');
     await db.transaction((txn) async {
       for (final spec in existingLegacy) {
         await txn.rawUpdate(
           "UPDATE ${spec.table} SET sync_state = 'retry_wait', "
-          'next_attempt_at = ? '
-          "WHERE synced = 0 AND sync_state = 'in_flight'",
-          [now],
-        );
-      }
-      if (hasHymn) {
-        await txn.rawUpdate(
-          "UPDATE pending_hymn_ops SET sync_state = 'retry_wait', "
           'next_attempt_at = ? '
           "WHERE synced = 0 AND sync_state = 'in_flight'",
           [now],
@@ -1196,628 +930,6 @@ class LocalDb {
     ''');
   }
 
-  /// Hymn-library offline tables (schema v11). Kept in one place so
-  /// onCreate and onUpgrade stay identical.
-  Future<void> _createHymnTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_hymns (
-        id INTEGER PRIMARY KEY,
-        title TEXT NOT NULL DEFAULT '',
-        category TEXT,
-        lyrics TEXT,
-        status TEXT NOT NULL DEFAULT 'active',
-        length TEXT NOT NULL DEFAULT 'long',
-        language TEXT NOT NULL DEFAULT 'amharic',
-        revision INTEGER NOT NULL DEFAULT 1,
-        server_updated_at TEXT,
-        fetched_at TEXT,
-        audio_status TEXT NOT NULL DEFAULT 'none',
-        audio_url TEXT,
-        audio_format TEXT,
-        audio_size INTEGER,
-        audio_duration_s INTEGER,
-        audio_updated_at TEXT,
-        lyrics_synced TEXT,
-        lyrics_synced_at TEXT,
-        art_status TEXT NOT NULL DEFAULT 'none',
-        art_color TEXT,
-        art_url TEXT,
-        art_url_medium TEXT,
-        art_url_small TEXT
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_cached_hymns_title ON cached_hymns (title)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_cached_hymns_category ON cached_hymns (category)');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_mezmur_categories (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        parent_id INTEGER NULL,
-        image_url TEXT NULL,
-        gradient_start TEXT NULL,
-        gradient_end TEXT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        updated_at TEXT
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_mezmur_zemarians (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        name_am TEXT,
-        image_url TEXT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        updated_at TEXT
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_hymn_categories (
-        hymn_id INTEGER NOT NULL,
-        category_id INTEGER NOT NULL,
-        PRIMARY KEY (hymn_id, category_id)
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_chc_category ON cached_hymn_categories (category_id)');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_hymn_zemarians (
-        hymn_id INTEGER NOT NULL,
-        zemarian_id INTEGER NOT NULL,
-        PRIMARY KEY (hymn_id, zemarian_id)
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_chz_zemarian ON cached_hymn_zemarians (zemarian_id)');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS pending_hymn_ops (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        op TEXT NOT NULL,
-        payload_json TEXT NOT NULL,
-        client_op_id TEXT,
-        created_at TEXT NOT NULL,
-        synced INTEGER NOT NULL DEFAULT 0,
-        synced_at TEXT,
-        sync_error TEXT,
-        sync_state TEXT NOT NULL DEFAULT 'pending',
-        attempt_count INTEGER NOT NULL DEFAULT 0,
-        next_attempt_at TEXT,
-        last_attempt_at TEXT,
-        failure_code TEXT,
-        failure_http_status INTEGER,
-        failed_at TEXT,
-        created_authorization_version INTEGER,
-        created_by_user_id INTEGER,
-        entity_key TEXT,
-        depends_on INTEGER
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_sync_meta (
-        key TEXT PRIMARY KEY,
-        value TEXT
-      )
-    ''');
-    await _createHymnSearchIndex(db);
-    await _createDownloadTables(db);
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // P33 — offline audio downloads (Streaming model)
-  // ══════════════════════════════════════════════════════════════
-  // One row per hymn the user asked to keep offline. The AUDIO BYTES
-  // live on the filesystem (app support dir, excluded from backup);
-  // this table is the durable index the player consults BEFORE it
-  // ever asks the network for a signed URL.
-  //
-  //   state: queued | downloading | done | failed | paused
-  //
-  // `source` records WHY the file is on the device:
-  //   'user'  — explicitly pinned (never auto-evicted)
-  //   'auto'  — smart/bulk download (evictable under a storage cap)
-  //
-  // `etag` + `audio_updated_at` let a delta pull notice the server
-  // replaced the object and re-download instead of playing stale audio.
-  Future<void> _createDownloadTables(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_downloads (
-        hymn_id INTEGER PRIMARY KEY,
-        state TEXT NOT NULL DEFAULT 'queued',
-        source TEXT NOT NULL DEFAULT 'user',
-        file_path TEXT,
-        bytes_total INTEGER NOT NULL DEFAULT 0,
-        bytes_done INTEGER NOT NULL DEFAULT 0,
-        audio_format TEXT,
-        audio_updated_at TEXT,
-        etag TEXT,
-        sha256 TEXT,
-        error TEXT,
-        attempts INTEGER NOT NULL DEFAULT 0,
-        queued_at TEXT,
-        completed_at TEXT,
-        last_played_at TEXT
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_downloads_state ON hymn_downloads (state)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_downloads_source ON hymn_downloads (source, last_played_at)');
-    // Collection-level pins ("download this category / this singer"),
-    // so newly-synced hymns inside a pinned collection auto-download
-    // the way a Streaming playlist keeps itself current.
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_download_pins (
-        kind TEXT NOT NULL,
-        ref_id INTEGER NOT NULL,
-        label TEXT,
-        created_at TEXT,
-        PRIMARY KEY (kind, ref_id)
-      )
-    ''');
-  }
-
-  // ── downloads: reads ────────────────────────────────────────
-
-  /// Every download row, newest completion first — powers the
-  /// "Downloads" management screen.
-  Future<List<Map<String, dynamic>>> downloadRows() async {
-    final db = await database;
-    return db.rawQuery('''
-      SELECT d.*, h.title AS title, h.category AS category,
-             h.audio_duration_s AS audio_duration_s
-        FROM hymn_downloads d
-        LEFT JOIN cached_hymns h ON h.id = d.hymn_id
-       ORDER BY (d.state = 'done') DESC, d.completed_at DESC, d.queued_at DESC
-    ''');
-  }
-
-  Future<Map<String, dynamic>?> downloadRow(int hymnId) async {
-    final db = await database;
-    final r = await db.query('hymn_downloads',
-        where: 'hymn_id = ?', whereArgs: [hymnId], limit: 1);
-    return r.isEmpty ? null : r.first;
-  }
-
-  /// hymn_id → state, for painting list badges in one query.
-  Future<Map<int, String>> downloadStates() async {
-    final db = await database;
-    final rows = await db.query('hymn_downloads',
-        columns: ['hymn_id', 'state']);
-    return {
-      for (final r in rows) (r['hymn_id'] as int): '${r['state']}',
-    };
-  }
-
-  /// Local file for a hymn, but only when the download actually finished.
-  Future<String?> downloadedPath(int hymnId) async {
-    final db = await database;
-    final r = await db.query('hymn_downloads',
-        columns: ['file_path'],
-        where: "hymn_id = ? AND state = 'done'",
-        whereArgs: [hymnId],
-        limit: 1);
-    if (r.isEmpty) return null;
-    final p = '${r.first['file_path'] ?? ''}';
-    return p.isEmpty ? null : p;
-  }
-
-  Future<List<Map<String, dynamic>>> pendingDownloads({int limit = 50}) async {
-    final db = await database;
-    return db.query('hymn_downloads',
-        where: "state IN ('queued','downloading')",
-        orderBy: 'queued_at ASC',
-        limit: limit);
-  }
-
-  Future<int> downloadedBytes() async {
-    final db = await database;
-    final r = await db.rawQuery(
-        "SELECT COALESCE(SUM(bytes_done), 0) AS n FROM hymn_downloads WHERE state = 'done'");
-    return (r.first['n'] as num?)?.toInt() ?? 0;
-  }
-
-  Future<int> downloadedCount() async {
-    final db = await database;
-    final r = await db.rawQuery(
-        "SELECT COUNT(*) AS n FROM hymn_downloads WHERE state = 'done'");
-    return (r.first['n'] as num?)?.toInt() ?? 0;
-  }
-
-  /// Auto-downloaded rows, least-recently-played first — the eviction
-  /// order when the user's storage cap is exceeded. User-pinned rows
-  /// are never returned.
-  Future<List<Map<String, dynamic>>> evictionCandidates() async {
-    final db = await database;
-    return db.query('hymn_downloads',
-        where: "state = 'done' AND source = 'auto'",
-        orderBy: "COALESCE(last_played_at, completed_at, '') ASC");
-  }
-
-  // ── downloads: writes ───────────────────────────────────────
-
-  Future<void> enqueueDownload(int hymnId,
-      {String source = 'user', String? audioUpdatedAt, String? format}) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    // A row already 'done' and still current must not be reset to
-    // 'queued' — that would re-download the whole library on a re-pin.
-    final existing = await downloadRow(hymnId);
-    if (existing != null &&
-        '${existing['state']}' == 'done' &&
-        '${existing['audio_updated_at'] ?? ''}' == '${audioUpdatedAt ?? ''}') {
-      if (source == 'user' && '${existing['source']}' != 'user') {
-        await db.update('hymn_downloads', {'source': 'user'},
-            where: 'hymn_id = ?', whereArgs: [hymnId]);
-      }
-      return;
-    }
-    await db.insert(
-      'hymn_downloads',
-      {
-        'hymn_id': hymnId,
-        'state': 'queued',
-        'source': source,
-        'audio_updated_at': audioUpdatedAt,
-        'audio_format': format,
-        'bytes_done': 0,
-        'error': null,
-        'attempts': 0,
-        'queued_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> markDownloadState(int hymnId, String state,
-      {String? filePath,
-      int? bytesTotal,
-      int? bytesDone,
-      String? etag,
-      String? sha256,
-      String? error,
-      bool bumpAttempts = false}) async {
-    final db = await database;
-    final data = <String, Object?>{'state': state};
-    if (filePath != null) data['file_path'] = filePath;
-    if (bytesTotal != null) data['bytes_total'] = bytesTotal;
-    if (bytesDone != null) data['bytes_done'] = bytesDone;
-    if (etag != null) data['etag'] = etag;
-    if (sha256 != null) data['sha256'] = sha256;
-    data['error'] = error;
-    if (state == 'done') {
-      data['completed_at'] = DateTime.now().toIso8601String();
-      data['error'] = null;
-    }
-    if (bumpAttempts) {
-      await db.rawUpdate(
-          'UPDATE hymn_downloads SET attempts = attempts + 1 WHERE hymn_id = ?',
-          [hymnId]);
-    }
-    await db.update('hymn_downloads', data,
-        where: 'hymn_id = ?', whereArgs: [hymnId]);
-  }
-
-  Future<void> updateDownloadProgress(int hymnId, int done, int total) async {
-    final db = await database;
-    await db.update('hymn_downloads', {'bytes_done': done, 'bytes_total': total},
-        where: 'hymn_id = ?', whereArgs: [hymnId]);
-  }
-
-  Future<void> touchDownloadPlayed(int hymnId) async {
-    final db = await database;
-    await db.update(
-        'hymn_downloads', {'last_played_at': DateTime.now().toIso8601String()},
-        where: 'hymn_id = ?', whereArgs: [hymnId]);
-  }
-
-  Future<void> deleteDownloadRow(int hymnId) async {
-    final db = await database;
-    await db.delete('hymn_downloads', where: 'hymn_id = ?', whereArgs: [hymnId]);
-  }
-
-  /// Rows whose server-side audio changed since the file was stored —
-  /// the delta-sync hook that keeps offline copies honest.
-  Future<List<Map<String, dynamic>>> staleDownloads() async {
-    final db = await database;
-    return db.rawQuery('''
-      SELECT d.hymn_id, h.audio_updated_at AS server_updated, d.source
-        FROM hymn_downloads d
-        JOIN cached_hymns h ON h.id = d.hymn_id
-       WHERE d.state = 'done'
-         AND IFNULL(h.audio_updated_at, '') <> IFNULL(d.audio_updated_at, '')
-    ''');
-  }
-
-  // ── collection pins ─────────────────────────────────────────
-
-  Future<void> addDownloadPin(String kind, int refId, String label) async {
-    final db = await database;
-    await db.insert(
-        'hymn_download_pins',
-        {
-          'kind': kind,
-          'ref_id': refId,
-          'label': label,
-          'created_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<void> removeDownloadPin(String kind, int refId) async {
-    final db = await database;
-    await db.delete('hymn_download_pins',
-        where: 'kind = ? AND ref_id = ?', whereArgs: [kind, refId]);
-  }
-
-  Future<List<Map<String, dynamic>>> downloadPins() async {
-    final db = await database;
-    return db.query('hymn_download_pins', orderBy: 'created_at DESC');
-  }
-
-  Future<bool> hasDownloadPin(String kind, int refId) async {
-    final db = await database;
-    final r = await db.query('hymn_download_pins',
-        where: 'kind = ? AND ref_id = ?', whereArgs: [kind, refId], limit: 1);
-    return r.isNotEmpty;
-  }
-
-  /// Ready-to-play hymn ids inside a pinned collection — used to top up
-  /// downloads after a delta sync adds hymns to a pinned category.
-  Future<List<Map<String, dynamic>>> readyAudioHymnsIn(
-      {int? categoryId, int? zemarianId}) async {
-    final db = await database;
-    if (categoryId != null) {
-      return db.rawQuery('''
-        SELECT h.id, h.audio_updated_at, h.audio_format
-          FROM cached_hymns h
-          JOIN cached_hymn_categories c ON c.hymn_id = h.id
-         WHERE c.category_id = ? AND h.audio_status = 'ready'
-               AND h.status <> 'archived'
-      ''', [categoryId]);
-    }
-    if (zemarianId != null) {
-      return db.rawQuery('''
-        SELECT h.id, h.audio_updated_at, h.audio_format
-          FROM cached_hymns h
-          JOIN cached_hymn_zemarians z ON z.hymn_id = h.id
-         WHERE z.zemarian_id = ? AND h.audio_status = 'ready'
-               AND h.status <> 'archived'
-      ''', [zemarianId]);
-    }
-    return db.query('cached_hymns',
-        columns: ['id', 'audio_updated_at', 'audio_format'],
-        where: "audio_status = 'ready' AND status <> 'archived'");
-  }
-
-  /// P38: index metadata (analyzer stamp + rebuild flag) and the dirty
-  /// queue that drives incremental repair.
-  Future<void> _createSearchMetaTables(DatabaseExecutor db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_search_meta (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        analyzer_version INTEGER,
-        rebuild_in_progress INTEGER NOT NULL DEFAULT 0,
-        updated_at TEXT
-      )
-    ''');
-    await db.execute(
-        'INSERT OR IGNORE INTO hymn_search_meta (id, analyzer_version, '
-        'rebuild_in_progress) VALUES (1, NULL, 0)');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_search_dirty (
-        hymn_id INTEGER PRIMARY KEY,
-        queued_at TEXT
-      )
-    ''');
-  }
-
-  /// P39: trigram index for SUBSTRING retrieval.
-  ///
-  /// `word LIKE 'term%'` can only find prefixes, so any Amharic word
-  /// carrying a grammatical prefix (በሰላም for ሰላም) was unfindable. A
-  /// `LIKE '%term%'` scan would find it but cannot use an index. The
-  /// standard fix is an n-gram index: look candidates up by trigram
-  /// equality (indexed), then verify exactly in Dart.
-  Future<void> _createHymnTrigramIndex(DatabaseExecutor db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_search_grams (
-        gram TEXT NOT NULL,
-        hymn_id INTEGER NOT NULL,
-        PRIMARY KEY (gram, hymn_id)
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_grams_gram ON hymn_search_grams (gram)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_grams_hymn ON hymn_search_grams (hymn_id)');
-  }
-
-  Future<void> _createHymnSearchIndex(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS hymn_search_words (
-        word TEXT NOT NULL,
-        hymn_id INTEGER NOT NULL,
-        PRIMARY KEY (word, hymn_id)
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_search_words_word ON hymn_search_words (word)');
-    await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_hymn_search_words_hymn ON hymn_search_words (hymn_id)');
-    await _createSearchMetaTables(db);
-    await _createHymnTrigramIndex(db);
-  }
-
-  // ---------------------------------------------------------------
-  // P38: self-healing search index.
-  // ---------------------------------------------------------------
-
-  /// Reads the current index state (analyzer stamp, rebuild flag,
-  /// dirty backlog).
-  Future<IndexState> searchIndexState() async {
-    final db = await database;
-    try {
-      final rows = await db.query('hymn_search_meta',
-          where: 'id = 1', limit: 1);
-      final dirty = _asIntLocal((await db.rawQuery(
-              'SELECT COUNT(*) c FROM hymn_search_dirty'))
-          .first['c']);
-      if (rows.isEmpty) return IndexState(dirtyCount: dirty);
-      final r = rows.first;
-      final v = r['analyzer_version'];
-      return IndexState(
-        stampedVersion: v == null ? null : _asIntLocal(v),
-        rebuildInProgress: _asIntLocal(r['rebuild_in_progress']) == 1,
-        dirtyCount: dirty,
-      );
-    } catch (_) {
-      // Metadata unreadable => treat as never stamped, which forces a
-      // rebuild rather than trusting an unknown index.
-      return const IndexState();
-    }
-  }
-
-  /// Marks hymns as needing reindexing. Cheap and idempotent, so callers
-  /// can be liberal.
-  Future<void> markHymnsDirty(Iterable<int> ids) async {
-    final list = ids.where((i) => i > 0).toList();
-    if (list.isEmpty) return;
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    final batch = db.batch();
-    for (final id in list) {
-      batch.insert(
-        'hymn_search_dirty',
-        {'hymn_id': id, 'queued_at': now},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
-  }
-
-  /// Reindexes queued rows in bounded batches.
-  ///
-  /// A row is cleared from the queue only after its words are written,
-  /// so an interruption leaves it queued and it is retried next time —
-  /// never silently skipped.
-  ///
-  /// Returns how many hymns were reindexed.
-  Future<int> processDirtySearchRows({int max = 200}) async {
-    final db = await database;
-    final queued = await db.query('hymn_search_dirty',
-        columns: ['hymn_id'], orderBy: 'queued_at ASC', limit: max);
-    if (queued.isEmpty) return 0;
-    final ids =
-        queued.map((r) => _asIntLocal(r['hymn_id'])).where((i) => i > 0).toList();
-    var done = 0;
-    for (final chunk in SearchIndexPolicy.batches(ids)) {
-      for (final id in chunk) {
-        final rows = await db.query('cached_hymns',
-            columns: ['id', 'title', 'lyrics'],
-            where: 'id = ?',
-            whereArgs: [id],
-            limit: 1);
-        if (rows.isEmpty) {
-          // The hymn was deleted; drop its index rows too so it cannot
-          // linger as a phantom result.
-          await db.delete('hymn_search_words',
-              where: 'hymn_id = ?', whereArgs: [id]);
-          await db.delete('hymn_search_grams',
-              where: 'hymn_id = ?', whereArgs: [id]);
-        } else {
-          await _reindexHymnSearchIndex(db, rows.first);
-        }
-        await db.delete('hymn_search_dirty',
-            where: 'hymn_id = ?', whereArgs: [id]);
-        done++;
-      }
-    }
-    return done;
-  }
-
-  /// The self-heal entry point: call on open and after each sync.
-  ///
-  /// Decides between a full rebuild (analyzer changed / interrupted /
-  /// unstamped) and incremental repair of dirty rows. The stamp is
-  /// written ONLY after a rebuild finishes, so a crash mid-rebuild is
-  /// retried instead of being mistaken for success.
-  Future<void> ensureSearchIndexFresh({bool userIsSearching = false}) async {
-    final db = await database;
-    final state = await searchIndexState();
-    final action = SearchIndexPolicy.decide(state);
-
-    if (action == IndexAction.fullRebuild) {
-      if (!SearchIndexPolicy.mayRebuildNow(
-        appIsForeground: true,
-        userIsSearching: userIsSearching,
-      )) {
-        // Defer the full pass, but still repair what we can so the rows
-        // the user is touching stay correct.
-        await processDirtySearchRows();
-        return;
-      }
-      await db.update('hymn_search_meta', {'rebuild_in_progress': 1},
-          where: 'id = 1');
-      await _rebuildHymnSearchIndex(db);
-      await db.delete('hymn_search_dirty');
-      await db.update(
-          'hymn_search_meta',
-          {
-            'analyzer_version': kAnalyzerVersion,
-            'rebuild_in_progress': 0,
-            'updated_at': DateTime.now().toIso8601String(),
-          },
-          where: 'id = 1');
-      return;
-    }
-    await processDirtySearchRows();
-  }
-
-  Future<void> _rebuildHymnSearchIndex(Database db) async {
-    await db.transaction((txn) async {
-      await txn.delete('hymn_search_words');
-      await txn.delete('hymn_search_grams');
-      final rows = await txn.query('cached_hymns',
-          columns: ['id', 'title', 'lyrics']);
-      for (final row in rows) {
-        await _reindexHymnSearchIndex(txn, row);
-      }
-    });
-  }
-
-  Future<void> _reindexHymnSearchIndex(
-      DatabaseExecutor db, Map<String, dynamic> hymn) async {
-    final id = _asIntLocal(hymn['id']);
-    if (id <= 0) return;
-    await db.delete('hymn_search_words', where: 'hymn_id = ?', whereArgs: [id]);
-    // P28: single title — the index feeds from title + lyrics only.
-    // Tokenizer contract: length >= 2 and RegExp(r'[\p{L}\p{M}\p{N}]+', unicode: true)
-    // P37: normalisation now folds Amharic homophones, so a member who
-    // types ጸሀይ finds a hymn stored as ፀሐይ. Index and query MUST use
-    // the same normaliser or nothing matches.
-    final words = <String>{
-      ...amharic.indexWords('${hymn['title'] ?? ''}'),
-      ...amharic.indexWords('${hymn['lyrics'] ?? ''}'),
-    };
-    await db.delete('hymn_search_grams', where: 'hymn_id = ?', whereArgs: [id]);
-    final batch = db.batch();
-    for (final word in words) {
-      batch.insert('hymn_search_words', {'word': word, 'hymn_id': id});
-    }
-    // P39: trigrams enable SUBSTRING retrieval. Deduped across the whole
-    // hymn, so a repeated word costs nothing extra.
-    final grams = <String>{};
-    for (final word in words) {
-      grams.addAll(SearchMatching.gramsOf(word));
-    }
-    for (final g in grams) {
-      batch.insert('hymn_search_grams', {'gram': g, 'hymn_id': id});
-    }
-    await batch.commit(noResult: true);
-  }
 
   /// P1-B (DB v27): local-first Notification Center store. Two
   /// tables because the two server feeds have different contracts —
@@ -1844,25 +956,6 @@ class LocalDb {
     ''');
   }
 
-  /// P1-C (DB v28): local-first Mezmur Home store — the
-  /// department-wide attendance-day aggregate from GET /mezmur/days,
-  /// stored verbatim. Days never disappear server-side (no delete
-  /// path) and attendance_date is UNIQUE server-side, so merge-upsert
-  /// by server id is safe. marked/attended are server-authoritative
-  /// aggregates — never derived from cached_mezmur_sheet (which only
-  /// holds (date, section) pairs visited on this phone).
-  Future<void> _createMezmurDaysTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_mezmur_days (
-        id INTEGER PRIMARY KEY,
-        attendance_date TEXT NOT NULL,
-        marked INTEGER NOT NULL DEFAULT 0,
-        attended INTEGER NOT NULL DEFAULT 0,
-        data_json TEXT,
-        fetched_at TEXT
-      )
-    ''');
-  }
 
   /// P1-D (DB v29): local-first Review Inbox read model. Identity is
   /// (dept, id) — the three departments' submission tables are
@@ -2016,33 +1109,14 @@ class LocalDb {
     ''');
   }
 
-  /// P1-H: the LAST successfully validated Mezmur analytics view only.
-  /// One row stores the member-page + section-rollup pair atomically. It is
-  /// sensitive member attendance data and is wiped on logout; it never reuses
-  /// sheet/day/section caches or overlays pending_mezmur writes.
-  Future<void> _createMezmurAnalyticsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS cached_mezmur_analytics_last (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        from_date TEXT NOT NULL,
-        to_date TEXT NOT NULL,
-        sessions_held INTEGER NOT NULL DEFAULT 0,
-        members_response_json TEXT NOT NULL,
-        sections_response_json TEXT NOT NULL,
-        fetched_at TEXT NOT NULL
-      )
-    ''');
-  }
 
   Future<void> _createTables(Database db) async {
     await _createCommTables(db);
     await _createNotificationTables(db);
-    await _createMezmurDaysTable(db);
     await _createReviewTables(db);
     await _createEduTables(db);
     await _createEduSubjectsTable(db);
     await _createEduTeachersTables(db);
-    await _createMezmurAnalyticsTable(db);
     // ---- ATTENDANCE ----
     await db.execute('''
       CREATE TABLE pending_attendance (
@@ -2074,49 +1148,6 @@ class LocalDb {
       )
     ''');
 
-    // ---- GRADES ----
-    await db.execute('''
-      CREATE TABLE pending_mezmur (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        program TEXT,
-        section TEXT NOT NULL DEFAULT '',
-        member_id INTEGER NOT NULL,
-        status TEXT NOT NULL,
-        notes TEXT,
-        packet_kind TEXT NOT NULL DEFAULT 'draft',
-        client_op_id TEXT,
-        synced INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        synced_at TEXT,
-        sync_error TEXT,
-        sync_state TEXT NOT NULL DEFAULT 'pending',
-        attempt_count INTEGER NOT NULL DEFAULT 0,
-        next_attempt_at TEXT,
-        last_attempt_at TEXT,
-        failure_code TEXT,
-        failure_http_status INTEGER,
-        failed_at TEXT,
-        created_authorization_version INTEGER,
-        owner_user_id INTEGER
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE cached_mezmur_sheet (
-        date TEXT NOT NULL,
-        section TEXT NOT NULL DEFAULT '',
-        response_json TEXT NOT NULL,
-        updated_at TEXT,
-        PRIMARY KEY (date, section)
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE cached_mezmur_sections (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        sections_json TEXT NOT NULL,
-        updated_at TEXT
-      )
-    ''');
     // ---- HR ATTENDANCE (HR's own section-based domain) ----
     await db.execute('''
       CREATE TABLE pending_hr (
@@ -2301,8 +1332,6 @@ class LocalDb {
       )
     ''');
 
-    // ---- HYMN LIBRARY (offline-first) ----
-    await _createHymnTables(db);
   }
 
   // ============================================================
@@ -2630,64 +1659,6 @@ class LocalDb {
     String p2(int v) => v.toString().padLeft(2, '0');
     return '${n.year}-${p2(n.month)}-${p2(n.day)} '
         '${p2(n.hour)}:${p2(n.minute)}:${p2(n.second)}';
-  }
-
-  // ============================================================
-  // P1-C: CACHED MEZMUR HOME DAYS (department-wide aggregate)
-  // ============================================================
-
-  /// Merge-upsert the server's day rows by server id
-  /// (ConflictAlgorithm.replace — merge-only; days never disappear
-  /// server-side, so nothing is ever deleted here). Repeated
-  /// refreshes can never duplicate a day or lose history.
-  Future<void> cacheMezmurDays(List<Map<String, dynamic>> rows) async {
-    final db = await database;
-    final batch = db.batch();
-    final now = DateTime.now().toIso8601String();
-    for (final m in rows) {
-      batch.insert(
-        'cached_mezmur_days',
-        {
-          'id': m['id'],
-          'attendance_date': '${m['attendance_date'] ?? ''}',
-          'marked': _asIntLocal(m['marked']),
-          'attended': _asIntLocal(m['attended']),
-          'data_json': jsonEncode(m),
-          'fetched_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
-  }
-
-  /// Local Mezmur Home page — the server's exact ordering
-  /// (attendance_date DESC; yyyy-MM-dd strings sort identically to
-  /// MySQL DATE). Rows come back shaped like the server's day items
-  /// plus a local_fetched_at stamp for the '· updated HH:MM' banner.
-  Future<List<Map<String, dynamic>>> getCachedMezmurDays(
-      {int limit = 25}) async {
-    final db = await database;
-    final rows = await db.query('cached_mezmur_days',
-        orderBy: 'attendance_date DESC', limit: limit);
-    return rows.map((row) {
-      try {
-        final decoded =
-            jsonDecode(row['data_json'] as String) as Map<String, dynamic>;
-        decoded['local_fetched_at'] = row['fetched_at'];
-        return decoded;
-      } catch (_) {
-        // Corrupt/missing blob — identify the row honestly from its
-        // discrete columns, never fabricate content.
-        return <String, dynamic>{
-          'id': row['id'],
-          'attendance_date': row['attendance_date'],
-          'marked': row['marked'],
-          'attended': row['attended'],
-          'local_fetched_at': row['fetched_at'],
-        };
-      }
-    }).toList();
   }
 
   // ============================================================
@@ -3174,113 +2145,6 @@ class LocalDb {
   }
 
   // ============================================================
-  // P1-H: CACHED MEZMUR ANALYTICS LAST VIEW
-  // ============================================================
-
-  /// Atomically replace the one bounded last-view row. The caller invokes
-  /// this only after BOTH endpoint responses have valid List items, the same
-  /// canonical server window, and the same sessions_held value.
-  Future<void> cacheMezmurAnalyticsLast({
-    required String fromDate,
-    required String toDate,
-    required int sessionsHeld,
-    required Map<String, dynamic> membersResponse,
-    required Map<String, dynamic> sectionsResponse,
-  }) async {
-    final db = await database;
-    await db.insert(
-      'cached_mezmur_analytics_last',
-      {
-        'id': 1,
-        'from_date': fromDate,
-        'to_date': toDate,
-        'sessions_held': sessionsHeld,
-        'members_response_json': jsonEncode(membersResponse),
-        'sections_response_json': jsonEncode(sectionsResponse),
-        'fetched_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  /// Return only a coherent pair. Corrupt JSON, non-list items, or any
-  /// mismatch between stored dates/held count and either response is treated
-  /// as no cache; analytics is never fabricated from a half-valid blob.
-  Future<Map<String, dynamic>?> getCachedMezmurAnalyticsLast() async {
-    final db = await database;
-    final rows = await db.query('cached_mezmur_analytics_last',
-        where: 'id = ?', whereArgs: [1], limit: 1);
-    if (rows.isEmpty) return null;
-    final row = rows.first;
-    int? strictInt(dynamic value) {
-      if (value is int) return value;
-      if (value is num && value.isFinite && value == value.roundToDouble()) {
-        return value.toInt();
-      }
-      if (value is String) return int.tryParse(value);
-      return null;
-    }
-    bool validIsoDate(dynamic value) {
-      if (value is! String) return false;
-      final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value);
-      if (match == null) return false;
-      final parsed = DateTime.tryParse(value);
-      return parsed != null &&
-          parsed.year == int.parse(match.group(1)!) &&
-          parsed.month == int.parse(match.group(2)!) &&
-          parsed.day == int.parse(match.group(3)!);
-    }
-
-    try {
-      final memberRaw = jsonDecode(row['members_response_json'] as String);
-      final sectionRaw = jsonDecode(row['sections_response_json'] as String);
-      if (memberRaw is! Map || sectionRaw is! Map) return null;
-      final members = Map<String, dynamic>.from(memberRaw);
-      final sections = Map<String, dynamic>.from(sectionRaw);
-      if (members['items'] is! List || sections['items'] is! List) return null;
-      final memberItems = members['items'] as List;
-      final sectionItems = sections['items'] as List;
-      if (memberItems.any((item) => item is! Map) ||
-          sectionItems.any((item) => item is! Map) ||
-          strictInt(members['page']) != 1 ||
-          memberItems.length > 100) {
-        return null;
-      }
-      final memberWindow = members['window'];
-      final sectionWindow = sections['window'];
-      if (memberWindow is! Map || sectionWindow is! Map) return null;
-      final fromDate = row['from_date'];
-      final toDate = row['to_date'];
-      final held = strictInt(row['sessions_held']);
-      final memberHeld = strictInt(members['sessions_held']);
-      final sectionHeld = strictInt(sections['sessions_held']);
-      if (!validIsoDate(fromDate) ||
-          !validIsoDate(toDate) ||
-          '$fromDate'.compareTo('$toDate') > 0 ||
-          held == null ||
-          held < 0 ||
-          memberHeld != held ||
-          sectionHeld != held ||
-          memberWindow['from'] != fromDate ||
-          memberWindow['to'] != toDate ||
-          sectionWindow['from'] != fromDate ||
-          sectionWindow['to'] != toDate) {
-        return null;
-      }
-      return <String, dynamic>{
-        'from_date': fromDate,
-        'to_date': toDate,
-        'sessions_held': held,
-        'members_response': members,
-        'sections_response': sections,
-        'local_fetched_at': row['fetched_at'],
-      };
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // ============================================================
   // CACHED CLASSES
   // ============================================================
 
@@ -3420,7 +2284,6 @@ class LocalDb {
     final table = switch (kind) {
       LegacyOperationKind.attendance => 'pending_attendance',
       LegacyOperationKind.grades => 'pending_grades',
-      LegacyOperationKind.mezmur => 'pending_mezmur',
       LegacyOperationKind.hr => 'pending_hr',
     };
     return legacyOutboxTableSpecs.firstWhere((spec) => spec.table == table);
@@ -3494,24 +2357,12 @@ class LocalDb {
             'AND created_authorization_version = ?',
         whereArgs: [ownerUserId, authorizationVersion],
       );
-      // Hymn operations are shared rather than private-owner-bound. Preserve
-      // the exact id and make an interrupted request retryable for the next
-      // authorized curator instead of attaching it to the lost session.
-      await txn.update(
-        'pending_hymn_ops',
-        {
-          'sync_state': 'retry_wait',
-          'next_attempt_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        where: "synced = 0 AND sync_state = 'in_flight'",
-      );
     });
   }
 
   Future<void> resumeLegacyPausedAuthentication({
     required int ownerUserId,
     required int authorizationVersion,
-    bool resumeSharedHymnOperations = true,
   }) async {
     final db = await database;
     await db.transaction((txn) async {
@@ -3529,19 +2380,6 @@ class LocalDb {
               'AND owner_user_id = ? '
               'AND created_authorization_version = ?',
           whereArgs: [ownerUserId, authorizationVersion],
-        );
-      }
-      if (resumeSharedHymnOperations) {
-        await txn.update(
-          'pending_hymn_ops',
-          {
-            'sync_state': 'pending',
-            'next_attempt_at': null,
-            'failure_code': null,
-            'failure_http_status': null,
-            'sync_error': null,
-          },
-          where: "synced = 0 AND sync_state = 'paused_auth'",
         );
       }
       await txn.update(
@@ -4775,197 +3613,6 @@ class LocalDb {
   // PENDING COUNTS
   // ============================================================
 
-  // ============================================================
-  // PENDING MEZMUR (offline outbox, date-keyed)
-  // ============================================================
-
-  Future<LegacyOperationRef> saveMezmurLocal(String date, String section,
-      List<Map<String, dynamic>> records,
-      {String packetKind = 'draft', DateTime? notBefore}) async {
-    // Teacher parity: present / absent / late / excused.
-    const validStatuses = {'present', 'absent', 'late', 'excused'};
-    if (records.isEmpty) {
-      throw ArgumentError('Mezmur records are required.');
-    }
-    for (final record in records) {
-      final status = '${record['status'] ?? ''}'.trim().toLowerCase();
-      final memberId = record['member_id'] is int
-          ? record['member_id'] as int
-          : int.tryParse('${record['member_id'] ?? ''}');
-      if (memberId == null || memberId <= 0 || !validStatuses.contains(status)) {
-        throw ArgumentError('Attendance must explicitly mark every member.');
-      }
-    }
-
-    return _replaceLegacyOperation(
-      kind: LegacyOperationKind.mezmur,
-      table: 'pending_mezmur',
-      naturalKeyWhere: 'date = ? AND section = ?',
-      naturalKeyArgs: [date, section],
-      naturalKey: {'date': date, 'section': section},
-      packetKind: packetKind,
-      notBefore: notBefore,
-      rows: records.map((r) {
-        final note = '${r['notes'] ?? r['note'] ?? ''}'.trim();
-        return <String, Object?>{
-          'date': date,
-          'section': section,
-          'program': r['program'],
-          'member_id': r['member_id'],
-          'status': '${r['status']}'.trim().toLowerCase(),
-          if (note.isNotEmpty) 'notes': note,
-        };
-      }).toList(),
-    );
-  }
-
-  /// Pending packets grouped by (date, section).
-  Future<List<Map<String, dynamic>>> getPendingMezmur() async {
-    final db = await database;
-    return db.transaction((txn) async {
-      final binding = await requireActiveOwnerBinding(txn);
-      return txn.rawQuery('''
-        SELECT date, section,
-               CASE WHEN SUM(CASE WHEN IFNULL(packet_kind,'draft') = 'submitted' THEN 1 ELSE 0 END) > 0
-                    THEN 'submitted' ELSE 'draft' END as packet_kind,
-               CASE WHEN COUNT(DISTINCT client_op_id) = 1
-                    THEN MIN(client_op_id) ELSE NULL END as client_op_id,
-               COUNT(*) as member_count, MIN(created_at) as created_at,
-               MAX(CASE WHEN sync_error IS NOT NULL THEN 1 ELSE 0 END) as rejected
-        FROM pending_mezmur
-        WHERE synced = 0 AND sync_state IN ('pending', 'retry_wait')
-          AND owner_user_id = ? AND created_authorization_version = ?
-        GROUP BY date, section ORDER BY date DESC
-      ''', [
-        binding['owner_user_id'],
-        binding['created_authorization_version'],
-      ]);
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getPendingMezmurRecords(
-      String date, String section) async {
-    final db = await database;
-    return db.transaction((txn) async {
-      final binding = await requireActiveOwnerBinding(txn);
-      return txn.query(
-        'pending_mezmur',
-        where: 'date = ? AND section = ? AND synced = 0 '
-            'AND owner_user_id = ? AND created_authorization_version = ?',
-        whereArgs: [
-          date,
-          section,
-          binding['owner_user_id'],
-          binding['created_authorization_version'],
-        ],
-      );
-    });
-  }
-
-
-
-  @Deprecated('A lock is not an acceptance receipt; do not use for lock cleanup.')
-  Future<void> dropPendingMezmur(String date, String section) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      final binding = await requireActiveOwnerBinding(txn);
-      await txn.delete(
-        'pending_mezmur',
-        // F8: spare workflow-rejected rows (see dropPendingAttendance).
-        where: 'date = ? AND section = ? AND synced = 0 '
-            "AND sync_state IN ('pending', 'retry_wait') "
-            'AND sync_error IS NULL AND owner_user_id = ? '
-            'AND created_authorization_version = ?',
-        whereArgs: [
-          date,
-          section,
-          binding['owner_user_id'],
-          binding['created_authorization_version'],
-        ],
-      );
-    });
-  }
-
-  Future<int> getPendingMezmurCount() async {
-    final db = await database;
-    return db.transaction((txn) async {
-      final binding = await requireActiveOwnerBinding(txn);
-      final rows = await txn.rawQuery(
-        'SELECT COUNT(DISTINCT client_op_id) AS cnt FROM pending_mezmur '
-        'WHERE synced = 0 AND owner_user_id = ? '
-        'AND created_authorization_version = ?',
-        [
-          binding['owner_user_id'],
-          binding['created_authorization_version'],
-        ],
-      );
-      return rows.first['cnt'] as int? ?? 0;
-    });
-  }
-
-  Future<void> cacheMezmurSheet(
-      String date, String section, Map<String, dynamic> payload) async {
-    final db = await database;
-    await db.insert(
-        'cached_mezmur_sheet',
-        {
-          'date': date,
-          'section': section,
-          'response_json': jsonEncode(payload),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<Map<String, dynamic>?> getCachedMezmurSheet(
-      String date, String section) async {
-    final db = await database;
-    try {
-      final rows = await db.query('cached_mezmur_sheet',
-          where: 'date = ? AND section = ?', whereArgs: [date, section]);
-      if (rows.isEmpty) return null;
-      final raw = rows.first['response_json'] as String?;
-      if (raw == null || raw.isEmpty) return null;
-      final decoded = jsonDecode(raw);
-      return decoded is Map<String, dynamic> ? decoded : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Warm cache for the [Section ▾] picker (offline parity).
-  Future<void> cacheMezmurSections(List<Map<String, dynamic>> sections) async {
-    final db = await database;
-    await db.insert(
-        'cached_mezmur_sections',
-        {
-          'id': 1,
-          'sections_json': jsonEncode(sections),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<List<Map<String, dynamic>>?> getCachedMezmurSections() async {
-    final db = await database;
-    try {
-      final rows = await db.query('cached_mezmur_sections', where: 'id = 1');
-      if (rows.isEmpty) return null;
-      final raw = rows.first['sections_json'] as String?;
-      if (raw == null || raw.isEmpty) return null;
-      final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        return decoded
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<int> getPendingAttendanceCount() async {
     final db = await database;
     return db.transaction((txn) async {
@@ -5012,9 +3659,6 @@ class LocalDb {
             'AND next_attempt_at IS NOT NULL AND owner_user_id = ? '
             'AND created_authorization_version = ? '
             "${spec.table == 'pending_attendance' ? _attendanceClaimEligibilityWhere : ''}",
-      "SELECT next_attempt_at AS due FROM pending_hymn_ops "
-          "WHERE synced = 0 AND sync_state IN ('pending', 'retry_wait') "
-          'AND next_attempt_at IS NOT NULL',
     ];
     final rows = await db.rawQuery(
       'SELECT MIN(due) AS due FROM (${selects.join(' UNION ALL ')})',
@@ -5032,15 +3676,11 @@ class LocalDb {
   Future<int> getTotalPendingCount() async {
     return (await getPendingAttendanceCount()) +
         (await getPendingGradesCount()) +
-        (await getPendingMezmurCount()) +
-        (await getPendingHrCount()) +
-        (await getPendingHymnOpsCount());
+        (await getPendingHrCount());
   }
 
   // ============================================================
   // HR DEPARTMENT ATTENDANCE (offline-first, section-scoped)
-  // Structural clone of the mezmur outbox — separate tables, so the
-  // two departments' data never touch each other on the phone either.
   // ============================================================
 
   // HR attendance was RETIRED (2026-10-07): no screen creates new HR
@@ -5155,7 +3795,6 @@ class LocalDb {
       _legacySpecFor(switch (kind) {
         'attendance' => LegacyOperationKind.attendance,
         'grades' => LegacyOperationKind.grades,
-        'mezmur' => LegacyOperationKind.mezmur,
         'hr' => LegacyOperationKind.hr,
         _ => throw ArgumentError.value(kind, 'kind', 'Unknown outbox kind'),
       });
@@ -5293,7 +3932,7 @@ class LocalDb {
     });
   }
 
-  /// All rejected batches across the four legacy outboxes, for the
+  /// All rejected batches across the three legacy outboxes, for the
   /// review sheet and the SyncStatus count. Fields: kind, label, detail,
   /// client_op_id and reason (PII-light: names/dates, never member rows).
   Future<List<Map<String, dynamic>>> getRejectedBatches() async {
@@ -5320,15 +3959,6 @@ class LocalDb {
           AND owner_user_id = ? AND created_authorization_version = ?
         GROUP BY client_op_id, assessment_id
         UNION ALL
-        SELECT 'mezmur' AS kind, 'Mezmur attendance' AS label,
-               date || ' · ' || section AS detail,
-               client_op_id, MAX(sync_error) AS reason
-        FROM pending_mezmur
-        WHERE synced = 0
-          AND sync_state IN ('needs_attention', 'resolved_conflict')
-          AND owner_user_id = ? AND created_authorization_version = ?
-        GROUP BY client_op_id, date, section
-        UNION ALL
         SELECT 'hr' AS kind, 'HR attendance' AS label,
                date || ' · ' || section AS detail,
                client_op_id, MAX(sync_error) AS reason
@@ -5338,7 +3968,7 @@ class LocalDb {
           AND owner_user_id = ? AND created_authorization_version = ?
         GROUP BY client_op_id, date, section
         ORDER BY kind, detail
-      ''', [owner, scope, owner, scope, owner, scope, owner, scope]);
+      ''', [owner, scope, owner, scope, owner, scope]);
     });
   }
 
@@ -5346,11 +3976,8 @@ class LocalDb {
   /// Current-scope detail rows for the Sync Recovery Center. The owner and
   /// authorization predicates are part of every private query. Older-scope
   /// work is intentionally absent here and is surfaced only as a safe count
-  /// from [getOutboxInventory]. Shared hymn metadata is returned only when
-  /// the current role is allowed to curate the shared library.
-  Future<List<SyncRecoveryItem>> getSyncRecoveryItems({
-    required bool includeSharedHymns,
-  }) async {
+  /// from [getOutboxInventory].
+  Future<List<SyncRecoveryItem>> getSyncRecoveryItems() async {
     final db = await database;
     return db.transaction((txn) async {
       final binding = await requireActiveOwnerBinding(txn);
@@ -5377,14 +4004,6 @@ class LocalDb {
          GROUP BY client_op_id, sync_state, assessment_id,
                   assessment_name, class_name
         UNION ALL
-        SELECT 'mezmur', client_op_id, NULL, sync_state,
-               'Mezmur attendance', date || ' · ' || section,
-               MAX(sync_error), MAX(next_attempt_at)
-          FROM pending_mezmur
-         WHERE synced = 0 AND owner_user_id = ?
-           AND created_authorization_version = ?
-         GROUP BY client_op_id, sync_state, date, section
-        UNION ALL
         SELECT 'hr', client_op_id, NULL, sync_state,
                'HR attendance', date || ' · ' || section,
                MAX(sync_error), MAX(next_attempt_at)
@@ -5405,7 +4024,6 @@ class LocalDb {
         owner, scope,
         owner, scope,
         owner, scope,
-        owner, scope,
       ]);
 
       final result = <SyncRecoveryItem>[];
@@ -5413,7 +4031,6 @@ class LocalDb {
         final domain = switch ('${row['domain']}') {
           'attendance' => SyncRecoveryDomain.attendance,
           'grades' => SyncRecoveryDomain.grades,
-          'mezmur' => SyncRecoveryDomain.mezmur,
           'hr' => SyncRecoveryDomain.hr,
           _ => SyncRecoveryDomain.communication,
         };
@@ -5430,106 +4047,8 @@ class LocalDb {
         ));
       }
 
-      if (includeSharedHymns) {
-        final hymnRows = await txn.query(
-          'pending_hymn_ops',
-          columns: [
-            'id',
-            'client_op_id',
-            'op',
-            'sync_state',
-            'sync_error',
-            'next_attempt_at',
-          ],
-          where: 'synced = 0',
-          orderBy: 'id',
-        );
-        for (final row in hymnRows) {
-          final op = '${row['op']}';
-          final title = switch (op) {
-            'hymn_save' => 'Hymn change',
-            'hymn_delete' => 'Hymn archive',
-            'category_save' => 'Hymn category change',
-            'category_delete' => 'Hymn category removal',
-            'zemarian_save' => 'Singer change',
-            'zemarian_delete' => 'Singer removal',
-            'lyrics_synced' => 'Timed lyrics change',
-            _ => 'Shared hymn library change',
-          };
-          result.add(SyncRecoveryItem(
-            domain: SyncRecoveryDomain.hymn,
-            operationId: '${row['client_op_id']}',
-            rowId: _asIntLocal(row['id']),
-            state: '${row['sync_state']}',
-            title: title,
-            detail: 'Shared library operation',
-            reason: row['sync_error']?.toString(),
-            nextAttemptAt:
-                DateTime.tryParse('${row['next_attempt_at'] ?? ''}')
-                    ?.toLocal(),
-          ));
-        }
-      }
       return List<SyncRecoveryItem>.unmodifiable(result);
     });
-  }
-
-  /// Exact compare-and-set retry for one shared hymn operation.
-  Future<SyncRecoveryActionResult> retryHymnRecoveryOperation(
-    int rowId,
-    String clientOpId,
-    String expectedState,
-  ) async {
-    if (!const {'needs_attention', 'blocked_dependency', 'failed'}
-        .contains(expectedState)) {
-      return SyncRecoveryActionResult.stale;
-    }
-    final db = await database;
-    final affected = await db.update(
-      'pending_hymn_ops',
-      {
-        'sync_state': 'pending',
-        'attempt_count': 0,
-        'next_attempt_at': null,
-        'last_attempt_at': null,
-        'failure_code': null,
-        'failure_http_status': null,
-        'failed_at': null,
-        'sync_error': null,
-      },
-      where: 'id = ? AND client_op_id = ? AND synced = 0 '
-          'AND sync_state = ?',
-      whereArgs: [rowId, clientOpId, expectedState],
-    );
-    return affected == 1
-        ? SyncRecoveryActionResult.applied
-        : SyncRecoveryActionResult.stale;
-  }
-
-  /// Exact terminal discard/acknowledgement for one shared operation.
-  Future<SyncRecoveryActionResult> discardHymnRecoveryOperation(
-    int rowId,
-    String clientOpId,
-    String expectedState,
-  ) async {
-    if (!const {
-      'needs_attention',
-      'blocked_dependency',
-      'failed',
-      'resolved_conflict',
-    }.contains(expectedState)) {
-      return SyncRecoveryActionResult.stale;
-    }
-    final db = await database;
-    final affected = await db.delete(
-      'pending_hymn_ops',
-      where: 'id = ? AND client_op_id = ? AND synced = 0 '
-          'AND sync_state = ?',
-      whereArgs: [rowId, clientOpId, expectedState],
-    );
-    return affected == 1
-        ? SyncRecoveryActionResult.applied
-        : SyncRecoveryActionResult.stale;
   }
 
   @Deprecated('A lock is not an acceptance receipt; do not use for lock cleanup.')
@@ -5637,1414 +4156,6 @@ class LocalDb {
   Future<void> cleanupSyncedHr() async {
     final db = await database;
     await db.delete('pending_hr', where: 'synced = 1');
-  }
-
-  // ============================================================
-  // HYMN LIBRARY (offline-first: local store + outbox + cursor)
-  // ============================================================
-
-  static int _asIntLocal(dynamic v) =>
-      v is int ? v : int.tryParse('$v') ?? 0;
-
-  List<int> _asIntList(dynamic v) {
-    if (v is List) {
-      return v.map((e) => _asIntLocal(e)).where((e) => e > 0).toList();
-    }
-    if (v is int && v > 0) return [v];
-    return const [];
-  }
-
-  /// Upsert rows pulled from the server delta. [protectIds] are rows
-  /// with LOCAL edits still queued in the outbox — server deltas must
-  /// not clobber an edit the user has not seen synced yet. Archived
-  /// deltas flip status so "deleted" hymns leave the active list
-  /// without data loss.
-  Future<void> upsertHymns(List<dynamic> rows, {Set<int>? protectIds}) async {
-    if (rows.isEmpty) return;
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    final protected = protectIds ?? const <int>{};
-    final indexedRows = <Map<String, dynamic>>[];
-    // P38: searchable text BEFORE the write, so we can reindex only the
-    // rows whose title/lyrics actually changed. A play-count or cover
-    // update must not cost an index rewrite.
-    final priorText = <int, (String, String)>{};
-    await db.transaction((txn) async {
-      final batch = txn.batch();
-      for (final h in rows.whereType<Map>()) {
-        final id = _asIntLocal(h['id']);
-        if (id <= 0) continue;
-        if (protected.contains(id)) continue;
-        final existing = await txn.query('cached_hymns',
-            columns: [
-              'title',
-              'lyrics',
-              'lyrics_synced',
-              'audio_status',
-              'audio_url',
-              'audio_format',
-              'audio_size',
-              'audio_duration_s',
-              'audio_updated_at',
-              'art_status',
-              'art_color',
-              'art_url',
-              'art_url_medium',
-              'art_url_small'
-            ],
-            where: 'id = ?',
-            whereArgs: [id],
-            limit: 1);
-        priorText[id] = (
-          '${existing.isNotEmpty ? existing.first['title'] ?? '' : ''}',
-          '${existing.isNotEmpty ? existing.first['lyrics'] ?? '' : ''}');
-        final stored = Map<String, dynamic>.from(h);
-        if (!h.containsKey('lyrics') && existing.isNotEmpty) {
-          stored['lyrics'] = existing.first['lyrics'];
-        }
-        indexedRows.add(stored);
-        // P0 audio/synced-lyrics preservation: a delta that does NOT
-        // carry a heavy field (e.g. synced LRC, which is fetched lazily
-        // per hymn) must not wipe the cached copy — same rule as lyrics.
-        final old = existing.isEmpty ? <String, dynamic>{} : existing.first;
-        String? textPreserve(String key, [String? def]) =>
-            h.containsKey(key) ? '${h[key] ?? ''}' : (old[key] as String? ?? def);
-        int? intPreserve(String key) => h.containsKey(key)
-            ? (h[key] == null ? null : _asIntLocal(h[key]))
-            : (old[key] == null ? null : _asIntLocal(old[key]));
-        batch.insert(
-          'cached_hymns',
-          {
-            'id': id,
-            'title': '${h['title'] ?? ''}',
-            'category': h['category'] ?? '',
-            'lyrics': h.containsKey('lyrics')
-              ? h['lyrics']
-              : (existing.isEmpty ? null : existing.first['lyrics']),
-            'status': '${h['status'] ?? 'active'}',
-            'length': '${h['length'] ?? 'long'}',
-            'language': '${h['language'] ?? 'amharic'}',
-            'revision': _asIntLocal(h['revision']),
-            'server_updated_at': '${h['updated_at'] ?? ''}',
-            'fetched_at': now,
-            // P0 media columns (audio_status always rides the delta; the
-            // rest preserve the cached copy when the payload omits them).
-            'audio_status': textPreserve('audio_status', 'none') ?? 'none',
-            'audio_url': textPreserve('audio_url') ?? '',
-            'audio_format': textPreserve('audio_format'),
-            'audio_size': intPreserve('audio_size'),
-            'audio_duration_s': intPreserve('audio_duration_s'),
-            'audio_updated_at': textPreserve('audio_updated_at'),
-            // P48: DEFENSIVE MERGE for timed lyrics.
-            //
-            // An EMPTY STRING from the server is ambiguous: it means
-            // either "this hymn genuinely has no timings" or "my schema
-            // lacks the column so I cannot tell you". Older deployments
-            // emit '' AS lyrics_synced for the second case, and the old
-            // rule below dutifully wiped perfectly good local LRC on
-            // EVERY delta pull — which is why karaoke highlighting,
-            // animation and auto-scroll silently stopped working on the
-            // phone while the web player was fine.
-            //
-            // Rule now:
-            //   key absent      -> keep local (nothing was said)
-            //   value null      -> keep local (column unknown/absent)
-            //   value ''        -> keep local (cannot distinguish -> do
-            //                      not destroy user work)
-            //   non-empty value -> take it (the only authoritative case)
-            //
-            // Clearing timings is therefore driven by the explicit
-            // lyrics_synced op, not by an ambiguous sync payload. Losing
-            // a curator's work is far worse than a stale clear that the
-            // next real edit fixes.
-            'lyrics_synced': _mergeSyncedLyrics(
-                h.containsKey('lyrics_synced') ? h['lyrics_synced'] : null,
-                old['lyrics_synced'] as String?),
-            'lyrics_synced_at': textPreserve('lyrics_synced_at'),
-            // P66 hymn art: server-authoritative like audio_status —
-            // the fields ride every delta (a probe-guarded server
-            // reports status 'none'), so apply them whenever present;
-            // an ABSENT key (pre-art payload, e.g. an old save echo)
-            // keeps the cached copy. UI renders nothing unless
-            // art_status == 'ready', so a stale URL can never show.
-            'art_status': textPreserve('art_status', 'none') ?? 'none',
-            'art_color': textPreserve('art_color'),
-            'art_url': textPreserve('art_url') ?? '',
-            'art_url_medium': textPreserve('art_url_medium') ?? '',
-            'art_url_small': textPreserve('art_url_small') ?? '',
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-        // P25 (singer/category sync fix): the API speaks BOTH shapes —
-        // delta pulls send `category_ids`/`zemarian_ids` (int lists) while
-        // hymn save echoes send `categories`/`zemarians` (object lists).
-        // Previously the echo shape was ignored, so a hymn saved offline
-        // LOST its joins on-device until the next delta pull (its
-        // placeholder joins were dropped right after). Normalize both.
-        final catIds = h.containsKey('category_ids')
-            ? _asIntList(h['category_ids'])
-            : _idListOfMaps(h['categories']);
-        final zemIds = h.containsKey('zemarian_ids')
-            ? _asIntList(h['zemarian_ids'])
-            : _idListOfMaps(h['zemarians']);
-        if (catIds != null || zemIds != null) {
-          await txn.delete('cached_hymn_categories',
-              where: 'hymn_id = ?', whereArgs: [id]);
-          await txn.delete('cached_hymn_zemarians',
-              where: 'hymn_id = ?', whereArgs: [id]);
-          for (final cid in catIds ?? const <int>[]) {
-            await txn.insert(
-                'cached_hymn_categories', {'hymn_id': id, 'category_id': cid});
-          }
-          for (final zid in zemIds ?? const <int>[]) {
-            await txn.insert(
-                'cached_hymn_zemarians', {'hymn_id': id, 'zemarian_id': zid});
-          }
-        }
-      }
-      await batch.commit(noResult: true);
-    });
-    // P38: reindex only rows whose SEARCHABLE text actually changed, and
-    // do it through the dirty queue so a sync that touches hundreds of
-    // hymns cannot stall on index writes, and an interruption leaves the
-    // work queued rather than silently lost.
-    final dirty = <int>[];
-    for (final hymn in indexedRows) {
-      final id = _asIntLocal(hymn['id']);
-      if (id <= 0) continue;
-      final before = priorText[id];
-      if (before == null ||
-          SearchIndexPolicy.needsReindex(
-            oldTitle: before.$1,
-            oldLyrics: before.$2,
-            newTitle: '${hymn['title'] ?? ''}',
-            newLyrics: '${hymn['lyrics'] ?? ''}',
-          )) {
-        dirty.add(id);
-      }
-    }
-    await markHymnsDirty(dirty);
-    await processDirtySearchRows();
-  }
-
-  /// Fill lyrics into an already-cached row (lazy blob download).
-  /// P48: delegate to the shared, unit-tested policy so the DB layer and
-  /// any future caller can never disagree about when a sync payload may
-  /// overwrite a curator's timings.
-  static String? _mergeSyncedLyrics(Object? incoming, String? local) =>
-      SyncedLyricsMerge.merge(incoming: incoming, local: local);
-
-  /// P46: write timed (LRC) lyrics locally.
-  ///
-  /// Optimistic: the karaoke view reflects an edit before the upload
-  /// happens, so timing work is visible offline. `revision` is left
-  /// alone — the server owns it, and the delta pull will reconcile.
-  Future<void> updateHymnSyncedLyrics(int hymnId, String? lrc) async {
-    final db = await database;
-    await db.update(
-      'cached_hymns',
-      {
-        'lyrics_synced': lrc,
-        'lyrics_synced_at': DateTime.now().toUtc().toIso8601String(),
-      },
-      where: 'id = ?',
-      whereArgs: [hymnId],
-    );
-  }
-
-  Future<void> updateHymnLyrics(int id, String lyrics, int revision) async {
-    final db = await database;
-    await db.rawUpdate(
-        'UPDATE cached_hymns SET lyrics = ?, revision = MAX(revision, ?), fetched_at = ? WHERE id = ?',
-        [lyrics, revision, DateTime.now().toIso8601String(), id]);
-    // P38: lyrics blobs stream in long after the row was cached, and
-    // this is the ONLY moment a hymn becomes searchable by its body.
-    // Route it through the dirty queue like every other write.
-    await markHymnsDirty([id]);
-    await processDirtySearchRows();
-  }
-
-  /// Indexed local search. The query returns only word-index candidates, so
-  /// low-end devices do not load and scan every cached lyrics blob.
-  Future<List<Map<String, dynamic>>> searchHymnCandidates(
-    String search, {
-    String? category,
-    bool includeArchived = false,
-    String? length,
-    String? language,
-    int? categoryId,
-    int? zemarianId,
-    int limit = 500,
-  }) async {
-    final db = await database;
-    final terms = amharic.queryTerms(search);
-    if (terms.isEmpty) return const [];
-    // P37: rank candidates by HOW MANY query terms they contain, so a
-    // hymn matching every word is fetched even when thousands of rows
-    // contain one common word.
-    //
-    // The previous query was `WHERE word LIKE a% OR word LIKE b% LIMIT n`,
-    // which is wrong twice over: LIMIT applied to an unordered set, so
-    // the best row was routinely cut before ranking ever saw it, and
-    // multi-word queries behaved as pure OR with no preference for rows
-    // matching everything. GROUP BY + ORDER BY hits fixes both while
-    // still returning partial matches (below the complete ones).
-    // P39: retrieval must find SUBSTRINGS, not just prefixes. Amharic
-    // words carry grammatical prefixes (በ-, ለ-, የ-, ከ-), so the root the
-    // user types is usually NOT at the start of the stored word — the
-    // old `word LIKE 'term%'` silently missed those, which is the
-    // "it says no match but there is" bug.
-    //
-    // `LIKE '%term%'` would find them but cannot use an index. So we
-    // look candidates up by TRIGRAM equality (indexed) and let the Dart
-    // ranker verify exactly. Terms shorter than a trigram have no
-    // interior grams, so they fall back to a prefix probe on the word
-    // index — that is the 1-2 character type-ahead case.
-    final gramTerms = terms.where(SearchMatching.isIndexable).toList();
-    final shortTerms = terms.where((t) => !SearchMatching.isIndexable(t));
-
-    List<Map<String, Object?>> idRows = const [];
-    if (gramTerms.isNotEmpty) {
-      final grams = <String>{};
-      for (final t in gramTerms) {
-        grams.addAll(SearchMatching.queryGrams(t));
-      }
-      if (grams.isNotEmpty) {
-        final ph = List.filled(grams.length, '?').join(',');
-        idRows = await db.rawQuery(
-            'SELECT hymn_id, COUNT(DISTINCT gram) AS hits '
-            'FROM hymn_search_grams WHERE gram IN ($ph) '
-            'GROUP BY hymn_id ORDER BY hits DESC LIMIT ?',
-            [...grams, limit]);
-      }
-    }
-    if (idRows.isEmpty) {
-      // Short query (or nothing gram-indexed): prefix probe. Cheap and
-      // indexed, and enough to make single letters feel instant.
-      final probes = [...shortTerms, ...gramTerms];
-      if (probes.isEmpty) return const [];
-      final ors = probes.map((_) => 'word LIKE ?').join(' OR ');
-      idRows = await db.rawQuery(
-          'SELECT hymn_id, COUNT(DISTINCT word) AS hits '
-          'FROM hymn_search_words WHERE $ors '
-          'GROUP BY hymn_id ORDER BY hits DESC LIMIT ?',
-          [for (final t in probes) '$t%', limit]);
-    }
-    final ids = idRows.map((row) => _asIntLocal(row['hymn_id'])).where((id) => id > 0).toList();
-    if (ids.isEmpty) return const [];
-    return _getLocalHymnsByIds(db, ids,
-        category: category,
-        includeArchived: includeArchived,
-        length: length,
-        language: language,
-        categoryId: categoryId,
-        zemarianId: zemarianId);
-  }
-
-  Future<List<Map<String, dynamic>>> _getLocalHymnsByIds(
-      Database db, List<int> ids,
-      {String? category,
-      bool includeArchived = false,
-      String? length,
-      String? language,
-      int? categoryId,
-      int? zemarianId}) async {
-    final where = <String>['id IN (${List.filled(ids.length, '?').join(',')})'];
-    final args = <dynamic>[...ids];
-    if (!includeArchived) where.add("status = 'active'");
-    if (category != null && category.isNotEmpty) {
-      where.add('category = ?');
-      args.add(category);
-    }
-    if (length != null && length.isNotEmpty) {
-      where.add('length = ?');
-      args.add(length);
-    }
-    if (language != null && language.isNotEmpty) {
-      where.add('language = ?');
-      args.add(language);
-    }
-    if (categoryId != null && categoryId > 0) {
-      where.add(
-          'EXISTS (SELECT 1 FROM cached_hymn_categories cc WHERE cc.hymn_id = cached_hymns.id AND (cc.category_id = ? OR cc.category_id IN (SELECT id FROM cached_mezmur_categories WHERE parent_id = ?)))');
-      args.add(categoryId);
-      args.add(categoryId);
-    }
-    if (zemarianId != null && zemarianId > 0) {
-      where.add('EXISTS (SELECT 1 FROM cached_hymn_zemarians cz WHERE cz.hymn_id = cached_hymns.id AND cz.zemarian_id = ?)');
-      args.add(zemarianId);
-    }
-    return db.query('cached_hymns',
-        where: where.join(' AND '),
-        whereArgs: args,
-        orderBy: 'title COLLATE NOCASE');
-  }
-
-  /// Structural (non-search) hymn filters, shared by the list query and
-  /// the P28 filter-sheet count query so the two can never diverge.
-  void _hymnStructWhere(
-    List<String> where,
-    List<dynamic> args, {
-    String? category,
-    bool includeArchived = false,
-    String? length,
-    String? language,
-    int? categoryId,
-    int? zemarianId,
-  }) {
-    if (!includeArchived) where.add("status = 'active'");
-    if (category != null && category.isNotEmpty) {
-      where.add('category = ?');
-      args.add(category);
-    }
-    if (length != null && length.isNotEmpty) {
-      where.add('length = ?');
-      args.add(length);
-    }
-    if (language != null && language.isNotEmpty) {
-      where.add('language = ?');
-      args.add(language);
-    }
-    if (categoryId != null && categoryId > 0) {
-      where.add(
-          'EXISTS (SELECT 1 FROM cached_hymn_categories cc WHERE cc.hymn_id = cached_hymns.id AND (cc.category_id = ? OR cc.category_id IN (SELECT id FROM cached_mezmur_categories WHERE parent_id = ?)))');
-      args.add(categoryId);
-      args.add(categoryId);
-    }
-    if (zemarianId != null && zemarianId > 0) {
-      where.add(
-          'EXISTS (SELECT 1 FROM cached_hymn_zemarians cz WHERE cz.hymn_id = cached_hymns.id AND cz.zemarian_id = ?)');
-      args.add(zemarianId);
-    }
-  }
-
-  /// Instant local search across title (P28: single Amharic title).
-  /// Local-first: the list never waits on the network.
-  Future<List<Map<String, dynamic>>> getLocalHymns({
-    String? search,
-    String? category,
-    bool includeArchived = false,
-    String? length,
-    String? language,
-    int? categoryId,
-    int? zemarianId,
-    int limit = 500,
-  }) async {
-    final db = await database;
-    final where = <String>[];
-    final args = <dynamic>[];
-    _hymnStructWhere(where, args,
-        category: category,
-        includeArchived: includeArchived,
-        length: length,
-        language: language,
-        categoryId: categoryId,
-        zemarianId: zemarianId);
-    if (search != null && search.trim().isNotEmpty) {
-      final like = '%${search.trim()}%';
-      where.add('title LIKE ?');
-      args.add(like);
-    }
-    return db.query(
-      'cached_hymns',
-      where: where.isEmpty ? null : where.join(' AND '),
-      whereArgs: args.isEmpty ? null : args,
-      orderBy: 'title COLLATE NOCASE',
-      limit: limit,
-    );
-  }
-
-  /// P28 (item 5): live result count for the filter sheet's Apply
-  /// button ("Show 47 hymns") — same structural filters as the list.
-  Future<int> countLocalHymns({
-    String? category,
-    bool includeArchived = false,
-    String? length,
-    String? language,
-    int? categoryId,
-    int? zemarianId,
-  }) async {
-    final db = await database;
-    final where = <String>[];
-    final args = <dynamic>[];
-    _hymnStructWhere(where, args,
-        category: category,
-        includeArchived: includeArchived,
-        length: length,
-        language: language,
-        categoryId: categoryId,
-        zemarianId: zemarianId);
-    final rows = await db.rawQuery(
-        'SELECT COUNT(*) c FROM cached_hymns${where.isEmpty ? '' : ' WHERE ${where.join(' AND ')}'}',
-        args.isEmpty ? null : args);
-    return rows.isEmpty ? 0 : _asIntLocal(rows.first['c']);
-  }
-
-  Future<Map<String, dynamic>?> getLocalHymn(int id) async {
-    final db = await database;
-    final rows = await db.query('cached_hymns', where: 'id = ?', whereArgs: [id]);
-    return rows.isEmpty ? null : rows.first;
-  }
-
-  /// Hymns whose lyrics blob has not been downloaded yet (prefetch queue).
-  Future<List<Map<String, dynamic>>> getHymnsMissingLyrics(int limit) async {
-    final db = await database;
-    return db.query(
-      'cached_hymns',
-      where: "status = 'active' AND (lyrics IS NULL)",
-      orderBy: 'id',
-      limit: limit,
-    );
-  }
-
-  Future<int> getLocalHymnCount() async {
-    final db = await database;
-    final r = await db.rawQuery("SELECT COUNT(*) c FROM cached_hymns WHERE status = 'active'");
-    return _asIntLocal(r.first['c']);
-  }
-
-  // ── categories ──────────────────────────────────────────────
-
-  /// Replace the local category list with the server's canonical one.
-  ///
-  /// This is a RECONCILING sync, not a blind upsert. The categories
-  /// endpoint always returns the *complete* list, so any local row whose
-  /// id is absent from [rows] no longer exists on the server and must be
-  /// deleted — otherwise a category deleted in the web admin lingers on
-  /// every phone forever (there is no per-row tombstone to pull).
-  ///
-  /// Two things are deliberately preserved:
-  ///   • negative ids — offline-created rows that have not been pushed
-  ///     yet. They are not "missing from the server", they were never
-  ///     sent. Deleting them would destroy unsynced user work.
-  ///   • rows named in [protectIds] — ids with a queued local edit.
-  ///
-  /// [authoritative] must be false when the caller could not actually
-  /// reach the server; an empty list from a failed request must never be
-  /// read as "the server has no categories".
-  Future<void> upsertCategories(List<dynamic> rows,
-      {bool authoritative = false, Set<int> protectIds = const {}}) async {
-    if (rows.isEmpty && !authoritative) return;
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    final serverIds = <int>{};
-    await db.transaction((txn) async {
-      final batch = txn.batch();
-      for (final c in rows.whereType<Map>()) {
-        final id = _asIntLocal(c['id']);
-        if (id <= 0) continue;
-        serverIds.add(id);
-        batch.insert(
-          'cached_mezmur_categories',
-          {
-            'id': id,
-            'name': '${c['name'] ?? ''}',
-            'parent_id': c['parent_id'] == null ? null : _asIntLocal(c['parent_id']),
-            'image_url': c['image_url'] == null || '${c['image_url']}' == ''
-                ? null
-                : '${c['image_url']}',
-            'gradient_start':
-                c['gradient_start'] == null || '${c['gradient_start']}' == ''
-                    ? null
-                    : '${c['gradient_start']}',
-            'gradient_end':
-                c['gradient_end'] == null || '${c['gradient_end']}' == ''
-                    ? null
-                    : '${c['gradient_end']}',
-            'sort_order': _asIntLocal(c['sort_order']),
-            'is_active': _asIntLocal(c['is_active']),
-            'updated_at': now,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-      await batch.commit(noResult: true);
-
-      if (!authoritative) return;
-      // ── reconcile: drop what the server no longer has ──────────
-      // Decision lives in TaxonomyReconcile so it is unit-tested; this
-      // block only applies the result.
-      final localRows =
-          await txn.query('cached_mezmur_categories', columns: ['id']);
-      final stale = TaxonomyReconcile.staleIds(
-        localIds: localRows.map((r) => _asIntLocal(r['id'])),
-        serverIds: serverIds,
-        protectIds: protectIds,
-      );
-      if (stale.isEmpty) return;
-      final marks = List.filled(stale.length, '?').join(',');
-      await txn.delete('cached_mezmur_categories',
-          where: 'id IN ($marks)', whereArgs: stale);
-      // Join rows would otherwise keep pointing at a category that is
-      // gone, leaving hymns filed under a phantom section.
-      await txn.delete('cached_hymn_categories',
-          where: 'category_id IN ($marks)', whereArgs: stale);
-      // A deleted MAIN category orphans its subs. The server drops them
-      // too (FK cascade), so they are already absent from `rows` and the
-      // sweep above catches them; this only cleans a parent pointer left
-      // dangling by an out-of-order response.
-      await txn.update('cached_mezmur_categories', {'parent_id': null},
-          where: 'parent_id IN ($marks)', whereArgs: stale);
-    });
-  }
-
-  /// Apply a category edit instantly (optimistic local-first write).
-  Future<void> upsertCategoryLocal(Map<String, dynamic> c) async {
-    final db = await database;
-    // REPLACE rewrites the WHOLE row, so columns the caller does not
-    // carry (parent_id, image_url) must be merged from the existing
-    // row — a rename must never flatten a sub back to a main.
-    final existing = await db.query('cached_mezmur_categories',
-        where: 'id = ?', whereArgs: [_asIntLocal(c['id'])], limit: 1);
-    final prev = existing.isNotEmpty
-        ? existing.first
-        : <String, Object?>{};
-    await db.insert(
-      'cached_mezmur_categories',
-      {
-        'id': _asIntLocal(c['id']),
-        'name': '${c['name'] ?? prev['name'] ?? ''}',
-        'parent_id': c.containsKey('parent_id')
-            ? (c['parent_id'] == null ||
-                    '${c['parent_id']}'.trim().isEmpty ||
-                    _asIntLocal(c['parent_id']) <= 0
-                ? null
-                : _asIntLocal(c['parent_id']))
-            : prev['parent_id'],
-        'image_url': '${c['image_url'] ?? prev['image_url'] ?? ''}',
-        'gradient_start':
-            '${c['gradient_start'] ?? prev['gradient_start'] ?? ''}',
-        'gradient_end': '${c['gradient_end'] ?? prev['gradient_end'] ?? ''}',
-        'sort_order': _asIntLocal(c['sort_order'] ?? prev['sort_order'] ?? 0),
-        'is_active': _isOne(c['is_active'] ?? prev['is_active']),
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  int _isOne(dynamic v) => v == 1 || v == '1' ? 1 : 0;
-
-  Future<List<Map<String, dynamic>>> getLocalCategories({bool activeOnly = true}) async {
-    final db = await database;
-    return db.query(
-      'cached_mezmur_categories',
-      where: activeOnly ? 'is_active = 1' : null,
-      orderBy: 'sort_order, name COLLATE NOCASE',
-    );
-  }
-
-  // ── zemarians (singers) + associations ─────────────────────
-
-  /// Reconciling sync for singers — same contract as [upsertCategories]:
-  /// server list is canonical, absent ids are deleted, negative
-  /// (offline-created) and [protectIds] rows survive.
-  Future<void> upsertZemarians(List<dynamic> rows,
-      {bool authoritative = false, Set<int> protectIds = const {}}) async {
-    if (rows.isEmpty && !authoritative) return;
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    final serverIds = <int>{};
-    await db.transaction((txn) async {
-      final batch = txn.batch();
-      for (final z in rows.whereType<Map>()) {
-        final id = _asIntLocal(z['id']);
-        if (id <= 0) continue;
-        serverIds.add(id);
-        batch.insert(
-          'cached_mezmur_zemarians',
-          {
-            'id': id,
-            'name': '${z['name'] ?? ''}',
-            'name_am': z['name_am'],
-            'image_url': z['image_url'] == null || '${z['image_url']}' == ''
-                ? null
-                : '${z['image_url']}',
-            'sort_order': _asIntLocal(z['sort_order']),
-            'is_active': _asIntLocal(z['is_active']),
-            'updated_at': now,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-      await batch.commit(noResult: true);
-
-      if (!authoritative) return;
-      final localRows =
-          await txn.query('cached_mezmur_zemarians', columns: ['id']);
-      final stale = TaxonomyReconcile.staleIds(
-        localIds: localRows.map((r) => _asIntLocal(r['id'])),
-        serverIds: serverIds,
-        protectIds: protectIds,
-      );
-      if (stale.isEmpty) return;
-      final marks = List.filled(stale.length, '?').join(',');
-      await txn.delete('cached_mezmur_zemarians',
-          where: 'id IN ($marks)', whereArgs: stale);
-      await txn.delete('cached_hymn_zemarians',
-          where: 'zemarian_id IN ($marks)', whereArgs: stale);
-    });
-  }
-
-  Future<void> upsertZemarianLocal(Map<String, dynamic> z) async {
-    final db = await database;
-    // Merge from the existing row: REPLACE rewrites the whole row and a
-    // local rename/hide must never wipe the singer's cover image (P34).
-    final existing = await db.query('cached_mezmur_zemarians',
-        where: 'id = ?', whereArgs: [_asIntLocal(z['id'])], limit: 1);
-    final prev = existing.isNotEmpty ? existing.first : <String, Object?>{};
-    await db.insert(
-      'cached_mezmur_zemarians',
-      {
-        'id': _asIntLocal(z['id']),
-        'name': '${z['name'] ?? prev['name'] ?? ''}',
-        'name_am': z['name_am'] ?? prev['name_am'],
-        'image_url': '${z['image_url'] ?? prev['image_url'] ?? ''}',
-        'sort_order': _asIntLocal(z['sort_order'] ?? prev['sort_order'] ?? 0),
-        'is_active': _isOne(z['is_active'] ?? prev['is_active']),
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getLocalZemarians({bool activeOnly = true}) async {
-    final db = await database;
-    return db.query(
-      'cached_mezmur_zemarians',
-      where: activeOnly ? 'is_active = 1' : null,
-      orderBy: 'sort_order, name COLLATE NOCASE',
-    );
-  }
-
-  /// P24: hymn counts per category / singer (Streaming-style tiles) —
-  /// active hymns only, computed on-device from the cached joins.
-  Future<Map<int, int>> getCategoryHymnCounts() async {
-    final db = await database;
-    // P30: rolled-up counts — a MAIN's total includes every sub's
-    // hymns (deduped via EXISTS), a SUB counts its own leaves.
-    final rows = await db.rawQuery(
-      "SELECT c.id AS tid, (SELECT COUNT(*) FROM cached_hymns h "
-      "WHERE h.status = 'active' AND EXISTS (SELECT 1 FROM cached_hymn_categories cc "
-      "WHERE cc.hymn_id = h.id AND (cc.category_id = c.id OR cc.category_id IN "
-      "(SELECT id FROM cached_mezmur_categories WHERE parent_id = c.id)))) AS n "
-      "FROM cached_mezmur_categories c");
-    return {for (final r in rows) _asIntLocal(r['tid']): _asIntLocal(r['n'])};
-  }
-
-  Future<Map<int, int>> getZemarianHymnCounts() async {
-    final db = await database;
-    final rows = await db.rawQuery(
-      "SELECT cz.zemarian_id AS tid, COUNT(*) AS n FROM cached_hymn_zemarians cz "
-      "JOIN cached_hymns h ON h.id = cz.hymn_id AND h.status = 'active' "
-      "GROUP BY cz.zemarian_id");
-    return {for (final r in rows) _asIntLocal(r['tid']): _asIntLocal(r['n'])};
-  }
-
-  /// Extract ids from an API object list ({'id':..,'name':..}); null
-  /// when the value is absent so callers can distinguish "no data" from
-  /// "empty list".
-  List<int>? _idListOfMaps(dynamic v) {
-    if (v == null) return null;
-    if (v is! List) return const [];
-    final out = <int>[];
-    for (final e in v) {
-      if (e is Map) {
-        final id = _asIntLocal(e['id']);
-        if (id > 0) out.add(id);
-      }
-    }
-    return out;
-  }
-
-  Future<List<int>> getHymnCategoryIds(int hymnId) async {
-    final db = await database;
-    final rows = await db.query('cached_hymn_categories',
-        columns: ['category_id'], where: 'hymn_id = ?', whereArgs: [hymnId]);
-    // P23: placeholder ids (< 0, offline-created taxonomy) are returned
-    // too — filtering them out made the editor silently forget the
-    // selection, and re-saving erased the links on-device.
-    return rows.map((r) => _asIntLocal(r['category_id'])).where((e) => e != 0).toList();
-  }
-
-  Future<List<int>> getHymnZemarianIds(int hymnId) async {
-    final db = await database;
-    final rows = await db.query('cached_hymn_zemarians',
-        columns: ['zemarian_id'], where: 'hymn_id = ?', whereArgs: [hymnId]);
-    return rows.map((r) => _asIntLocal(r['zemarian_id'])).where((e) => e != 0).toList();
-  }
-
-  // ── outbox: queued hymn mutations ───────────────────────────
-
-  String? _hymnEntityKey(String op, Map<String, dynamic> payload) {
-    final id = _asIntLocal(payload['id']);
-    if (op.startsWith('hymn_') || op == 'lyrics_synced') {
-      return id == 0 ? null : 'hymn:$id';
-    }
-    if (op.startsWith('category_')) {
-      if (id != 0) return 'category:$id';
-      final name = '${payload['name'] ?? ''}'.trim().toLowerCase();
-      return name.isEmpty ? null : 'category-name:$name';
-    }
-    if (op.startsWith('zemarian_')) {
-      if (id != 0) return 'zemarian:$id';
-      final name = '${payload['name'] ?? ''}'.trim().toLowerCase();
-      return name.isEmpty ? null : 'zemarian-name:$name';
-    }
-    return null;
-  }
-
-  bool _hasNegativeHymnReference(Map<String, dynamic> payload) {
-    for (final field in const ['categories', 'zemarians']) {
-      final values = payload[field];
-      if (values is! List) continue;
-      for (final value in values) {
-        final id = value is Map
-            ? _asIntLocal(value['id'])
-            : _asIntLocal(value);
-        if (id < 0) return true;
-      }
-    }
-    return false;
-  }
-
-  Future<int?> _hymnDependencyFor(
-    Transaction txn,
-    String op,
-    Map<String, dynamic> payload,
-    String? entityKey,
-  ) async {
-    final ids = <int>[];
-    if (entityKey != null) {
-      final prior = await txn.query(
-        'pending_hymn_ops',
-        columns: ['id'],
-        where: 'synced = 0 AND entity_key = ?',
-        whereArgs: [entityKey],
-        orderBy: 'id DESC',
-        limit: 1,
-      );
-      if (prior.isNotEmpty) ids.add(_asIntLocal(prior.first['id']));
-    }
-    final isPlaceholderTaxonomy =
-        (op == 'category_save' || op == 'zemarian_save') &&
-            _asIntLocal(payload['id']) < 0;
-    if (isPlaceholderTaxonomy ||
-        (op == 'hymn_save' && _hasNegativeHymnReference(payload))) {
-      final priorPlaceholder = await txn.rawQuery('''
-        SELECT id FROM pending_hymn_ops
-         WHERE synced = 0
-           AND (entity_key LIKE 'category:-%'
-                OR entity_key LIKE 'zemarian:-%')
-         ORDER BY id DESC LIMIT 1
-      ''');
-      if (priorPlaceholder.isNotEmpty) {
-        ids.add(_asIntLocal(priorPlaceholder.first['id']));
-      }
-    }
-    ids.removeWhere((id) => id <= 0);
-    if (ids.isEmpty) return null;
-    return ids.reduce((a, b) => a > b ? a : b);
-  }
-
-  Future<int> enqueueHymnOp(String op, Map<String, dynamic> payload) async {
-    final db = await database;
-    final opId = newClientOpId();
-    payload['client_op_id'] = opId;
-    return db.transaction((txn) async {
-      final binding = await requireActiveOwnerBinding(txn);
-      final entityKey = _hymnEntityKey(op, payload);
-      final dependsOn =
-          await _hymnDependencyFor(txn, op, payload, entityKey);
-      return txn.insert('pending_hymn_ops', {
-        'op': op,
-        'payload_json': jsonEncode(payload),
-        'client_op_id': opId,
-        'created_at': DateTime.now().toIso8601String(),
-        'created_by_user_id': binding['owner_user_id'],
-        'created_authorization_version':
-            binding['created_authorization_version'],
-        'entity_key': entityKey,
-        'depends_on': dependsOn,
-      });
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getPendingHymnOps() async {
-    final db = await database;
-    return db.query('pending_hymn_ops', where: 'synced = 0', orderBy: 'id');
-  }
-
-  Future<int> getPendingHymnOpsCount() async {
-    final db = await database;
-    final r = await db.rawQuery(
-        'SELECT COUNT(*) c FROM pending_hymn_ops WHERE synced = 0');
-    return _asIntLocal(r.first['c']);
-  }
-
-  /// Claims one due hymn operation. New keyed operations are FIFO per entity;
-  /// old unkeyed rows conservatively retain global FIFO ordering. A failed
-  /// prerequisite blocks its dependent payload instead of letting it overtake.
-  Future<HymnOutboxClaim?> claimNextHymnOperation({
-    required int runtimeGeneration,
-    required int ownerUserId,
-    required int authorizationVersion,
-    DateTime? now,
-    // S2 Goal A.7: the provenance of the drain performing this claim. The
-    // authoritative execution boundary passes it down; it is never inferred
-    // here from who called us.
-    SyncExecutionSource executionSource = SyncExecutionSource.foreground,
-  }) async {
-    final db = await database;
-    final hasAttemptLedger = await _tableExists(db, 'sync_attempts');
-    final claimedAt = (now ?? DateTime.now()).toUtc();
-    final claimedAtText = claimedAt.toIso8601String();
-    return db.transaction((txn) async {
-      final sessionMatches = await activeSessionMatches(
-        runtimeGeneration: runtimeGeneration,
-        ownerUserId: ownerUserId,
-        authorizationVersion: authorizationVersion,
-        executor: txn,
-      );
-      if (!sessionMatches) return null;
-      await txn.rawUpdate('''
-        UPDATE pending_hymn_ops
-           SET sync_state = 'blocked_dependency',
-               failure_code = 'DEPENDENCY_UNRESOLVED',
-               sync_error = 'A required earlier change needs attention.',
-               next_attempt_at = NULL
-         WHERE synced = 0
-           AND sync_state IN ('pending', 'retry_wait')
-           AND depends_on IS NOT NULL
-           AND EXISTS (
-             SELECT 1 FROM pending_hymn_ops dependency
-              WHERE dependency.id = pending_hymn_ops.depends_on
-                AND dependency.synced = 0
-                AND dependency.sync_state IN (
-                  'needs_attention', 'paused_scope', 'resolved_conflict',
-                  'blocked_dependency'
-                )
-           )
-      ''');
-      final rows = await txn.rawQuery('''
-        SELECT candidate.*
-          FROM pending_hymn_ops candidate
-         WHERE candidate.synced = 0
-           AND candidate.sync_state IN ('pending', 'retry_wait')
-           AND (candidate.next_attempt_at IS NULL
-                OR candidate.next_attempt_at <= ?)
-           AND (
-             candidate.depends_on IS NULL OR EXISTS (
-               SELECT 1 FROM pending_hymn_ops dependency
-                WHERE dependency.id = candidate.depends_on
-                  AND dependency.synced = 1
-             )
-           )
-           AND NOT EXISTS (
-             SELECT 1 FROM pending_hymn_ops earlier
-              WHERE earlier.id < candidate.id
-                AND earlier.synced = 0
-                AND earlier.sync_state <> 'resolved_conflict'
-                AND (
-                  earlier.entity_key IS NULL
-                  OR TRIM(earlier.entity_key) = ''
-                  OR candidate.entity_key IS NULL
-                  OR TRIM(candidate.entity_key) = ''
-                  OR earlier.entity_key = candidate.entity_key
-                )
-           )
-         ORDER BY candidate.id
-         LIMIT 1
-      ''', [claimedAtText]);
-      if (rows.isEmpty) return null;
-      final row = rows.first;
-      final rowId = _asIntLocal(row['id']);
-      final priorState = '${row['sync_state']}';
-      final affected = await txn.rawUpdate(
-        "UPDATE pending_hymn_ops SET sync_state = 'in_flight', "
-        'attempt_count = attempt_count + 1, last_attempt_at = ?, '
-        'next_attempt_at = NULL '
-        'WHERE id = ? AND synced = 0 AND sync_state = ?',
-        [claimedAtText, rowId, priorState],
-      );
-      if (affected != 1) {
-        throw StateError('Hymn operation claim was not atomic.');
-      }
-      final clientOpId = '${row['client_op_id'] ?? ''}';
-      final operation = '${row['op'] ?? ''}';
-      final attemptNumber = _asIntLocal(row['attempt_count']) + 1;
-      final entityKey = '${row['entity_key'] ?? ''}'.trim();
-
-      // S2 Goal A.7 lineage: hymn operations join the SAME durable attempt
-      // ledger the legacy outbox has written since S1. The row is opened
-      // inside the claim transaction, after the claim has already proven
-      // atomic, so there can be no attempt row without a successful claim and
-      // no claimed operation whose attempt went unrecorded across a process
-      // death. _openSyncAttempt inserts with ConflictAlgorithm.ignore, so a
-      // replayed claim of the same (client_op_id, attempt_number) is a no-op
-      // instead of duplicated lineage.
-      //
-      // Rows predating client_op_id carry no transmission identity, and
-      // sync_attempts keys on it; inventing one would be fabricated lineage,
-      // so those rows claim exactly as before and stay unledgered.
-      if (hasAttemptLedger && clientOpId.isNotEmpty) {
-        final rowOwner = row['created_by_user_id'];
-        final rowAuthorizationVersion = row['created_authorization_version'];
-        await _openSyncAttempt(
-          txn,
-          clientOpId: clientOpId,
-          attemptNumber: attemptNumber,
-          attemptUid: newAttemptUid(),
-          domain: 'pending_hymn_ops',
-          startedAt: claimedAt,
-          // Natural key only — never the operation payload.
-          entityRef: {
-            'op': operation,
-            if (entityKey.isNotEmpty) 'entity_key': entityKey,
-          },
-          // The claimed operation's OWN lineage, not the drainer's. Hymn
-          // operations are shared, so the session draining one may differ
-          // from the session that created it; the legacy path records the
-          // claimed row's owner and this preserves that meaning. Falls back
-          // to the claiming session only for rows written before these
-          // columns carried a value.
-          ownerUserId: rowOwner == null ? ownerUserId : _asIntLocal(rowOwner),
-          authorizationVersion: rowAuthorizationVersion == null
-              ? authorizationVersion
-              : _asIntLocal(rowAuthorizationVersion),
-          executionSource: executionSource,
-        );
-      }
-
-      return HymnOutboxClaim(
-        rowId: rowId,
-        operation: operation,
-        payloadJson: '${row['payload_json'] ?? ''}',
-        clientOpId: clientOpId,
-        runtimeGeneration: runtimeGeneration,
-        attemptCount: attemptNumber,
-        claimedAt: claimedAt,
-      );
-    });
-  }
-
-  Future<HymnSettlementResult> settleHymnOperation({
-    required HymnOutboxClaim claim,
-    required HymnSettlement settlement,
-    required int currentRuntimeGeneration,
-    DateTime? now,
-    // S2 Goal A.7: how this attempt ended. Optional so a caller that does not
-    // participate in the ledger settles exactly as before.
-    SyncAttemptClosure? attemptClosure,
-  }) async {
-    if (claim.runtimeGeneration != currentRuntimeGeneration) {
-      return HymnSettlementResult.supersededSession;
-    }
-    final db = await database;
-    final hasAttemptLedger = await _tableExists(db, 'sync_attempts');
-    final settledAt = (now ?? DateTime.now()).toUtc().toIso8601String();
-    final values = <String, Object?>{
-      'failure_code': settlement.failureCode,
-      'failure_http_status': settlement.failureHttpStatus,
-    };
-    switch (settlement.kind) {
-      case HymnSettlementKind.accepted:
-        values.addAll({
-          'sync_state': 'synced',
-          'synced': 1,
-          'synced_at': settledAt,
-          'sync_error': null,
-          'next_attempt_at': null,
-          'failed_at': null,
-        });
-        break;
-      case HymnSettlementKind.retryable:
-        values.addAll({
-          'sync_state': 'retry_wait',
-          'next_attempt_at':
-              (settlement.nextAttemptAt ?? DateTime.parse(settledAt))
-                  .toUtc()
-                  .toIso8601String(),
-          'sync_error': settlement.failureMessage,
-          'failed_at': null,
-        });
-        break;
-      case HymnSettlementKind.needsAttention:
-        values.addAll({
-          'sync_state': 'needs_attention',
-          'next_attempt_at': null,
-          'sync_error': settlement.failureMessage,
-          'failed_at': settledAt,
-        });
-        break;
-      case HymnSettlementKind.pausedAuthentication:
-        values.addAll({
-          'sync_state': 'paused_auth',
-          'next_attempt_at': null,
-          'sync_error': settlement.failureMessage,
-          'failed_at': null,
-        });
-        break;
-      case HymnSettlementKind.pausedAuthorizationScope:
-        values.addAll({
-          'sync_state': 'paused_scope',
-          'next_attempt_at': null,
-          'sync_error': settlement.failureMessage,
-          'failed_at': null,
-        });
-        break;
-      case HymnSettlementKind.resolvedConflict:
-        values.addAll({
-          'sync_state': 'resolved_conflict',
-          'next_attempt_at': null,
-          'sync_error': settlement.failureMessage,
-          'failed_at': settledAt,
-        });
-        break;
-      case HymnSettlementKind.blockedDependency:
-        values.addAll({
-          'sync_state': 'blocked_dependency',
-          'next_attempt_at': null,
-          'sync_error': settlement.failureMessage,
-          'failed_at': null,
-        });
-        break;
-    }
-    final affected = await db.transaction((txn) async {
-      final sessionMatches = await activeSessionMatches(
-        runtimeGeneration: currentRuntimeGeneration,
-        executor: txn,
-      );
-      if (!sessionMatches) return -1;
-      final updated = await txn.update(
-        'pending_hymn_ops',
-        values,
-        where: "id = ? AND synced = 0 AND sync_state = 'in_flight' "
-            'AND client_op_id = ? AND last_attempt_at = ?',
-        whereArgs: [
-          claim.rowId,
-          claim.clientOpId,
-          claim.claimedAt.toUtc().toIso8601String(),
-        ],
-      );
-      // S2 Goal A.7 lineage: close this attempt in the same transaction that
-      // settles the row, and only when the settlement actually applied — a
-      // superseded settlement never closes an attempt it did not own. Only
-      // the matching open attempt is touched, so a later success can never
-      // rewrite an earlier failure.
-      if (updated == 1 &&
-          attemptClosure != null &&
-          hasAttemptLedger &&
-          claim.clientOpId.isNotEmpty) {
-        await _closeSyncAttempt(
-          txn,
-          clientOpId: claim.clientOpId,
-          attemptNumber: claim.attemptCount,
-          closure: attemptClosure,
-          finishedAt: DateTime.parse(settledAt),
-        );
-      }
-      return updated;
-    });
-    if (affected < 0) return HymnSettlementResult.supersededSession;
-    return affected == 1
-        ? HymnSettlementResult.applied
-        : HymnSettlementResult.supersededLocal;
-  }
-
-  /// Queued hymn_save ops for one LOCAL row id (negative placeholders).
-  /// Lets a re-save collapse into a single server create — without this,
-  /// create + edit while offline would post two hymns.
-  /// Deliberately replaces unsent edits for one optimistic hymn placeholder.
-  /// An HTTP-owned in-flight row is immutable; a fresh dependent generation is
-  /// inserted behind it instead of mutating the bytes under that request.
-  Future<bool> replacePendingHymnSaveForLocalId(
-    int localId,
-    Map<String, dynamic> payload,
-  ) async {
-    final db = await database;
-    return db.transaction((txn) async {
-      final rows = await txn.query(
-        'pending_hymn_ops',
-        where: "op = 'hymn_save' AND synced = 0",
-        orderBy: 'id',
-      );
-      final matching = <Map<String, Object?>>[];
-      for (final row in rows) {
-        try {
-          final decoded = jsonDecode('${row['payload_json'] ?? ''}');
-          if (decoded is Map && _asIntLocal(decoded['id']) == localId) {
-            matching.add(row);
-          }
-        } catch (_) {}
-      }
-      if (matching.isEmpty) return false;
-
-      final inFlight = matching
-          .where((row) => '${row['sync_state']}' == 'in_flight')
-          .toList(growable: false);
-      final replaceableIds = matching
-          .where((row) => '${row['sync_state']}' != 'in_flight')
-          .map((row) => _asIntLocal(row['id']))
-          .where((id) => id > 0)
-          .toList(growable: false);
-      if (replaceableIds.isNotEmpty) {
-        final marks = List.filled(replaceableIds.length, '?').join(',');
-        await txn.delete(
-          'pending_hymn_ops',
-          where: 'id IN ($marks)',
-          whereArgs: replaceableIds,
-        );
-      }
-
-      final binding = await requireActiveOwnerBinding(txn);
-      final freshId = newClientOpId();
-      final freshPayload = Map<String, dynamic>.from(payload)
-        ..['client_op_id'] = freshId;
-      final entityKey = _hymnEntityKey('hymn_save', freshPayload);
-      final dependency = inFlight.isNotEmpty
-          ? inFlight.map((row) => _asIntLocal(row['id'])).reduce(
-                (a, b) => a > b ? a : b,
-              )
-          : await _hymnDependencyFor(
-              txn,
-              'hymn_save',
-              freshPayload,
-              entityKey,
-            );
-      await txn.insert('pending_hymn_ops', {
-        'op': 'hymn_save',
-        'payload_json': jsonEncode(freshPayload),
-        'client_op_id': freshId,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-        'sync_state': 'pending',
-        'entity_key': entityKey,
-        'depends_on': dependency,
-        'created_by_user_id': binding['owner_user_id'],
-        'created_authorization_version':
-            binding['created_authorization_version'],
-      });
-      payload['client_op_id'] = freshId;
-      return true;
-    });
-  }
-
-  /// After a placeholder create is accepted, rebase any newer dependent edit
-  /// onto the real server id while preserving its optimistic cached contents.
-  Future<bool> rebasePendingHymnPlaceholder(
-    int localId,
-    int completedRowId,
-    Map<String, dynamic> canonical,
-  ) async {
-    if (localId >= 0) return false;
-    final serverId = _asIntLocal(canonical['id']);
-    if (serverId <= 0) return false;
-    final db = await database;
-    return db.transaction((txn) async {
-      final rows = await txn.query(
-        'pending_hymn_ops',
-        where: "id > ? AND op = 'hymn_save' AND synced = 0 "
-            "AND sync_state IN ('pending', 'retry_wait', 'blocked_dependency')",
-        whereArgs: [completedRowId],
-        orderBy: 'id',
-      );
-      var rebased = false;
-      for (final row in rows) {
-        try {
-          final decoded = jsonDecode('${row['payload_json'] ?? ''}');
-          if (decoded is! Map || _asIntLocal(decoded['id']) != localId) {
-            continue;
-          }
-          final payload = Map<String, dynamic>.from(decoded)
-            ..['id'] = serverId
-            ..['base_revision'] = _asIntLocal(canonical['revision']);
-          await txn.update(
-            'pending_hymn_ops',
-            {
-              'payload_json': jsonEncode(payload),
-              'entity_key': 'hymn:$serverId',
-              'depends_on': null,
-              if ('${row['sync_state']}' == 'blocked_dependency') ...{
-                'sync_state': 'pending',
-                'failure_code': null,
-                'sync_error': null,
-              },
-            },
-            where: "id = ? AND synced = 0 AND sync_state <> 'in_flight'",
-            whereArgs: [row['id']],
-          );
-          rebased = true;
-        } catch (_) {}
-      }
-      if (!rebased) return false;
-
-      final localRows = await txn.query(
-        'cached_hymns',
-        where: 'id = ?',
-        whereArgs: [localId],
-        limit: 1,
-      );
-      if (localRows.isEmpty) return false;
-      for (final spec in const [
-        ('cached_hymn_categories', 'category_id'),
-        ('cached_hymn_zemarians', 'zemarian_id'),
-      ]) {
-        await txn.rawDelete(
-          'DELETE FROM ${spec.$1} WHERE hymn_id = ? AND ${spec.$2} IN '
-          '(SELECT ${spec.$2} FROM ${spec.$1} WHERE hymn_id = ?)',
-          [localId, serverId],
-        );
-        await txn.update(
-          spec.$1,
-          {'hymn_id': serverId},
-          where: 'hymn_id = ?',
-          whereArgs: [localId],
-        );
-      }
-      await txn.delete(
-        'cached_hymns',
-        where: 'id = ?',
-        whereArgs: [serverId],
-      );
-      await txn.update(
-        'cached_hymns',
-        {
-          'id': serverId,
-          'revision': _asIntLocal(canonical['revision']),
-          'server_updated_at': canonical['updated_at']?.toString(),
-        },
-        where: 'id = ?',
-        whereArgs: [localId],
-      );
-      return true;
-    });
-  }
-
-  Future<bool> rebaseNewerPendingHymnRevision(
-    int hymnId,
-    int completedRowId,
-    Map<String, dynamic> canonical,
-  ) async {
-    if (hymnId <= 0) return false;
-    final db = await database;
-    return db.transaction((txn) async {
-      final rows = await txn.query(
-        'pending_hymn_ops',
-        where: "id > ? AND op = 'hymn_save' AND synced = 0 "
-            "AND sync_state IN ('pending', 'retry_wait', 'blocked_dependency')",
-        whereArgs: [completedRowId],
-        orderBy: 'id',
-      );
-      var rebased = false;
-      for (final row in rows) {
-        try {
-          final decoded = jsonDecode('${row['payload_json'] ?? ''}');
-          if (decoded is! Map || _asIntLocal(decoded['id']) != hymnId) {
-            continue;
-          }
-          final payload = Map<String, dynamic>.from(decoded)
-            ..['base_revision'] = _asIntLocal(canonical['revision']);
-          await txn.update(
-            'pending_hymn_ops',
-            {
-              'payload_json': jsonEncode(payload),
-              'depends_on': null,
-              if ('${row['sync_state']}' == 'blocked_dependency') ...{
-                'sync_state': 'pending',
-                'failure_code': null,
-                'sync_error': null,
-              },
-            },
-            where: "id = ? AND synced = 0 AND sync_state <> 'in_flight'",
-            whereArgs: [row['id']],
-          );
-          rebased = true;
-        } catch (_) {}
-      }
-      return rebased;
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getPendingHymnSavesForLocalId(
-      int localId) async {
-    final db = await database;
-    final ops = await db.query('pending_hymn_ops',
-        where: "op = 'hymn_save' AND synced = 0", orderBy: 'id');
-    final out = <Map<String, dynamic>>[];
-    for (final op in ops) {
-      try {
-        final payload = jsonDecode('${op['payload_json'] ?? '{}'}');
-        if (payload is Map && '${payload['id']}' == '$localId') out.add(op);
-      } catch (_) {}
-    }
-    return out;
-  }
-
-  // ── delta-sync cursor ───────────────────────────────────────
-
-  Future<String> getHymnSyncCursor() async {
-    final db = await database;
-    final rows = await db.query('hymn_sync_meta',
-        where: "key = 'cursor'", whereArgs: []);
-    return rows.isEmpty ? '' : '${rows.first['value'] ?? ''}';
-  }
-
-  Future<void> setHymnSyncCursor(String cursor) async {
-    final db = await database;
-    await db.insert(
-      'hymn_sync_meta',
-      {'key': 'cursor', 'value': cursor},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  /// 1.6.2 sync anchor: the dataset identity this local corpus was
-  /// built from (see server SyncInstanceService). Empty when never set.
-  Future<String> getHymnSyncInstanceId() async {
-    final db = await database;
-    final rows = await db.query('hymn_sync_meta',
-        where: "key = 'sync_instance_id'", whereArgs: []);
-    return rows.isEmpty ? '' : '${rows.first['value'] ?? ''}';
-  }
-
-  Future<void> setHymnSyncInstanceId(String instanceId) async {
-    final db = await database;
-    await db.insert(
-      'hymn_sync_meta',
-      {'key': 'sync_instance_id', 'value': instanceId},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  /// 1.6.2 sync-anchor reset: the server's dataset identity changed, so
-  /// every server-derived hymn row belongs to a previous dataset (a
-  /// "ghost" the delta stream can never remove — deletions only travel
-  /// as tombstones inside one dataset's own timeline). Deletes the
-  /// corpus minus ids with unpushed local edits (the outbox still owns
-  /// those and re-pushes them), clears the delta cursor so the next
-  /// pull rebuilds from the authoritative dataset, and drops orphaned
-  /// taxonomy join rows. The search index self-heals on the next open
-  /// (P38). Returns the number of hymn rows removed.
-  Future<int> resetHymnSyncForInstanceChange(Set<int> protectIds) async {
-    final db = await database;
-    var removed = 0;
-    await db.transaction((txn) async {
-      await txn.delete('hymn_sync_meta', where: "key = 'cursor'");
-      if (protectIds.isEmpty) {
-        removed = await txn.delete('cached_hymns');
-      } else {
-        final marks = List.filled(protectIds.length, '?').join(',');
-        removed = await txn.delete('cached_hymns',
-            where: 'id NOT IN ($marks)', whereArgs: protectIds.toList());
-      }
-      await txn.rawDelete(
-          'DELETE FROM cached_hymn_categories WHERE hymn_id NOT IN '
-          '(SELECT id FROM cached_hymns)');
-      await txn.rawDelete(
-          'DELETE FROM cached_hymn_zemarians WHERE hymn_id NOT IN '
-          '(SELECT id FROM cached_hymns)');
-    });
-    return removed;
   }
 
   // ============================================================
@@ -7171,7 +4282,7 @@ class LocalDb {
   }
 
   /// Purge server-derived reads whose visibility depends on the current role.
-  /// Durable private writes/drafts and every shared hymn table are preserved.
+  /// Durable private writes/drafts are preserved.
   Future<void> clearAuthorizationScopedReadCaches() async {
     final db = await database;
     await db.transaction((txn) async {
@@ -7253,8 +4364,7 @@ class LocalDb {
   }
 
   /// A complete credential bundle is the only evidence permitted to claim
-  /// ownerless legacy rows.  Shared hymn work receives creator provenance but
-  /// remains outside the private-account deletion boundary.
+  /// ownerless legacy rows.
   Future<void> backfillOwnerlessRows({
     required int ownerUserId,
     required int authorizationVersion,
@@ -7264,7 +4374,6 @@ class LocalDb {
       for (final table in const [
         'pending_attendance',
         'pending_grades',
-        'pending_mezmur',
         'pending_hr',
       ]) {
         await txn.update(
@@ -7286,19 +4395,11 @@ class LocalDb {
           where: 'owner_user_id IS NULL',
         );
       }
-      await txn.update(
-        'pending_hymn_ops',
-        {
-          'created_by_user_id': ownerUserId,
-          'created_authorization_version': authorizationVersion,
-        },
-        where: 'synced = 0 AND created_by_user_id IS NULL',
-      );
     });
   }
 
   /// Whether another bounded legacy drain pass has immediately due work for
-  /// the active owner/scope. Shared hymn and communication rows are excluded;
+  /// the active owner/scope. Communication rows are excluded;
   /// their own workers provide the corresponding bounded-rescan guarantees.
   Future<bool> hasDueLegacyOutbox({DateTime? now}) async {
     final db = await database;
@@ -7329,7 +4430,7 @@ class LocalDb {
   /// operations (not legacy child rows), and terminal review states never
   /// masquerade as network-retry work. Actionable private state counts use
   /// the active owner/scope; older-scope private work contributes only to the
-  /// safe paused/total counts. Shared hymn operations remain global by design.
+  /// safe paused/total counts.
   Future<OutboxInventory> getOutboxInventory({DateTime? now}) async {
     final db = await database;
     final nowText = (now ?? DateTime.now()).toUtc().toIso8601String();
@@ -7375,19 +4476,12 @@ class LocalDb {
 
       Future<int> allState(
         String legacyPredicate,
-        String hymnPredicate,
         String commPredicate, {
         String? attendancePredicate,
         List<Object?> legacyArgs = const [],
-        List<Object?> hymnArgs = const [],
         List<Object?> commArgs = const [],
       }) async {
         return await legacyState(legacyPredicate, legacyArgs, attendancePredicate) +
-            await scalar(
-              'SELECT COUNT(DISTINCT client_op_id) FROM pending_hymn_ops '
-              'WHERE synced = 0 AND ($hymnPredicate)',
-              hymnArgs,
-            ) +
             await scalar(
               'SELECT COUNT(*) FROM comm_outbox WHERE ($commPredicate) '
               'AND owner_user_id = ? '
@@ -7399,53 +4493,35 @@ class LocalDb {
       final due = await allState(
         "sync_state IN ('pending', 'retry_wait') AND "
             '(next_attempt_at IS NULL OR next_attempt_at <= ?)',
-        "sync_state IN ('pending', 'retry_wait') AND "
-            '(next_attempt_at IS NULL OR next_attempt_at <= ?) AND '
-            '(depends_on IS NULL OR EXISTS ('
-            'SELECT 1 FROM pending_hymn_ops dependency '
-            'WHERE dependency.id = pending_hymn_ops.depends_on '
-            'AND dependency.synced = 1))',
         "state IN ('pending', 'retry_wait') AND "
             '(next_attempt_at IS NULL OR next_attempt_at <= ?)',
         attendancePredicate: "sync_state IN ('pending', 'retry_wait') AND "
             '(next_attempt_at IS NULL OR next_attempt_at <= ?) '
             '$_attendanceClaimEligibilityWhere',
         legacyArgs: [nowText],
-        hymnArgs: [nowText],
         commArgs: [nowText],
       );
       final waiting = await allState(
         "sync_state IN ('pending', 'retry_wait') AND next_attempt_at > ?",
-        "(sync_state IN ('pending', 'retry_wait') AND next_attempt_at > ?) "
-            "OR (sync_state IN ('pending', 'retry_wait') "
-            'AND depends_on IS NOT NULL AND EXISTS ('
-            'SELECT 1 FROM pending_hymn_ops dependency '
-            'WHERE dependency.id = pending_hymn_ops.depends_on '
-            'AND dependency.synced = 0))',
         "state IN ('pending', 'retry_wait') AND next_attempt_at > ?",
         attendancePredicate: "sync_state IN ('pending', 'retry_wait') "
             'AND next_attempt_at > ? $_attendanceClaimEligibilityWhere',
         legacyArgs: [nowText],
-        hymnArgs: [nowText],
         commArgs: [nowText],
       );
       final inFlight = await allState(
-        "sync_state = 'in_flight'",
         "sync_state = 'in_flight'",
         "state = 'in_flight'",
       );
       final attention = await allState(
         "sync_state = 'needs_attention'",
-        "sync_state = 'needs_attention'",
         "state IN ('needs_attention', 'failed')",
       );
       final pausedAuth = await allState(
         "sync_state = 'paused_auth'",
-        "sync_state = 'paused_auth'",
         "state = 'paused_auth'",
       );
       final currentScopePaused = await allState(
-        "sync_state = 'paused_scope'",
         "sync_state = 'paused_scope'",
         "state = 'paused_scope'",
       );
@@ -7465,14 +4541,12 @@ class LocalDb {
       final pausedScope = currentScopePaused + oldScopePrivate;
       final blocked = await allState(
         "sync_state = 'blocked_dependency'",
-        "sync_state = 'blocked_dependency'",
         "state = 'blocked_dependency'",
         attendancePredicate: "sync_state = 'blocked_dependency' OR "
             "(sync_state IN ('pending', 'retry_wait') "
             'AND NOT (1 = 1 $_attendanceClaimEligibilityWhere))',
       );
       final conflicts = await allState(
-        "sync_state = 'resolved_conflict'",
         "sync_state = 'resolved_conflict'",
         "state = 'resolved_conflict'",
       );
@@ -7483,10 +4557,6 @@ class LocalDb {
                 'AND owner_user_id = ?',
                 [ownerUserId],
               );
-      final sharedHymns = await scalar(
-        'SELECT COUNT(DISTINCT client_op_id) FROM pending_hymn_ops '
-        'WHERE synced = 0',
-      );
       final drafts = await scalar(
         "SELECT COUNT(*) FROM comm_drafts WHERE TRIM(body) <> '' "
         'AND owner_user_id = ?',
@@ -7502,7 +4572,6 @@ class LocalDb {
         blockedDependency: blocked,
         resolvedConflict: conflicts,
         privateUnresolvedTotal: privateUnresolved,
-        sharedHymnUnresolvedTotal: sharedHymns,
         communicationDraftCount: drafts,
       );
     });
@@ -7528,7 +4597,6 @@ class LocalDb {
 
       final attendance = await operationCount('pending_attendance');
       final grades = await operationCount('pending_grades');
-      final mezmur = await operationCount('pending_mezmur');
       final hr = await operationCount('pending_hr');
       final commPending = await scalar(
         "SELECT COUNT(*) FROM comm_outbox WHERE state NOT IN "
@@ -7547,8 +4615,6 @@ class LocalDb {
              WHERE synced = 0 AND sync_state = 'needs_attention') +
           (SELECT COUNT(DISTINCT client_op_id) FROM pending_grades
              WHERE synced = 0 AND sync_state = 'needs_attention') +
-          (SELECT COUNT(DISTINCT client_op_id) FROM pending_mezmur
-             WHERE synced = 0 AND sync_state = 'needs_attention') +
           (SELECT COUNT(DISTINCT client_op_id) FROM pending_hr
              WHERE synced = 0 AND sync_state = 'needs_attention') +
           (SELECT COUNT(*) FROM comm_outbox
@@ -7560,23 +4626,15 @@ class LocalDb {
              WHERE synced = 0 AND sync_state IN ('paused_auth', 'paused_scope')) +
           (SELECT COUNT(DISTINCT client_op_id) FROM pending_grades
              WHERE synced = 0 AND sync_state IN ('paused_auth', 'paused_scope')) +
-          (SELECT COUNT(DISTINCT client_op_id) FROM pending_mezmur
-             WHERE synced = 0 AND sync_state IN ('paused_auth', 'paused_scope')) +
           (SELECT COUNT(DISTINCT client_op_id) FROM pending_hr
              WHERE synced = 0 AND sync_state IN ('paused_auth', 'paused_scope')) +
           (SELECT COUNT(*) FROM comm_outbox
              WHERE state IN ('paused_auth', 'paused_scope'))
       ''');
-      final sharedHymns = await scalar(
-        'SELECT COUNT(DISTINCT client_op_id) FROM pending_hymn_ops '
-        'WHERE synced = 0',
-      );
       final ownerRows = await txn.rawQuery('''
         SELECT owner_user_id FROM pending_attendance
           WHERE synced = 0 AND owner_user_id IS NOT NULL
         UNION SELECT owner_user_id FROM pending_grades
-          WHERE synced = 0 AND owner_user_id IS NOT NULL
-        UNION SELECT owner_user_id FROM pending_mezmur
           WHERE synced = 0 AND owner_user_id IS NOT NULL
         UNION SELECT owner_user_id FROM pending_hr
           WHERE synced = 0 AND owner_user_id IS NOT NULL
@@ -7599,7 +4657,6 @@ class LocalDb {
       return LocalDataInventory(
         attendanceOperations: attendance,
         gradeOperations: grades,
-        mezmurOperations: mezmur,
         hrOperations: hr,
         communicationPending: commPending,
         communicationFailed: commFailed,
@@ -7608,7 +4665,6 @@ class LocalDb {
         pausedOperations: paused,
         privateCacheRows: cacheRows,
         privateOwnerUserIds: privateOwners,
-        sharedHymnOperations: sharedHymns,
       );
     });
   }
@@ -7627,20 +4683,6 @@ class LocalDb {
   // ============================================================
   // CLEANUP
   // ============================================================
-
-  Future<void> cleanupSyncedHymnOps() async {
-    final db = await database;
-    final cutoff =
-        DateTime.now().subtract(const Duration(days: 7)).toIso8601String();
-    await db.delete('pending_hymn_ops',
-        where: 'synced = 1 AND synced_at < ?', whereArgs: [cutoff]);
-  }
-
-  Future<void> cleanupSyncedMezmur() async {
-    final db = await database;
-    await db
-        .delete('pending_mezmur', where: 'synced = 1');
-  }
 
   Future<void> cleanupSynced() async {
     final db = await database;
@@ -7666,11 +4708,7 @@ class LocalDb {
         whereArgs: [cutoff]);
     await db.delete('pending_grades',
         where: 'synced = 1 AND synced_at < ?', whereArgs: [cutoff]);
-    await db.delete('pending_mezmur',
-        where: 'synced = 1 AND synced_at < ?', whereArgs: [cutoff]);
     await db.delete('pending_hr',
-        where: 'synced = 1 AND synced_at < ?', whereArgs: [cutoff]);
-    await db.delete('pending_hymn_ops',
         where: 'synced = 1 AND synced_at < ?', whereArgs: [cutoff]);
   }
 
@@ -7695,24 +4733,17 @@ class LocalDb {
     await db.delete('cached_members');
     try { await db.delete('cached_attendance'); } catch (_) {}
     try { await db.delete('cached_grade_sheets'); } catch (_) {}
-    try { await db.delete('cached_mezmur_sheet'); } catch (_) {}
-    try { await db.delete('cached_mezmur_sections'); } catch (_) {}
     try { await db.delete('cached_hr_sheet'); } catch (_) {}
     try { await db.delete('cached_hr_sections'); } catch (_) {}
     await db.delete('attendance_preparation_snapshot');
     await db.delete('grades_preparation_snapshot');
     try { await db.delete('attendance_sync_receipt'); } catch (_) {}
     try { await db.delete('grades_sync_receipt'); } catch (_) {}
-    // NOTE: the hymn library (cached_hymns, cached_mezmur_categories,
-    // hymn_sync_meta, pending_hymn_ops) is deliberately NOT cleared —
-    // it is shared department content, not member data, and queued
-    // hymn edits must survive logout (product decision 2026-08-28).
   }
 
   /// Full transactional wipe for this device user — member/attendance
   /// cache + unsynced rows. Prevents the next login on this phone from
-  /// seeing the previous roster. The SHARED hymn library stays: it is
-  /// department content, not member data (and its queued edits survive).
+  /// seeing the previous roster.
   Future<void> clearAllUserData() async {
     final db = await database;
     await db.transaction((txn) async {
@@ -7725,12 +4756,6 @@ class LocalDb {
         'cached_members',
         'cached_attendance',
         'cached_grade_sheets',
-        'cached_mezmur_sheet',
-        'cached_mezmur_sections',
-        'cached_mezmur_days',
-        // P1-H: member attendance analytics (names/codes/rates) is
-        // authenticated PII and must never cross a logout boundary.
-        'cached_mezmur_analytics_last',
         'cached_review_packets',
         'cached_review_packet_details',
         'cached_review_stats',
@@ -7749,7 +4774,6 @@ class LocalDb {
         'cached_edu_teacher_details',
         'pending_attendance',
         'pending_grades',
-        'pending_mezmur',
         'pending_hr',
         'attendance_preparation_snapshot',
         'grades_preparation_snapshot',
@@ -7757,10 +4781,6 @@ class LocalDb {
         'grades_sync_receipt',
         'cached_hr_sheet',
         'cached_hr_sections',
-        // Intentionally kept on logout: cached_hymns,
-        // cached_mezmur_categories, hymn_sync_meta, pending_hymn_ops.
-        // Hymns are shared library content (no member PII); queued
-        // hymn edits wait here until a curator signs in again.
         // Comm tables (threads/messages/outbox/drafts/meta) ARE
         // member PII — wiped like everything else.
         'comm_threads',

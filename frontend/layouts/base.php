@@ -161,7 +161,7 @@ $_isImpersonating = !empty($_SESSION['original_admin_role']);
             'seal' => function_exists('ssms_school_seal_url') ? ssms_school_seal_url() : ($_themeBase . '/assets/seals/school_seal.png'),
             'features' => [
                 'ai' => feature_enabled('ai'), 'finance' => feature_enabled('finance'),
-                'mezmur' => feature_enabled('mezmur'), 'material' => feature_enabled('material'),
+                'material' => feature_enabled('material'),
                 'groups' => feature_enabled('groups'), 'idcards' => feature_enabled('id_cards'),
                 'attendance' => feature_enabled('attendance'), 'grades' => feature_enabled('grades'),
                 'reports' => feature_enabled('reports'), 'pdf' => feature_enabled('export_pdf'),

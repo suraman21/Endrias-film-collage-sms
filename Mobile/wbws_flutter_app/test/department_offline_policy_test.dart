@@ -2,10 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fkss_app/services/department_offline_policy.dart';
 
 void main() {
-  test('exactly two attendance scopes are offline today plus grades', () {
-    expect(DepartmentOfflinePolicy.offlineEnabledToday, hasLength(3));
+  test('exactly two scopes are offline today (education attendance + grades)', () {
+    expect(DepartmentOfflinePolicy.offlineEnabledToday, hasLength(2));
     expect(DepartmentOfflinePolicy.isOfflineEnabled(OfflineDepartment.educationAttendance), isTrue);
-    expect(DepartmentOfflinePolicy.isOfflineEnabled(OfflineDepartment.mezmurAttendance), isTrue);
     expect(DepartmentOfflinePolicy.isOfflineEnabled(OfflineDepartment.grades), isTrue);
   });
 

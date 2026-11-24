@@ -19,9 +19,6 @@ REVIEWS = os.path.join(APP, 'lib', 'screens', 'reviews',
                        'review_inbox_screen.dart')
 SYNC = os.path.join(APP, 'lib', 'services', 'sync_service.dart')
 POLICY = os.path.join(APP, 'lib', 'services', 'outbox_policy.dart')
-MEZMUR_ATTEND = os.path.join(APP, 'lib', 'screens', 'mezmur',
-                             'mezmur_attendance.dart')
-MEZMUR_HOME = os.path.join(APP, 'lib', 'screens', 'mezmur', 'mezmur_home.dart')
 MEMBERS = os.path.join(APP, 'lib', 'screens', 'members',
                        'member_list_screen.dart')
 NOTIF = os.path.join(APP, 'lib', 'screens', 'notifications',
@@ -29,7 +26,6 @@ NOTIF = os.path.join(APP, 'lib', 'screens', 'notifications',
 CONFIG = os.path.join(APP, 'lib', 'utils', 'config.dart')
 APISVC = os.path.join(APP, 'lib', 'services', 'api_service.dart')
 GRADES_PHP = os.path.join(ROOT, 'api', 'v1', 'routes', 'grades.php')
-MEZMUR_PHP = os.path.join(ROOT, 'api', 'v1', 'routes', 'mezmur.php')
 HR_PHP = os.path.join(ROOT, 'api', 'v1', 'routes', 'hr.php')
 SQLDIR = os.path.join(ROOT, 'sql')
 
@@ -107,8 +103,7 @@ class P1DDatabase(unittest.TestCase):
                   'cached_review_stats'):
             self.assertNotIn(f'ALTER TABLE {t}', self.ldb)
         # Earlier tables untouched by the v29 step.
-        for t in ('pending_mezmur', 'cached_mezmur_days',
-                  'cached_notifications', 'cached_announcements'):
+        for t in ('cached_notifications', 'cached_announcements'):
             self.assertIn(t, self.ldb)
         self.assertEqual(glob.glob(os.path.join(SQLDIR, '*p1d*')), [])
 
@@ -173,7 +168,7 @@ class P1DListFlow(unittest.TestCase):
 
     def test_status_windows_match_server_semantics(self):
         # 'attention' is department-specific by server contract:
-        # edu = incomplete/submitted/draft; mezmur+HR add
+        # edu = incomplete/submitted/draft; HR add
         # revision_needed.
         self.assertIn("widget.dept == 'edu'", self.cls)
         self.assertIn("'incomplete', 'submitted', 'draft'", self.cls)
@@ -297,7 +292,7 @@ class P1DOnlineOnlyActions(unittest.TestCase):
 
 
 class P1DDepartmentIsolation(unittest.TestCase):
-    """Education / HR / Mezmur cache scopes cannot collide."""
+    """Education / HR cache scopes cannot collide."""
 
     def test_identity_carries_dept(self):
         ldb = read(LDB)
@@ -317,8 +312,7 @@ class P1DDepartmentIsolation(unittest.TestCase):
 
     def test_existing_department_mapping_preserved(self):
         api = read(APISVC)
-        self.assertIn("dept == 'edu' ? '/grades' : (dept == 'hr' ? "
-                      "'/hr' : '/mezmur')", api)
+        self.assertIn("dept == 'edu' ? '/grades' : '/hr'", api)
 
     def test_stats_never_recomputed_locally(self):
         ldb = read(LDB)
@@ -346,7 +340,7 @@ class P1DDoNotTouch(unittest.TestCase):
         self.assertIn('throw StateError(', attendance)
         self.assertNotIn('.delete(', attendance)
         self.assertNotIn('await database', attendance)
-        for name in ('dropPendingGrades', 'dropPendingMezmur', 'dropPendingHr'):
+        for name in ('dropPendingGrades', 'dropPendingHr'):
             body = method_body(self.ldb, f'Future<void> {name}(')
             self.assertIn('sync_error IS NULL', body, name)
         sync = read(SYNC) + read(POLICY)
@@ -354,7 +348,6 @@ class P1DDoNotTouch(unittest.TestCase):
                       'IDEMPOTENCY_CONFLICT', 'IDEMPOTENCY_IN_PROGRESS',
                       'classifyOutboxResponse'):
             self.assertIn(token, sync)
-        self.assertNotIn('Future<void> rejectMezmur(', self.ldb)
         self.assertIn('discardRejectedOperation', self.ldb)
         discard = method_body(
             self.ldb,
@@ -362,7 +355,7 @@ class P1DDoNotTouch(unittest.TestCase):
         self.assertIn('client_op_id = ?', discard)
         self.assertIn('owner_user_id = ?', discard)
         # The review cache has no relationship to the outbox.
-        for token in ('pending_mezmur', 'pending_attendance',
+        for token in ('pending_attendance',
                       'pending_grades', 'pending_hr'):
             self.assertNotIn(token, method_body(
                 self.ldb, 'Future<void> cacheReviewPackets('))
@@ -373,20 +366,12 @@ class P1DDoNotTouch(unittest.TestCase):
         self.assertIn('getCachedMembers', read(MEMBERS))
         self.assertIn('getCachedMemberById', read(os.path.join(
             APP, 'lib', 'screens', 'members', 'member_detail_screen.dart')))
-        home = read(MEZMUR_HOME)
-        self.assertIn('getCachedMezmurDays', home)
-        self.assertIn('take(5)', home)
-        attend = read(MEZMUR_ATTEND)
-        self.assertIn('getCachedMezmurSheet', attend)
         # P1-C's table and migration branch still exist.
-        self.assertIn('cached_mezmur_days', self.ldb)
         self.assertIn('if (oldVersion < 28)', self.ldb)
 
     def test_server_contract_unchanged(self):
         for php, needle in (
                 (GRADES_PHP, "action === 'submissions'"),
-                (MEZMUR_PHP, "($method === 'GET' && $action === "
-                             "'submissions')"),
                 # HR_PHP dropped 2026-10-18: HR attendance fully retired (410).
                 (GRADES_PHP, "action === 'submission-review'")):
             self.assertIn(needle, read(php))

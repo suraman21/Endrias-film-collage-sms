@@ -222,7 +222,7 @@ final class AttendanceSummaryService
                 // data, not the moment the row happened to be written.
                 //
                 // Derived from the same source that feeds total_attendance_rate
-                // (the `attendance` table; HR/Mezmur keep their own datasets by
+                // (the `attendance` table; HR keeps its own dataset by
                 // product rule and are never merged here). Index-backed:
                 // idx_att_member_date (member_id, attendance_date) from
                 // sql/028 — and uq_att_member_class_date before it — are both

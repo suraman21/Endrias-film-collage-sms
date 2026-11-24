@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * WHAT THIS DELIBERATELY DOES NOT DO — these are architectural rules, not
  * omissions:
  *  - It never opens, reads or writes the database, and does not know that
- *    `pending_hymn_ops` or any other table exists.
+ *    `pending_grades` or any other table exists.
  *  - It never claims an operation, never retries, never leases, never
  *    implements idempotency, never checks an owner or an authorization
  *    version, and never inspects a session. Every one of those lives in the

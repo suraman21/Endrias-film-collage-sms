@@ -5,14 +5,13 @@ attendance instance of C/D found during the same pass).
 
 What went wrong
 ---------------
-A/B  HrSubmissionService::reviewPacket() and MezmurSubmissionService::
-     reviewPacket() read the packet's current status but used it ONLY to
-     label the audit record. The UPDATE was `WHERE id = ?` with no status
+A/B  HrSubmissionService::reviewPacket()
+     read the packet's current status but used it ONLY to label the audit record. The UPDATE was `WHERE id = ?` with no status
      predicate and no affected_rows check, so a reviewer decision could be
      applied to a packet in ANY state: approved -> rejected,
      rejected -> approved, revision_needed -> approved, or a packet the
      taker had never submitted. Two reviewers deciding at once both won.
-     Education already guarded this (finding H9); HR and Mezmur did not.
+     Education already guarded this (finding H9); HR did not.
 
 C/D  The upsert() paths never cleared review_notes / reviewed_by /
      reviewed_at, so a returned packet re-entered the reviewer's inbox
@@ -58,7 +57,7 @@ class SharedPolicyExists(unittest.TestCase):
 
     def test_policy_file_is_department_neutral(self):
         # It must not know about any department's tables or roles: that is
-        # what lets HR and Mezmur share it without depending on Education.
+        # what lets HR share it without depending on Education.
         for leak in ("grade_submissions", "hr_submissions", "mezmur_submissions",
                      "mysqli", "hr_dept", "edu_dept"):
             self.assertNotIn(leak, self.policy,
@@ -161,7 +160,7 @@ class EducationBehaviourPreserved(unittest.TestCase):
         # the five sentences above are the complete set the method can return
         self.assertEqual(len(rendered), len(before))
 
-    def test_hr_and_mezmur_render_their_own_vocabulary(self):
+    def test_hr_render_its_own_vocabulary(self):
         """The same templates must read correctly for a 'packet'/'taker'."""
         body = body_of(self.policy, "public static function error(",
                        end="\n    /**")
@@ -181,7 +180,6 @@ class ReviewPacketIsGuarded(unittest.TestCase):
 
     MODULES = {
         "HrSubmissionService.php": "hr_submissions",
-        "MezmurSubmissionService.php": "mezmur_submissions",
     }
 
     def _review_body(self, filename):
@@ -270,7 +268,6 @@ class ResubmissionClearsStaleReview(unittest.TestCase):
 
     CASES = [
         ("HrSubmissionService.php", "UPDATE hr_submissions"),
-        ("MezmurSubmissionService.php", "UPDATE mezmur_submissions"),
         ("SubmissionService.php", "UPDATE grade_submissions"),
     ]
 
@@ -284,7 +281,7 @@ class ResubmissionClearsStaleReview(unittest.TestCase):
 
     def test_clearing_is_conditional_not_unconditional(self):
         """Draft saves must keep the note the taker is working from."""
-        for filename in ("HrSubmissionService.php", "MezmurSubmissionService.php"):
+        for filename in ("HrSubmissionService.php",):
             with self.subTest(module=filename):
                 src = (SERVICES / filename).read_text(encoding="utf-8")
                 self.assertIn("$entersReviewQueue = $status === self::STATUS_SUBMITTED", src)
@@ -302,7 +299,7 @@ class ResubmissionClearsStaleReview(unittest.TestCase):
     def test_reviewer_columns_are_nullable_in_schema(self):
         """Writing NULL is only safe because the DDL permits it."""
         for path, table in (("sql/026_hr_attendance.sql", "hr_submissions"),
-                            ("sql/024_mezmur_submissions.sql", "mezmur_submissions")):
+                            ):
             with self.subTest(table=table):
                 ddl = (ROOT / path).read_text(encoding="utf-8")
                 self.assertIn("`reviewed_by`     INT UNSIGNED DEFAULT NULL", ddl)

@@ -66,8 +66,7 @@ void main() {
       expect(warningRateText({'rate': '66.67'}), '66.7%');
     });
     test('department label falls back by code', () {
-      expect(warningDepartmentLabel({'department': 'mezmur', 'department_label': 'Mezmur'}), 'Mezmur');
-      expect(warningDepartmentLabel({'department': 'mezmur'}), 'Mezmur');
+      expect(warningDepartmentLabel({'department': 'edu', 'department_label': 'Education'}), 'Education');
       expect(warningDepartmentLabel({'department': 'edu'}), 'Education');
     });
     test('outcome fallback list matches the server order and labels', () {

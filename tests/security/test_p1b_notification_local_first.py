@@ -252,7 +252,7 @@ class P1BTriggersAndContracts(unittest.TestCase):
         self.assertIn('throw StateError(', attendance)
         self.assertNotIn('.delete(', attendance)
         self.assertNotIn('await database', attendance)
-        for name in ('dropPendingGrades', 'dropPendingMezmur', 'dropPendingHr'):
+        for name in ('dropPendingGrades', 'dropPendingHr'):
             body = method_body(ldb, f'Future<void> {name}(')
             self.assertIn('sync_error IS NULL', body, name)
 

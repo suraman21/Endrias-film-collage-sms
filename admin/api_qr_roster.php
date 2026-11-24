@@ -5,10 +5,10 @@
  * ════════════════════════════════════════════════════════════
  * Streams a printable PDF grid of member QR tiles so every
  * department can hand members a scannable code (HR members already
- * carry one on their ID card; Education and Mezmur get rosters).
+ * carry one on their ID card; Education gets rosters).
  *
  *   GET ?dept=edu&class_id=N[&page=P]
- *   GET ?dept=mezmur|hr&section=S[&page=P]
+ *   GET ?dept=hr&section=S[&page=P]
  *
  * The QR payload is IDENTICAL to the ID-card payload
  *   {SITE_URL}/member.php?code={member_code}
@@ -65,7 +65,6 @@ $role = (string)($_SESSION['admin_role'] ?? '');
 $dept = (string)($_GET['dept'] ?? '');
 $deptRoleMap = [
     'edu'    => 'edu_dept',
-    'mezmur' => 'mezmur_dept',
     'hr'     => 'hr_dept',
 ];
 if (!isset($deptRoleMap[$dept])) {
@@ -181,7 +180,7 @@ $pdf->setPrintFooter(false);
 $pdf->SetFont('notosansethiopic', '', 9);
 $pdf->AddPage();
 
-$deptTitle = ['edu' => 'Education — Class', 'mezmur' => 'Mezmur — Section', 'hr' => 'HR — Section'][$dept];
+$deptTitle = ['edu' => 'Education — Class', 'hr' => 'HR — Section'][$dept];
 $pages = (int)ceil($total / QR_ROSTER_PAGE_SIZE);
 
 $pdf->SetFont('notosansethiopicb', '', 13);

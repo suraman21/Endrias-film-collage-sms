@@ -295,7 +295,7 @@ $sum = $atMetrics['summary'] ?? [];
                 <option value="">All statuses</option><option value="in_flight">In flight</option><option value="stale">Stale</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="rejected">Rejected</option><option value="replayed">Replayed</option>
             </select>
             <select id="sync-monitor-domain-filter" class="ar-select" style="width:auto;padding:.4rem .65rem;font-size:.78rem" onchange="SyncMonitorUI.loadAttempts(1)">
-                <option value="">All domains</option><option value="attendance">Attendance</option><option value="grades">Grades</option><option value="hr">HR</option><option value="mezmur">Mezmur</option><option value="notifications">Notifications</option><option value="users">Users</option><option value="other">Other</option>
+                <option value="">All domains</option><option value="attendance">Attendance</option><option value="grades">Grades</option><option value="hr">HR</option><option value="notifications">Notifications</option><option value="users">Users</option><option value="other">Other</option>
             </select>
             <select id="sync-monitor-source-filter" class="ar-select" style="width:auto;padding:.4rem .65rem;font-size:.78rem" onchange="SyncMonitorUI.loadAttempts(1)">
                 <option value="">All sources</option><option value="foreground">Foreground</option><option value="background">Background</option><option value="not_observed">Source not observed</option>

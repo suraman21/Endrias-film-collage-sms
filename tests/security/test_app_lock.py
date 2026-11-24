@@ -11,7 +11,7 @@ Security contract locked here:
   • lock gate sits in front of the whole app (main.dart home swap)
   • cold start opens locked when a passcode is set
   • lifecycle auto-lock hooks in AppShell
-  • hymn library + queued hymn edits SURVIVE logout (shared content),
+  • member data is wiped on logout,
     member/attendance data is still wiped
   • MainActivity extends FlutterFragmentActivity (local_auth requires)
 """
@@ -38,7 +38,6 @@ class AppLockSecurityTests(unittest.TestCase):
         cls.manifest = (M / "android/app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
         cls.pubspec = (M / "pubspec.yaml").read_text(encoding="utf-8")
         cls.db = (M / "lib/services/local_db.dart").read_text(encoding="utf-8")
-        cls.store = (M / "lib/services/hymn_store.dart").read_text(encoding="utf-8")
         cls.session = (M / "lib/services/session_service.dart").read_text(encoding="utf-8")
         cls.plist = (M / "ios/Runner/Info.plist").read_text(encoding="utf-8")
         cls.auth = (ROOT / "api/v1/core/auth.php").read_text(encoding="utf-8")
@@ -162,19 +161,6 @@ class AppLockSecurityTests(unittest.TestCase):
         # the lock (not a forced logout) protects the long session.
         self.assertIn("API_TOKEN_EXPIRY', 900", self.auth)
         self.assertIn("86400 * 90", self.auth)
-
-    # ── logout boundary: hymns stay, member data goes ─────────
-    def test_logout_keeps_hymns_wipes_member_data(self):
-        wipe = self.db.split("clearAllUserData")[1]
-        for sensitive in ("'cached_members',", "'pending_attendance',",
-                          "'pending_mezmur',", "'cached_mezmur_sheet',"):
-            self.assertIn(sensitive, wipe)
-        for kept in ("'cached_hymns',", "'pending_hymn_ops',", "'hymn_sync_meta',"):
-            self.assertNotIn(kept, wipe)
-        self.assertIn("if (!canEdit ||", self.store)
-        self.assertIn("shared hymn operation", self.logout_dialog)
-        self.assertIn("will be kept", self.logout_dialog)
-
 
 if __name__ == "__main__":
     unittest.main()

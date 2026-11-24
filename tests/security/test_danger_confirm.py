@@ -44,13 +44,12 @@ MIGRATED = [
     'admin/components/profile_tab_section.php',
     'admin/js/reports/reports_v2.js',
     'admin/js/attendance_analytics_hub.js',
-    # DC-4 Finance, Material, Groups, Mezmur, CMS, teachers/takers, shared
+    # DC-4 Finance, Material, Groups, CMS, teachers/takers, shared
     'admin/dashboards/finance_department.php',
     'frontend/js/finance.js',
     'admin/dashboards/material_department.php',
     'admin/groups.php',
     'admin/dashboards/groups.php',
-    'frontend/js/mezmur.js',
     'admin/js/content_editor.js',
     'admin/lesson_attendance.php',
     'admin/dashboards/teacher.php',

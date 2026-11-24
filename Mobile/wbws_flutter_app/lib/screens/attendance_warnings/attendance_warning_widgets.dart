@@ -47,7 +47,7 @@ Color warningStageColor(Map<dynamic, dynamic>? w) {
 String warningDepartmentLabel(Map<dynamic, dynamic> w) {
   final label = '${w['department_label'] ?? ''}';
   if (label.isNotEmpty) return label;
-  return '${w['department'] ?? ''}' == 'mezmur' ? 'Mezmur' : 'Education';
+  return 'Education';
 }
 
 /// Pure: lenient int from JSON.

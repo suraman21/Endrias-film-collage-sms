@@ -144,7 +144,7 @@ final class ApiSyncAttemptAdminService
     {
         $domain = trim((string)($filters['domain'] ?? ''));
         if ($domain === 'other') {
-            $where[] = "domain NOT IN ('attendance','grades','hr','mezmur','notifications','users')";
+            $where[] = "domain NOT IN ('attendance','grades','hr','notifications','users')";
         } elseif ($domain !== '' && preg_match('/^[a-z0-9_-]{1,48}$/D', $domain)) {
             $where[] = 'domain=?'; $params[] = $domain; $types .= 's';
         }

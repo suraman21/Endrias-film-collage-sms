@@ -4,7 +4,7 @@
 
 This release consumes the existing authenticated `GET /attendance/calendar`
 endpoint; it does not change server policy, route implementations, schemas,
-Mezmur attendance, dependencies, signing settings or update-enforcement policy.
+dependencies, signing settings or update-enforcement policy.
 The server remains authoritative on save/submit and outbox replay.
 
 `AttendanceCalendar` projects only the server's `o/m/n/c/d/h/x` codes. It does

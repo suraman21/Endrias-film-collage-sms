@@ -21,8 +21,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 
 SOURCE_TABLES = (
-    "attendance", "mezmur_attendance", "mezmur_submissions",
-    "hr_attendance", "hr_submissions",
+    "attendance", "hr_attendance", "hr_submissions",
 )
 
 
@@ -51,7 +50,6 @@ class PdfReportServiceContracts(unittest.TestCase):
     def test_member_history_keeps_sources_separate(self):
         # one table per source, each under its own heading
         self.assertIn("Education (class-based, recorded by teachers)", self.src)
-        self.assertIn("Mezmur (section-based, recorded by mezmur takers)", self.src)
         # HR attendance retired 2026-10-07; dropped from reports 2026-10-18.
         self.assertNotIn("HR (section-based, recorded by HR takers)", self.src)
         self.assertNotIn("FROM hr_attendance", self.src)

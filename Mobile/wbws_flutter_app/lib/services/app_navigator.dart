@@ -2,14 +2,13 @@ import 'package:flutter/widgets.dart';
 
 /// Global navigator handle (P35).
 ///
-/// The Mezmur now-playing bar is mounted in `MaterialApp.builder`, which
-/// sits ABOVE the Navigator so the bar survives pushed routes. That
-/// placement means the bar's own `BuildContext` has no Navigator
-/// ancestor, so `Navigator.of(context)` from inside it fails and taps do
-/// nothing.
+/// Widgets mounted in `MaterialApp.builder` sit ABOVE the Navigator, so
+/// their `BuildContext` has no Navigator ancestor and
+/// `Navigator.of(context)` from inside them fails. Services and view
+/// models that hold no `BuildContext` at all are in the same position.
 ///
-/// This key is handed to `MaterialApp.navigatorKey`, giving widgets that
-/// live above the Navigator a legitimate way to push routes.
+/// This key is handed to `MaterialApp.navigatorKey`, giving such callers
+/// a legitimate way to push routes or switch tabs.
 class AppNavigator {
   const AppNavigator._();
 

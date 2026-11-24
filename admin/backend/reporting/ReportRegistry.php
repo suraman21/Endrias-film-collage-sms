@@ -21,7 +21,7 @@
  * Clients never send SQL. They send field keys, operator keys and values;
  * ReportQueryService turns a validated definition into ONE prepared SELECT.
  *
- * Adding a department later (Education, Mezmur, Finance) = adding a dataset
+ * Adding a department later (Education, Finance) = adding a dataset
  * and fields here — no new endpoint, no new page.
  *
  * Shared‑hosting safe: pure PHP, no extensions, no Composer package.
@@ -44,7 +44,7 @@ final class ReportRegistry
     private const R_HR    = ['super_admin', 'school_admin', 'hr_dept'];
     /**
      * Owner decision 2026‑10‑19 (docs/planning/REPORTING_CENTRE_SCOPE_AND_ROLE_BOUNDARY_2026-10-19.md):
-     * future cross‑department / sensitive datasets (Finance, Material, Mezmur records,
+     * future cross‑department / sensitive datasets (Finance, Material records,
      * Education detail, telemetry) are Information‑Department‑only — use R_INFO for them.
      * HR's scope is frozen at V2‑3 until user feedback is reviewed.
      */
@@ -67,7 +67,6 @@ final class ReportRegistry
     public const BAND_GOOD      = \App\Services\AttendanceRiskService::BAND_GOOD;
     public const BAND_FAIR      = \App\Services\AttendanceRiskService::BAND_FAIR;
     public const SQL_ATTENDED_WEIGHTED_EDU    = "(SUM(a.status = 'present') + SUM(a.status = 'excused') + " . self::LATE_WEIGHT . " * SUM(a.status = 'late'))";
-    public const SQL_ATTENDED_WEIGHTED_MEZMUR = "(SUM(x.status = 'present') + SUM(x.status = 'excused') + " . self::LATE_WEIGHT . " * SUM(x.status = 'late'))";
     public const SQL_CURRENT_AY       = '(SELECT ay.id FROM `academic_years` ay WHERE ay.is_current = 1 ORDER BY ay.id DESC LIMIT 1)';
     public const SQL_CURRENT_AY_START = "COALESCE((SELECT ay.start_date FROM `academic_years` ay WHERE ay.is_current = 1 ORDER BY ay.id DESC LIMIT 1), '1000-01-01')";
     public const SQL_CURRENT_AY_END   = "COALESCE((SELECT ay.end_date FROM `academic_years` ay WHERE ay.is_current = 1 ORDER BY ay.id DESC LIMIT 1), '9999-12-31')";
@@ -147,7 +146,7 @@ final class ReportRegistry
                     'pe'  => "LEFT JOIN `class_enrollments` pe ON pe.id = (SELECT MAX(e.id) FROM `class_enrollments` e "
                            . "WHERE e.member_id = m.id AND e.academic_year_id = " . self::SQL_PREVIOUS_AY . ")",
                     'pcl' => "LEFT JOIN `classes` pcl ON pcl.id = pe.class_id",
-                    // ── Attendance bands (Education + Mezmur, read‑only), current academic‑year date range ──
+                    // ── Attendance bands (Education, read‑only), current academic‑year date range ──
                     // Attendance alerting Phase 4: the SAME weighted formula as AttendanceRiskService —
                     // attended = present + excused + 0.5·late over marked sessions (holidays never count).
                     // Scope note: this is the whole academic year, all rows (no packet/period scoping) —
@@ -157,19 +156,13 @@ final class ReportRegistry
                            . "SUM(a.status = 'absent' AND a.attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) AS absent_30d "
                            . "FROM `attendance` a WHERE a.status IN ('present','absent','late','excused') AND a.attendance_date BETWEEN " . self::SQL_CURRENT_AY_START . " AND " . self::SQL_CURRENT_AY_END . " "
                            . "GROUP BY a.member_id) ea ON ea.member_id = m.id",
-                    // Mezmur rows are date‑based (sql/023); legacy rows may only carry a session_id.
-                    'ma'  => "LEFT JOIN (SELECT x.member_id, COUNT(*) AS sessions, " . self::SQL_ATTENDED_WEIGHTED_MEZMUR . " AS attended, "
-                           . "MAX(CASE WHEN x.status IN ('present','late') THEN COALESCE(x.attendance_date, s.session_date) END) AS last_present "
-                           . "FROM `mezmur_attendance` x LEFT JOIN `mezmur_sessions` s ON s.id = x.session_id "
-                           . "WHERE (s.id IS NULL OR s.status = 'active') AND x.status IN ('present','absent','late','excused') AND COALESCE(x.attendance_date, s.session_date) BETWEEN " . self::SQL_CURRENT_AY_START . " AND " . self::SQL_CURRENT_AY_END . " "
-                           . "GROUP BY x.member_id) ma ON ma.member_id = m.id",
                     // ── Family Link (HR data): the primary / first guardian record ──
                     'mgp' => "LEFT JOIN `member_guardians` mgp ON mgp.member_id = m.id AND mgp.guardian_id = (SELECT mg.guardian_id FROM `member_guardians` mg "
                            . "WHERE mg.member_id = m.id ORDER BY mg.is_primary DESC, mg.contact_priority ASC, mg.guardian_id ASC LIMIT 1)",
                     'g'   => "LEFT JOIN `guardians` g ON g.id = mgp.guardian_id",
                 ],
                 'join_requires' => ['cl' => ['ce'], 'ct' => ['ce'], 'pcl' => ['pe'], 'g' => ['mgp']],
-                'owner_en' => 'Information department (directory), HR (registration & Family Link), Education (enrolment, attendance), Mezmur (attendance)',
+                'owner_en' => 'Information department (directory), HR (registration & Family Link), Education (enrolment, attendance)',
             ],
         ];
     }
@@ -367,7 +360,7 @@ final class ReportRegistry
                 'definition_en' => 'Compares the current active enrolment with the previous year\'s class level (Education data). "Not re‑enrolled" = had a class last year, none this year.',
             ],
 
-            // ───────────── Attendance (Education + Mezmur, current academic year, read‑only) ─────────────
+            // ───────────── Attendance (Education, current academic year, read‑only) ─────────────
             'edu_sessions' => [
                 'label_en' => 'Edu sessions marked', 'label_am' => 'የትምህርት ክትትል ቀናት', 'type' => 'int',
                 'sql' => 'COALESCE(ea.sessions, 0)', 'requires' => ['ea'],
@@ -400,31 +393,6 @@ final class ReportRegistry
                 'view' => self::R_ALL, 'export' => self::R_ALL, 'group' => false,
                 'definition_en' => 'Unexcused absences recorded in the last 30 days.',
             ],
-            'mezmur_sessions' => [
-                'label_en' => 'Mezmur sessions marked', 'label_am' => 'የመዝሙር ክትትል ቀናት', 'type' => 'int',
-                'sql' => 'COALESCE(ma.sessions, 0)', 'requires' => ['ma'],
-                'view' => self::R_ALL, 'export' => self::R_ALL, 'group' => false,
-            ],
-            'mezmur_attendance_rate' => [
-                'label_en' => 'Mezmur attendance %', 'label_am' => 'የመዝሙር ክትትል %', 'type' => 'int',
-                'sql' => 'ROUND(100 * ma.attended / NULLIF(ma.sessions, 0))', 'requires' => ['ma'],
-                'view' => self::R_ALL, 'export' => self::R_ALL, 'group' => false,
-            ],
-            'mezmur_attendance_band' => [
-                'label_en' => 'Mezmur attendance band', 'label_am' => 'የመዝሙር ክትትል ደረጃ', 'type' => 'derived_enum',
-                'sql' => "CASE WHEN COALESCE(ma.sessions, 0) = 0 THEN 'none' WHEN 100 * ma.attended / ma.sessions >= " . self::BAND_EXCELLENT . " THEN 'excellent' "
-                       . "WHEN 100 * ma.attended / ma.sessions >= " . self::BAND_GOOD . " THEN 'good' WHEN 100 * ma.attended / ma.sessions >= " . self::BAND_FAIR . " THEN 'fair' ELSE 'low' END",
-                'requires' => ['ma'],
-                'options' => ['excellent' => 'Excellent (≥90%)', 'good' => 'Good (75–89%)', 'fair' => 'Fair (50–74%)', 'low' => 'Low (<50%)', 'none' => 'No attendance marked'],
-                'view' => self::R_ALL, 'export' => self::R_ALL, 'sort' => false,
-                'definition_en' => 'Band of the Mezmur (choir) attendance rate this academic year.',
-            ],
-            'mezmur_last_present' => [
-                'label_en' => 'Mezmur last present', 'label_am' => 'በመዝሙር የመጨረሻ መገኘት', 'type' => 'date',
-                'sql' => 'ma.last_present', 'requires' => ['ma'],
-                'view' => self::R_ALL, 'export' => self::R_ALL, 'group' => false,
-            ],
-
             // ───────────── Contact & address (PII) ─────────────
             'phone_primary' => [
                 'label_en' => 'Phone', 'label_am' => 'ስልክ', 'type' => 'string',
@@ -609,7 +577,7 @@ final class ReportRegistry
         if (isset($map[$key])) {
             return $map[$key];
         }
-        foreach (['edu_' => 'attendance', 'mezmur_' => 'attendance', 'guardian' => 'guardian', 'fl_' => 'guardian', 'linked_' => 'guardian',
+        foreach (['edu_' => 'attendance', 'guardian' => 'guardian', 'fl_' => 'guardian', 'linked_' => 'guardian',
                   'has_' => 'quality', 'completeness' => 'quality', 'staff_' => 'staff', 'class_' => 'education', 'previous_class' => 'education',
                   'progression' => 'education', 'enrolled_at' => 'education'] as $needle => $cat) {
             if (str_starts_with($key, $needle) || str_contains($key, $needle)) {

@@ -175,8 +175,7 @@ class _LockScreenState extends State<LockScreen>
           'There is no passcode backdoor. Resetting it is destructive: it '
           'permanently removes private caches, ${inventory.workSummary}, '
           'saved credentials, and the app passcode. Server '
-          'data is not affected.'
-          '${inventory.sharedHymnOperations > 0 ? '\n\n${inventory.sharedHymnOperations} shared hymn operation(s) will be kept.' : ''}',
+          'data is not affected.',
           style: const TextStyle(fontSize: 12.5, height: 1.5),
         ),
         actions: [

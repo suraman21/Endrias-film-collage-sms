@@ -3,7 +3,7 @@
  * ============================================================================
  * Monthly attendance — shared report page (Attendance alerting — Phase 4)
  * ============================================================================
- * One report for Education, Mezmur, HR and Information (department-scoped on
+ * One report for Education, HR and Information (department-scoped on
  * the server by admin/api_attendance_monthly.php; HR and Information see both
  * departments, School Admin / Super Admin read-only like everyone else).
  * Shows every member's attendance for one ETHIOPIAN month from the derived
@@ -31,7 +31,7 @@ $departments = \App\Services\AttendanceWarningService::departmentsForRole($userR
 $today = new DateTime('now', new DateTimeZone('Africa/Addis_Ababa'));
 $roleLabels = [
     'super_admin' => 'Super Admin', 'school_admin' => 'School Admin', 'info_dept' => 'Information Department',
-    'hr_dept' => 'HR Department', 'edu_dept' => 'Education Department', 'mezmur_dept' => 'Mezmur Department',
+    'hr_dept' => 'HR Department', 'edu_dept' => 'Education Department',
 ];
 $reqDept = (string)($_GET['department'] ?? '');
 $cfg = [
@@ -124,7 +124,7 @@ $schoolName = defined('SCHOOL_NAME_SHORT') ? SCHOOL_NAME_SHORT : 'SSMS';
       <label>Department
         <select id="am-department">
           <?php foreach ($departments as $d): ?>
-            <option value="<?= $d ?>"><?= $d === 'edu' ? 'Education' : 'Mezmur' ?></option>
+            <option value="<?= $d ?>">Education</option>
           <?php endforeach; ?>
         </select>
       </label>

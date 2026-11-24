@@ -4,13 +4,12 @@
  * HR Attendance Reports API (web dashboard) — READ-ONLY
  * ════════════════════════════════════════════════════════════
  * HR no longer takes attendance (retired 2026-10-07); the
- * department READS combined attendance reports from the Education
- * and Mezmur departments instead. This endpoint is the governed
+ * department READS the attendance reports from the Education
+ * department instead. This endpoint is the governed
  * read path behind the HR dashboard's Attendance Reports section.
  *
  * Sources (never HR's own retired hr_* tables):
  *   • Education — `attendance` (class day sheets, mobile + web)
- *   • Mezmur    — `mezmur_attendance` (section day sheets, mobile)
  *
  * Defense in depth:
  *   1. access_control.php ROLE_MAP limits this file to
@@ -18,7 +17,7 @@
  *   2. This file re-checks login + role itself.
  *   3. Per-user rate limiting (reads only — no writes exist).
  *   4. Exceptions never leak internals; a missing source table
- *      degrades to zeros/empty rows (mezmur resilience pattern).
+ *      degrades to zeros/empty rows.
  *   5. Prepared statements only; PII discipline: names, codes and
  *      sections only — no contact or household columns.
  *
@@ -137,7 +136,6 @@ switch ($action) {
             'status' => 'success',
             'month' => $month,
             'education' => hr_reports_summary($conn, 'attendance', $month),
-            'mezmur' => hr_reports_summary($conn, 'mezmur_attendance', $month),
         ]);
     }
 
@@ -220,36 +218,11 @@ switch ($action) {
             $education = [];
         }
 
-        // Mezmur rows: date + status (section is the member's current
-        // section — historical per-day section is not stored per row).
-        $mezmur = [];
-        try {
-            $stmt = $conn->prepare(
-                'SELECT attendance_date, status
-                 FROM mezmur_attendance
-                 WHERE member_id = ? AND attendance_date LIKE ?
-                 ORDER BY attendance_date'
-            );
-            $stmt->bind_param('is', $memberId, $like);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_assoc()) {
-                $mezmur[] = [
-                    'date' => (string)$row['attendance_date'],
-                    'status' => (string)$row['status'],
-                ];
-            }
-            $stmt->close();
-        } catch (\Throwable $e) {
-            $mezmur = [];
-        }
-
         hr_reports_respond([
             'status' => 'success',
             'month' => $month,
             'member' => $member,
             'education' => $education,
-            'mezmur' => $mezmur,
         ]);
     }
 }

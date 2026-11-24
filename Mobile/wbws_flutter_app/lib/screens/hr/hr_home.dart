@@ -11,7 +11,7 @@ import '../attendance_warnings/attendance_warnings_screen.dart';
 /// HR department home — RETIRED ATTENDANCE (2026-10-07).
 ///
 /// HR no longer takes or reviews attendance: the department reads
-/// combined Education + Mezmur attendance reports on the school web
+/// Education attendance reports on the school web
 /// dashboard instead. The mobile review inbox is gone with the
 /// workflow it reviewed; this home stays for login, profile and
 /// notifications.
@@ -38,7 +38,7 @@ class _HrDeptHomeScreenState extends State<HrDeptHomeScreen> {
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1)),
           const SizedBox(height: 12),
-          // Attendance alerting Phase 2: HR reads Education + Mezmur
+          // Attendance alerting Phase 2: HR reads Education
           // warnings and may close them with an outcome. Hidden until the
           // server reports the feature switched on.
           if (AppUpdateService().featureEnabled('attendance_v2', fallback: false)) ...[
@@ -77,9 +77,9 @@ class _HrDeptHomeScreenState extends State<HrDeptHomeScreen> {
                 ]),
                 const SizedBox(height: 10),
                 Text(
-                  'HR no longer takes or reviews attendance. Combined '
-                  'attendance reports from the Education and Mezmur '
-                  'departments are on the school web dashboard '
+                  'HR no longer takes or reviews attendance. '
+                  'attendance reports from the Education '
+                  'department are on the school web dashboard '
                   '(HR → Attendance Reports). Everything recorded before '
                   'the change stays saved and readable there.',
                   style: TextStyle(fontSize: 12.5, height: 1.55, color: AppTheme.textSecondary),

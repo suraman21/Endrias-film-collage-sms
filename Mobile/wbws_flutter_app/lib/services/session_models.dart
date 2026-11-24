@@ -154,7 +154,6 @@ class OutboxInventory {
     this.blockedDependency = 0,
     this.resolvedConflict = 0,
     this.privateUnresolvedTotal = 0,
-    this.sharedHymnUnresolvedTotal = 0,
     this.communicationDraftCount = 0,
   });
 
@@ -167,7 +166,6 @@ class OutboxInventory {
   final int blockedDependency;
   final int resolvedConflict;
   final int privateUnresolvedTotal;
-  final int sharedHymnUnresolvedTotal;
   final int communicationDraftCount;
 
   int get paused => pausedAuth + pausedScope;
@@ -179,7 +177,6 @@ class LocalDataInventory {
   const LocalDataInventory({
     this.attendanceOperations = 0,
     this.gradeOperations = 0,
-    this.mezmurOperations = 0,
     this.hrOperations = 0,
     this.communicationPending = 0,
     this.communicationFailed = 0,
@@ -188,12 +185,10 @@ class LocalDataInventory {
     this.pausedOperations = 0,
     this.privateCacheRows = 0,
     this.privateOwnerUserIds = const <int>[],
-    this.sharedHymnOperations = 0,
   });
 
   final int attendanceOperations;
   final int gradeOperations;
-  final int mezmurOperations;
   final int hrOperations;
   final int communicationPending;
   final int communicationFailed;
@@ -205,25 +200,19 @@ class LocalDataInventory {
 
   bool get hasMixedPrivateOwners => privateOwnerUserIds.length > 1;
 
-  /// Shared hymn operations survive private-account cleanup and are never
-  /// included in the private-work decision.
-  final int sharedHymnOperations;
-
   int get legacyOperations =>
       attendanceOperations +
       gradeOperations +
-      mezmurOperations +
       hrOperations;
 
   int get communicationWork =>
       communicationPending + communicationFailed + communicationDrafts;
 
   /// Compatibility views retained from the v34 schema commit. Attention and
-  /// paused counts are subsets of the four domain totals, not additive work.
+  /// paused counts are subsets of the three domain totals, not additive work.
   int get privatePending => legacyOperations + communicationPending;
   int get privateNeedsAttention => attentionOperations;
   int get privatePaused => pausedOperations;
-  int get sharedHymnUnresolved => sharedHymnOperations;
 
   int get privateDurableWork => legacyOperations + communicationWork;
   bool get hasPrivateDurableWork => privateDurableWork > 0;
@@ -233,7 +222,6 @@ class LocalDataInventory {
       LocalDataInventory(
         attendanceOperations: attendanceOperations,
         gradeOperations: gradeOperations,
-        mezmurOperations: mezmurOperations,
         hrOperations: hrOperations,
         communicationPending: communicationPending,
         communicationFailed: communicationFailed,
@@ -242,7 +230,6 @@ class LocalDataInventory {
         pausedOperations: pausedOperations,
         privateCacheRows: privateCacheRows + additionalRows,
         privateOwnerUserIds: privateOwnerUserIds,
-        sharedHymnOperations: sharedHymnOperations,
       );
 
   String get workSummary {
@@ -251,7 +238,6 @@ class LocalDataInventory {
       parts.add('$attendanceOperations attendance batch(es)');
     }
     if (gradeOperations > 0) parts.add('$gradeOperations grade batch(es)');
-    if (mezmurOperations > 0) parts.add('$mezmurOperations mezmur batch(es)');
     if (hrOperations > 0) parts.add('$hrOperations HR batch(es)');
     if (communicationPending > 0) {
       parts.add('$communicationPending pending message(s)');

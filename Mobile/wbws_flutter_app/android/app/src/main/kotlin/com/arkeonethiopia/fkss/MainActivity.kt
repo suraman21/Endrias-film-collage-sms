@@ -13,10 +13,7 @@ import android.view.WindowManager
 import androidx.core.content.FileProvider
 // FlutterFragmentActivity (not FlutterActivity): required by
 // local_auth so the App Lock can use BiometricPrompt / fingerprint.
-// AudioServiceFragmentActivity extends FlutterFragmentActivity and adds
-// the audio_service bindings that keep P0 background mezmur playback
-// alive while the app is in the background.
-import com.ryanheise.audioservice.AudioServiceFragmentActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -24,7 +21,7 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.lang.ref.WeakReference
 
-class MainActivity : AudioServiceFragmentActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val channelName = "fkss.app/updater"
     private val lockChannelName = "fkss.app/app_lock"
     private val deviceChannelName = "fkss.app/device"

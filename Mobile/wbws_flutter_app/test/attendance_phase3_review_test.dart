@@ -33,21 +33,19 @@ void main() {
       expect(t['date'], '2026-09-28');
     });
 
-    test('mezmur sheet → section + date; bad date becomes empty', () {
-      final t = sheetTarget({
-        'target': {
-          'kind': 'attendance_sheet',
-          'id': 7,
-          'department': 'mezmur',
-          'section': 'Choir A',
-          'attendance_date': 'not-a-date',
-        }
-      });
-      expect(t, isNotNull);
-      expect(t!['department'], 'mezmur');
-      expect(t['section'], 'Choir A');
-      expect(t['classId'], 0);
-      expect(t['date'], '');
+    test('non-education departments are not routed to a sheet', () {
+      // The Mezmur department was removed; only 'edu' sheets deep-link.
+      expect(
+          sheetTarget({
+            'target': {
+              'kind': 'attendance_sheet',
+              'id': 7,
+              'department': 'mezmur',
+              'section': 'Choir A',
+              'attendance_date': '2026-09-28',
+            }
+          }),
+          isNull);
     });
   });
 }

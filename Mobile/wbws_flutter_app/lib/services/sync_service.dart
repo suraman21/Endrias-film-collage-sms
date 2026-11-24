@@ -6,8 +6,6 @@ import 'api_service.dart';
 import 'attendance_sync_coordinator.dart';
 import 'catalog_service.dart';
 import 'connectivity_service.dart';
-import 'mezmur_download_manager.dart';
-import 'hymn_store.dart';
 import 'legacy_outbox_models.dart';
 import 'local_db.dart';
 import 'outbox_policy.dart';
@@ -80,9 +78,7 @@ class SyncService {
   SyncStatus _lastStatus = SyncStatus(
       pendingAttendance: 0,
       pendingGrades: 0,
-      pendingMezmur: 0,
       pendingHr: 0,
-      pendingHymns: 0,
       syncing: false);
   SyncStatus get lastStatus => _lastStatus;
   String lastError = '';
@@ -321,37 +317,6 @@ class SyncService {
       }
     }
 
-    // Shared hymn operations use the same typed classifier and durable state,
-    // but remain deliberately outside private-owner inventory and purge.
-    // S2 Goal A.7: this drain is the authoritative execution boundary, so it
-    // hands the hymn push the same `source` the legacy kinds were given — the
-    // provenance is decided here once, never re-derived further down.
-    try {
-      final hymnStore = HymnStore();
-      final pushed = await hymnStore.pushPending(source: source);
-      if (!_ownsGeneration(generation)) {
-        return _pausedResult(synced: synced, failed: failed);
-      }
-      if (pushed > 0) synced += pushed;
-      if (!_drainsAllowed) {
-        await _emitStatus();
-        return _releasePausedResult(synced: synced, failed: failed);
-      }
-      if (ConnectivityService().hasLink) {
-        await hymnStore.pullChanges();
-        if (!_ownsGeneration(generation)) {
-          return _pausedResult(synced: synced, failed: failed);
-        }
-        await MezmurDownloadManager.instance.syncPins();
-      }
-    } catch (error) {
-      if (!_ownsGeneration(generation)) {
-        return _pausedResult(synced: synced, failed: failed);
-      }
-      failed++;
-      await _db.logSync('hymns', '$error', 'error');
-    }
-
     if (!_ownsGeneration(generation)) {
       return _pausedResult(synced: synced, failed: failed);
     }
@@ -381,7 +346,7 @@ class SyncService {
       // S2 Goal A.4 — THE opportunity request. This is the one place in the
       // app that knows, authoritatively, both that durable work remains and
       // when it next becomes eligible: `nextAttempt` is read from the outbox
-      // itself (legacy tables UNION pending_hymn_ops), not guessed.
+      // itself (the legacy outbox tables), not guessed.
       //
       // It asks the platform for a future execution opportunity. It does not
       // claim, does not drain, does not queue and does not decide
@@ -658,28 +623,6 @@ class SyncService {
                 attemptUid: attemptUid,
                 attemptNumber: claim.attemptCount,
                 executionSource: source.storageValue);
-      case LegacyOperationKind.mezmur:
-        final date = '${operation.naturalKey['date'] ?? ''}';
-        final section = '${operation.naturalKey['section'] ?? ''}';
-        final records = rows
-            .map((row) => <String, dynamic>{
-                  'member_id': row['member_id'],
-                  'status': row['status'],
-                  'notes': row['notes'] ?? '',
-                })
-            .toList(growable: false);
-        return _api.saveMezmurSheet(
-          date,
-          records,
-          section: section,
-          kind: operation.packetKind == LegacyPacketKind.submitted
-              ? 'submitted'
-              : 'draft',
-          clientOpId: operation.clientOpId,
-          attemptUid: attemptUid,
-          attemptNumber: claim.attemptCount,
-          executionSource: source.storageValue,
-        );
       case LegacyOperationKind.hr:
         final date = '${operation.naturalKey['date'] ?? ''}';
         final section = '${operation.naturalKey['section'] ?? ''}';
@@ -825,16 +768,12 @@ class SyncService {
   Future<void> _emitStatus({bool? syncing}) async {
     final pa = await _db.getPendingAttendanceCount();
     final pg = await _db.getPendingGradesCount();
-    final pm = await _db.getPendingMezmurCount();
     final phr = await _db.getPendingHrCount();
-    final ph = await _db.getPendingHymnOpsCount();
     final inventory = await _db.getOutboxInventory();
     _lastStatus = SyncStatus(
         pendingAttendance: pa,
         pendingGrades: pg,
-        pendingMezmur: pm,
         pendingHr: phr,
-        pendingHymns: ph,
         rejected: inventory.needsAttention,
         retryableDue: inventory.retryableDue,
         retryableWaiting: inventory.retryableWaiting,
@@ -844,7 +783,6 @@ class SyncService {
         blockedDependency: inventory.blockedDependency,
         resolvedConflict: inventory.resolvedConflict,
         privateUnresolvedTotal: inventory.privateUnresolvedTotal,
-        sharedHymnUnresolvedTotal: inventory.sharedHymnUnresolvedTotal,
         communicationDraftCount: inventory.communicationDraftCount,
         syncing: syncing ?? (_inflight != null));
     _syncController.add(_lastStatus);
@@ -882,9 +820,7 @@ final class _LegacyDrainStats {
 class SyncStatus {
   final int pendingAttendance;
   final int pendingGrades;
-  final int pendingMezmur;
   final int pendingHr;
-  final int pendingHymns;
   final int retryableDue;
   final int retryableWaiting;
   final int inFlight;
@@ -893,7 +829,6 @@ class SyncStatus {
   final int blockedDependency;
   final int resolvedConflict;
   final int privateUnresolvedTotal;
-  final int sharedHymnUnresolvedTotal;
   final int communicationDraftCount;
   final bool syncing;
 
@@ -906,9 +841,7 @@ class SyncStatus {
 
   int get totalPending => pendingAttendance +
       pendingGrades +
-      pendingMezmur +
-      pendingHr +
-      pendingHymns;
+      pendingHr;
   String get breakdown {
     if (totalPending <= 0 && rejected <= 0) return 'All synced';
     final parts = <String>[];
@@ -919,14 +852,8 @@ class SyncStatus {
     if (pendingGrades > 0) {
       parts.add('$pendingGrades grade list${pendingGrades == 1 ? '' : 's'}');
     }
-    if (pendingMezmur > 0) {
-      parts.add('$pendingMezmur mezmur sheet${pendingMezmur == 1 ? '' : 's'}');
-    }
     if (pendingHr > 0) {
       parts.add('$pendingHr HR sheet${pendingHr == 1 ? '' : 's'}');
-    }
-    if (pendingHymns > 0) {
-      parts.add('$pendingHymns hymn change${pendingHymns == 1 ? '' : 's'}');
     }
     if (rejected > 0) {
       parts.add('$rejected need${rejected == 1 ? 's' : ''} attention');
@@ -937,9 +864,7 @@ class SyncStatus {
   SyncStatus(
       {required this.pendingAttendance,
       required this.pendingGrades,
-      this.pendingMezmur = 0,
       this.pendingHr = 0,
-      this.pendingHymns = 0,
       this.rejected = 0,
       this.retryableDue = 0,
       this.retryableWaiting = 0,
@@ -949,7 +874,6 @@ class SyncStatus {
       this.blockedDependency = 0,
       this.resolvedConflict = 0,
       this.privateUnresolvedTotal = 0,
-      this.sharedHymnUnresolvedTotal = 0,
       this.communicationDraftCount = 0,
       required this.syncing});
 }

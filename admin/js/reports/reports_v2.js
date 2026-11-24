@@ -45,10 +45,9 @@
     { field: 'completeness_score', kind: 'bar', sortByBucket: true },
     { field: 'current_class', kind: 'barh', top: 12 },
     { field: 'age_band', kind: 'bar' },
-    // V2‑2 cross‑domain (Education + Mezmur attendance, enrolment progression, Family Link)
+    // V2‑2 cross‑domain (Education attendance, enrolment progression, Family Link)
     { field: 'edu_attendance_band', kind: 'pie' },
     { field: 'progression', kind: 'barh' },
-    { field: 'mezmur_attendance_band', kind: 'pie' },
     { field: 'fl_guardian_relation', kind: 'pie' },
   ];
   const PALETTE = ['#0f766e', '#0e9aa7', '#e3b341', '#6f171e', '#7c3aed', '#2563eb', '#f97316', '#64748b', '#16a34a', '#db2777', '#0891b2', '#a16207'];

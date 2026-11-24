@@ -8,14 +8,12 @@ import '../../services/app_nav.dart';
 import '../../services/app_update_service.dart';
 import '../../services/comm_outbox_service.dart';
 import '../../services/comm_store.dart';
-import '../../services/hymn_store.dart';
 import '../../services/local_db.dart';
 import '../../services/session_models.dart';
 import '../../services/sync_recovery_models.dart';
 import '../../services/sync_service.dart';
 import '../../utils/config.dart';
 import '../../utils/theme.dart';
-import '../mezmur/mezmur_hymns.dart';
 import '../notifications/messages_screen.dart';
 
 /// Owner-safe global recovery surface for all durable mobile write queues.
@@ -43,8 +41,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
   int _loadGeneration = 0;
   String? _error;
 
-  bool get _includeSharedHymns => HymnStore().canEdit;
-
   SyncRecoveryDomain? get _entryDomain {
     final arguments = ModalRoute.of(context)?.settings.arguments;
     return arguments is SyncRecoveryDomain ? arguments : null;
@@ -69,9 +65,7 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
     try {
       final values = await Future.wait<Object>([
         _db.getOutboxInventory(),
-        _db.getSyncRecoveryItems(
-          includeSharedHymns: _includeSharedHymns,
-        ),
+        _db.getSyncRecoveryItems(),
       ]);
       if (!mounted || generation != _loadGeneration) return;
       setState(() {
@@ -92,7 +86,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
   String _legacyKind(SyncRecoveryDomain domain) => switch (domain) {
         SyncRecoveryDomain.attendance => 'attendance',
         SyncRecoveryDomain.grades => 'grades',
-        SyncRecoveryDomain.mezmur => 'mezmur',
         SyncRecoveryDomain.hr => 'hr',
         _ => throw ArgumentError('Not a legacy operation'),
       };
@@ -110,15 +103,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
           );
           if (result == SyncRecoveryActionResult.applied) {
             CommOutboxService.instance.kick();
-          }
-          break;
-        case SyncRecoveryDomain.hymn:
-          result = item.rowId == null
-              ? SyncRecoveryActionResult.stale
-              : await HymnStore().retryRecoveryOperation(
-                  item.rowId!, item.operationId, item.state);
-          if (result == SyncRecoveryActionResult.applied) {
-            unawaited(SyncService().syncAll(force: true));
           }
           break;
         default:
@@ -195,11 +179,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
             item.operationId,
             expectedState: item.state,
           );
-        case SyncRecoveryDomain.hymn:
-          return item.rowId == null
-              ? SyncRecoveryActionResult.stale
-              : await HymnStore().discardRecoveryOperation(
-                  item.rowId!, item.operationId, item.state);
         default:
           return await _db.discardRejectedOperation(
             _legacyKind(item.domain),
@@ -235,24 +214,18 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
       ApiService().userRole,
       attendanceEnabled: config.featureEnabled('attendance'),
       gradesEnabled: config.featureEnabled('grades'),
-      mezmurEnabled: config.featureEnabled('mezmur'),
     ).map((tab) => tab.id).toSet();
   }
 
   String? _sourceTab(SyncRecoveryDomain domain) => switch (domain) {
         SyncRecoveryDomain.attendance => 'attendance',
         SyncRecoveryDomain.grades => 'grades',
-        SyncRecoveryDomain.mezmur => 'mezmur_attendance',
         SyncRecoveryDomain.hr => 'hr_attendance',
-        SyncRecoveryDomain.hymn => 'mezmur_hymns',
         SyncRecoveryDomain.communication => null,
       };
 
   bool _canOpenSource(SyncRecoveryItem item) {
     if (item.domain == SyncRecoveryDomain.communication) return true;
-    if (item.domain == SyncRecoveryDomain.hymn) {
-      return _includeSharedHymns && AppUpdateService().featureEnabled('mezmur');
-    }
     final tab = _sourceTab(item.domain);
     return tab != null && _authorizedTabs.contains(tab);
   }
@@ -266,11 +239,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
     if (item.domain == SyncRecoveryDomain.communication) {
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const MessagesScreen()));
-      return;
-    }
-    if (item.domain == SyncRecoveryDomain.hymn) {
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const MezmurHymnsScreen()));
       return;
     }
     final tab = _sourceTab(item.domain);
@@ -306,7 +274,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
     final conflicts = _items.where((item) => item.isConflict).toList();
     final hiddenPaused = math.max(0, _inventory.paused - paused.length);
     final unresolved = _inventory.privateUnresolvedTotal +
-        _inventory.sharedHymnUnresolvedTotal +
         _inventory.communicationDraftCount;
 
     return Scaffold(
@@ -385,16 +352,6 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
                     icon: Icons.rule_folder_outlined,
                     items: conflicts,
                   ),
-                  if (!_includeSharedHymns &&
-                      _inventory.sharedHymnUnresolvedTotal > 0)
-                    _noticeCard(
-                      icon: Icons.library_music_outlined,
-                      text:
-                          '${_inventory.sharedHymnUnresolvedTotal} shared hymn '
-                          'operation${_inventory.sharedHymnUnresolvedTotal == 1 ? '' : 's'} '
-                          'will be available to an authorized curator.',
-                      color: AppTheme.warning,
-                    ),
                 ],
               ),
             ),

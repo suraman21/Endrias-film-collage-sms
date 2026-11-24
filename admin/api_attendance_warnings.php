@@ -3,16 +3,15 @@
  * ============================================================
  * Attendance warnings API (Attendance alerting — Phase 2)
  * ============================================================
- *   GET  ?action=list[&department=edu|mezmur&status=open|closed|all&kind=&stage=&member_id=&source=&q=&limit=&offset=]
+ *   GET  ?action=list[&department=edu&status=open|closed|all&kind=&stage=&member_id=&source=&q=&limit=&offset=]
  *   GET  ?action=detail&id=N              → warning + events + risk + EC absence dates
  *   GET  ?action=counts                   → open counts per department / stage (dashboard card)
  *   GET  ?action=member_summary&member_id=N → both departments: risk + warnings (profile tab)
- *   GET  ?action=risk&member_id=N&department=edu|mezmur → the shared risk object
+ *   GET  ?action=risk&member_id=N&department=edu → the shared risk object
  *   POST action=close {id, outcome(contacted|excused|escalated|deactivated|no_action), note?}
  *
  * Role scoping (requirements §8, §9):
  *   edu_dept    → Education warnings only (read + close)
- *   mezmur_dept → Mezmur warnings only (read + close)
  *   hr_dept / info_dept → both (read + close)
  *   school_admin / super_admin → both, READ-ONLY (close answers 403)
  * Every user-facing date is Ethiopian calendar (the service presents them).
@@ -104,7 +103,7 @@ $scopeDepartments = static function (?string $requested) use ($myDepartments, $f
         return $myDepartments;
     }
     if (!in_array($requested, AttendanceRiskService::DEPARTMENTS, true)) {
-        $fail(400, 'department must be edu or mezmur.');
+        $fail(400, 'department must be edu.');
     }
     if (!in_array($requested, $myDepartments, true)) {
         $fail(403, 'You cannot view ' . AttendanceRiskService::LABELS[$requested] . ' warnings.');

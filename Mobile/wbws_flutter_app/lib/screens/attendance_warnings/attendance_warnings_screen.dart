@@ -16,15 +16,14 @@ import 'attendance_warning_widgets.dart';
 /// Open Attendance Warnings — mobile mirror of
 /// /admin/attendance_warnings.php (attendance alerting Phase 2).
 ///
-/// Roles: Education sees Education, Mezmur sees Mezmur, HR /
-/// Information / admins see both — the SERVER scopes the list; the
-/// app only hides filters that cannot apply. Closing is possible for
+/// Roles: Education sees Education; HR / Information / admins see all
+/// departments — the SERVER scopes the list. Closing is possible for
 /// the owning department, HR and Information (server-enforced, the
 /// app reads `can_close` from the payload). Admins are read-only.
 /// All dates are Ethiopian-calendar labels from the server.
 /// ════════════════════════════════════════════════════════════
 class AttendanceWarningsScreen extends StatefulWidget {
-  /// Preselected department filter: 'all' | 'edu' | 'mezmur'.
+  /// Preselected department filter: 'all' | 'edu'.
   final String department;
 
   const AttendanceWarningsScreen({super.key, this.department = 'all'});
@@ -46,7 +45,6 @@ class _AttendanceWarningsScreenState extends State<AttendanceWarningsScreen> {
   List<Map<String, dynamic>> _items = [];
   int _total = 0;
   bool _loadingMore = false; // Phase 3: Load more (was capped at 100)
-  List<String> _departments = const [];
   Map<String, dynamic> _counts = {};
 
   late String _department = widget.department;
@@ -135,13 +133,11 @@ class _AttendanceWarningsScreenState extends State<AttendanceWarningsScreen> {
         if (r is Map) items.add(Map<String, dynamic>.from(r));
       }
     }
-    final depts = data['departments'];
     setState(() {
       _loading = false;
       _available = data['available'] != false;
       _items = items;
       _total = warningInt(data['total']);
-      _departments = depts is List ? depts.map((d) => '$d').toList() : const [];
       if (counts.success && counts.data is Map && (counts.data as Map)['counts'] is Map) {
         _counts = Map<String, dynamic>.from((counts.data as Map)['counts'] as Map);
       }
@@ -302,12 +298,6 @@ class _AttendanceWarningsScreenState extends State<AttendanceWarningsScreen> {
           chip('Any kind', _kind == '', () => setState(() { _kind = ''; _load(); })),
           chip('Consecutive', _kind == 'consecutive', () => setState(() { _kind = 'consecutive'; _load(); })),
           chip('Low month', _kind == 'low_month', () => setState(() { _kind = 'low_month'; _load(); })),
-          if (_departments.length > 1) ...[
-            const SizedBox(width: 8),
-            chip('Both depts', _department == 'all', () => setState(() { _department = 'all'; _load(); })),
-            chip('Education', _department == 'edu', () => setState(() { _department = 'edu'; _load(); })),
-            chip('Mezmur', _department == 'mezmur', () => setState(() { _department = 'mezmur'; _load(); })),
-          ],
         ]),
       ),
     ]);
@@ -336,7 +326,7 @@ class _AttendanceWarningsScreenState extends State<AttendanceWarningsScreen> {
                       overflow: TextOverflow.ellipsis)),
               WarningPill(
                   text: warningDepartmentLabel(w),
-                  color: '${w['department']}' == 'mezmur' ? const Color(0xFF7C3AED) : AppTheme.info),
+                  color: AppTheme.info),
               const SizedBox(width: 6),
               WarningPill(text: warningStageLabel(w), color: warningStageColor(w)),
             ]),

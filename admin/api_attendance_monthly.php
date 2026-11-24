@@ -3,10 +3,10 @@
  * ============================================================
  * Monthly attendance report API (Attendance alerting — Phase 4)
  * ============================================================
- *   GET ?action=months&department=edu|mezmur            → EC months offered by the picker
+ *   GET ?action=months&department=edu                   → EC months offered by the picker
  *   GET ?action=summary&department=&ec_year=&ec_month=  → band counts, below-threshold count, policy
  *   GET ?action=list&department=&ec_year=&ec_month=[&below=1&band=&group=&q=&limit=&offset=]
- *   GET ?action=groups&department=&ec_year=&ec_month=   → classes (Education) / sections (Mezmur) in the month
+ *   GET ?action=groups&department=&ec_year=&ec_month=   → classes (Education) in the month
  *   GET ?action=member&department=&member_id=N          → the member's months (drill-down)
  *   GET ?action=export&department=&ec_year=&ec_month=[&below=1&band=&group=&q=&format=xlsx|csv]
  *
@@ -17,7 +17,7 @@
  * — no cron on shared hosting. `refresh=1` forces a recompute.
  *
  * Role scoping (requirements §8, §9) — server side, same as the warnings API:
- *   edu_dept → Education only · mezmur_dept → Mezmur only ·
+ *   edu_dept → Education only ·
  *   hr_dept / info_dept / school_admin / super_admin → both. READ-ONLY for all.
  * Every user-facing date / month label is Ethiopian calendar; the export has
  * no Gregorian column (test_ec_only_exports).
@@ -89,7 +89,7 @@ if ($department === '') {
     $department = $myDepartments[0] ?? '';
 }
 if (!in_array($department, AttendanceRiskService::DEPARTMENTS, true)) {
-    $fail(400, 'department must be edu or mezmur.');
+    $fail(400, 'department must be edu.');
 }
 if (!in_array($department, $myDepartments, true)) {
     $fail(403, 'You cannot view ' . AttendanceRiskService::LABELS[$department] . ' attendance.');

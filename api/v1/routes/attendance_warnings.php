@@ -8,7 +8,7 @@
  *   GET  /attendance/warnings/{id}
  *   POST /attendance/warnings/{id}/close   {outcome, note?}
  *
- * Roles: edu_dept (Education), mezmur_dept (Mezmur), hr_dept / info_dept
+ * Roles: edu_dept (Education), hr_dept / info_dept
  * (both) may read and close; school_admin / super_admin read only (§8);
  * teachers / attendance takers: 403 (their sheets get a read-only indicator
  * through the sheet endpoints, no warning PII).
@@ -54,7 +54,7 @@ if ($method === 'GET' && ($awSub === null || $awSub === '')) {
     $req = trim((string)($_GET['department'] ?? ''));
     $depts = $awDepartments;
     if ($req !== '' && $req !== 'all') {
-        if (!in_array($req, \App\Services\AttendanceRiskService::DEPARTMENTS, true)) err('department must be edu or mezmur.');
+        if (!in_array($req, \App\Services\AttendanceRiskService::DEPARTMENTS, true)) err('department must be edu.');
         if (!in_array($req, $awDepartments, true)) err('You cannot view those warnings.', 403);
         $depts = [$req];
     }

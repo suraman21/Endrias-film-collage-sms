@@ -78,7 +78,7 @@ final class SyncChangeFeedService
     /**
      * `scope_date` (migration 058) expressed so the query still runs on a
      * database where 058 has not been applied yet. Same runtime-detection
-     * approach MezmurHymnService::revisionExpr() uses for its own
+     * approach the hymn service used for its own
      * late-added column, so a partial rollout degrades instead of fataling.
      */
     private function scopeDateExpr(): string

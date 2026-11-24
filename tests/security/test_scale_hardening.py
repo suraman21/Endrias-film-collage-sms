@@ -67,7 +67,7 @@ class ReadBudgetContracts(unittest.TestCase):
 
     def test_pdf_member_history_cap(self):
         self.assertIn("MAX_MEMBER_ROWS = 200", self.pdf)
-        # each member source history applies the cap (edu + mezmur; HR removed 2026-10-18)
+        # each member source history applies the cap (edu only; HR removed 2026-10-18)
         self.assertEqual(self.pdf.count("LIMIT \" . self::MAX_MEMBER_ROWS"), 2)
 
     def test_endpoint_rate_limits(self):
@@ -89,10 +89,6 @@ class ScaleIndexMigrationContracts(unittest.TestCase):
         self.assertIn("DROP PROCEDURE IF EXISTS `ssms_add_index_if_missing_028`;", self.sql)
 
     def test_member_history_seek_indexes(self):
-        self.assertIn(
-            "CALL ssms_add_index_if_missing_028('mezmur_attendance', 'idx_mezmur_att_member_date', '`member_id`, `attendance_date`');",
-            self.sql,
-        )
         self.assertIn(
             "CALL ssms_add_index_if_missing_028('attendance', 'idx_att_member_date', '`member_id`, `attendance_date`');",
             self.sql,
