@@ -16,7 +16,9 @@ class MemberDuplicateEnforcementTests(unittest.TestCase):
             ROOT / "admin/backend/services/MemberDuplicateService.php"
         ).read_text()
         cls.advisory = (ROOT / "admin/api_check_duplicate.php").read_text()
-        cls.hr_ui = (ROOT / "admin/dashboards/hr-dept.php").read_text()
+        # 2026-11-24: student registration (and its duplicate advisory) is an
+        # Admission & Registrar surface; HR is a company HR department.
+        cls.hr_ui = (ROOT / "admin/dashboards/admissions_registrar_dept.php").read_text()
         cls.school_ui = (ROOT / "admin/dashboards/school_admin.php").read_text()
         cls.request_ids = (ROOT / "admin/js/request-id.js").read_text()
         cls.migration = (

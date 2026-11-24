@@ -202,7 +202,9 @@ class HrMobileContracts(unittest.TestCase):
 
     def test_dept_home_points_at_web_reports(self):
         self.assertIn("HrDeptHomeScreen", self.shell)
-        self.assertIn("Attendance reports moved to the dashboard", self.dept_home)
+        # 2026-11-24: HR is a company HR department; the mobile home now
+        # points at the web HR dashboard for staff/attendance/ID-card work.
+        self.assertIn("Employee management is on the web HR dashboard", self.dept_home)
         self.assertIn("NotificationBellButton", self.dept_home)
         # The mobile review inbox went with the workflow it reviewed.
         self.assertNotIn("ReviewInboxScreen(dept: 'hr')", self.dept_home)

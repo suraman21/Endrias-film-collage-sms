@@ -22,7 +22,9 @@ class OnclickArgEscaping(unittest.TestCase):
         self.assertIn("',' + esc(JSON.stringify(String(kidName(k)))) + ')\"", js)
 
     def test_family_link_tag_bumped(self):
-        self.assertIn('family_link.js?v=<?= SSMS_ASSET_VER ?>-20261022u', read('admin/dashboards/hr-dept.php'))
+        # 2026-11-24: Family Link (student management) lives on the Admission
+        # & Registrar dashboard; HR is a company HR department.
+        self.assertIn('family_link.js?v=<?= SSMS_ASSET_VER ?>-20261022u', read('admin/dashboards/admissions_registrar_dept.php'))
 
     def test_info_quick_status_uses_jsarg(self):
         php = read('admin/dashboards/info-dept.php')

@@ -53,7 +53,9 @@ class ImporterStaticContract(unittest.TestCase):
     def setUpClass(cls):
         cls.src = read("admin/api_import_members.php")
         cls.js = read("admin/js/hr_data_sync.js")
-        cls.hr = read("admin/dashboards/hr-dept.php")
+        # 2026-11-24: Excel student import/sync is an Admission & Registrar
+        # surface; HR is a company HR department.
+        cls.hr = read("admin/dashboards/admissions_registrar_dept.php")
         cls.enroll = read("admin/backend/services/EnrollmentService.php")
         cls.map = read("admin/backend/services/ExcelColumnMap.php")
 

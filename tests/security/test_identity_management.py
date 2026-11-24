@@ -45,7 +45,9 @@ class IdentityManagementV2Tests(unittest.TestCase):
         cls.super_admin = rd("admin/dashboards/super-admin.php")
         cls.js = rd("admin/js/super_admin.js")
         cls.section = rd("admin/dashboards/sections/identity_codes_section.php")
-        cls.hr_dept = rd("admin/dashboards/hr-dept.php")
+        # 2026-11-24: student registration (position picker) is an Admission
+        # & Registrar surface; HR is a company HR department.
+        cls.hr_dept = rd("admin/dashboards/admissions_registrar_dept.php")
         cls.register = rd("admin/hr_register_member.php")
         cls.edit_member = rd("admin/info_manage_member.php")
         cls.member_sync = rd("admin/backend/member_sync.php")

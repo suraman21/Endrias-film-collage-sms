@@ -80,9 +80,11 @@ class MemberDirectoryScalingTests(unittest.TestCase):
             self.assertNotIn(sensitive, picker_block)
 
     def test_management_dashboards_share_server_backed_renderer(self):
+        # 2026-11-24: HR is a company HR department; the member-management
+        # renderer lives on the Admission & Registrar dashboard.
         for relative in [
             "admin/dashboards/info-dept.php",
-            "admin/dashboards/hr-dept.php",
+            "admin/dashboards/admissions_registrar_dept.php",
         ]:
             source = (ROOT / relative).read_text()
             self.assertIn('/admin/js/manage-members.js', source)
@@ -138,7 +140,7 @@ class MemberDirectoryScalingTests(unittest.TestCase):
         self.assertNotIn("innerHTML", self.archive_js)
         for relative in [
             "admin/dashboards/info-dept.php",
-            "admin/dashboards/hr-dept.php",
+            "admin/dashboards/admissions_registrar_dept.php",
         ]:
             source = (ROOT / relative).read_text()
             self.assertIn('/admin/js/archive-members.js', source)
@@ -179,7 +181,9 @@ class MemberDirectoryScalingTests(unittest.TestCase):
             "'generate_id_card.php' => ['super_admin', 'school_admin', 'hr_dept']",
             access,
         )
-        hr = (ROOT / "admin/dashboards/hr-dept.php").read_text()
+        # 2026-11-24: HR is a company HR department; the student ID-card
+        # directory lives on the Admission & Registrar dashboard.
+        hr = (ROOT / "admin/dashboards/admissions_registrar_dept.php").read_text()
         info = (ROOT / "admin/dashboards/info-dept.php").read_text()
         self.assertIn('/admin/js/id-card-directory.js', hr)
         self.assertNotIn("$id_sql", info + hr)
@@ -198,7 +202,9 @@ class MemberDirectoryScalingTests(unittest.TestCase):
         self.assertIn("MAX_EDITABLE_ROWS = 2000", self.export_service)
         self.assertIn("bounded_workbook_rejected", self.export_controller)
         self.assertIn("SecurityAuditService::record", self.export_controller)
-        self.assertIn("format=csv", (ROOT / "admin/dashboards/hr-dept.php").read_text())
+        # 2026-11-24: HR is a company HR department; the student CSV export
+        # lives on the Admission & Registrar dashboard.
+        self.assertIn("format=csv", (ROOT / "admin/dashboards/admissions_registrar_dept.php").read_text())
 
     def test_scaling_indexes_are_deployment_managed(self):
         migration = (ROOT / "sql/014_member_directory_scaling.sql").read_text()

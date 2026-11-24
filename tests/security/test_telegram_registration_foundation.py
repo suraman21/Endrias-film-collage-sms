@@ -391,7 +391,9 @@ class TelegramRegistrationFoundationTests(unittest.TestCase):
         self.assertNotIn("TELEGRAM_BOT_TOKEN", retention + cron)
 
     def test_role_split_and_authorized_dashboards(self):
-        for path in ["admin/dashboards/super-admin.php", "admin/dashboards/hr-dept.php"]:
+        # 2026-11-24: Telegram registration (member review) is an
+        # Admission & Registrar surface; HR is a company HR department.
+        for path in ["admin/dashboards/super-admin.php", "admin/dashboards/admissions_registrar_dept.php"]:
             page = (ROOT / path).read_text(encoding="utf-8")
             self.assertIn('/admin/telegram_registration.php', page, path)
             self.assertIn('Telegram Registration', page, path)

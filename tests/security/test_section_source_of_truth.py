@@ -91,9 +91,10 @@ class SectionSourceOfTruthTests(unittest.TestCase):
 
     # ── 3. every former hardcode site now sources from the truth ──
     def test_dashboards_render_options_from_member_category(self):
+        # 2026-11-24: HR is a company HR department and no longer renders
+        # the student section/age lists, so it is out of this pin.
         sites = {
             "admin/dashboards/school_admin.php": 1,
-            "admin/dashboards/hr-dept.php": 3,
             "admin/dashboards/info-dept.php": 3,
             "admin/reports.php": 1,
             "admin/dashboards/edu_dept.php": 4,  # modal + roster + unassigned + bulk
@@ -110,7 +111,9 @@ class SectionSourceOfTruthTests(unittest.TestCase):
         all_members = (ROOT / "admin/js/all-members.js").read_text(encoding="utf-8")
         self.assertIn("window.WBWS_SECTIONS", all_members)
         self.assertNotIn("'7_13':", all_members)
-        for rel in ["admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php"]:
+        # 2026-11-24: the student section map is injected on the Admission
+        # & Registrar dashboard (HR is a company HR department).
+        for rel in ["admin/dashboards/admissions_registrar_dept.php", "admin/dashboards/info-dept.php"]:
             src = (ROOT / rel).read_text(encoding="utf-8")
             self.assertIn("window.WBWS_SECTIONS=", src, f"{rel} must inject the map")
         reports = (ROOT / "admin/reports.php").read_text(encoding="utf-8")

@@ -107,7 +107,10 @@ class Phase1StaticGuards(unittest.TestCase):
 
     def test_ui_hooks(self):
         self.assertIn('data-dept-status="<?= (int)$m[\'id\'] ?>"', read("admin/info_manage_member.php"))
-        for rel in ["admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php"]:
+        # HR became a company HR department (2026-11-24): it no longer
+        # manages students, so the per-student department-status widget is
+        # no longer mounted on the HR dashboard. Information dept keeps it.
+        for rel in ["admin/dashboards/info-dept.php"]:
             src = read(rel)
             self.assertIn("department_status.js", src, rel)
             self.assertIn("DeptStatus.mount(content)", src, rel)
