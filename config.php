@@ -40,7 +40,7 @@ if (PHP_SAPI !== 'cli') {
 // Order matters: earlier names win in a shared hosting account, so the
 // Endrias deployment name stays AFTER the legacy names — existing
 // FKSS/WBSS env files always take precedence where they exist.
-$_envFileNames = ['.fkss_env.php', '.wbws_env.php', 'env_endriasfc.php'];
+$_envFileNames = ['env_endriasfc.php'];
 $_envBaseDirs = [
     dirname(__DIR__),       // /home/user/ (production)
     dirname(__DIR__, 2),    // two levels up (some hosting layouts)
