@@ -1,0 +1,2264 @@
+<?php
+/**
+ * Teacher → Education submissions.
+ *
+ * One place for attendance and mark-list packets so the website and the
+ * phone app stay in sync. Status meaning:
+ *   incomplete — teacher sent work, still finishing
+ *   submitted  — teacher marked it complete, Education reviews
+ *   approved / rejected / revision_needed — Education decision
+ *   draft      — leftover from older rows; treated like incomplete in the UI
+ */
+
+namespace App\Services;
+
+require_once __DIR__ . '/ReviewTransitionPolicy.php';
+require_once __DIR__ . '/AttendanceSubmissionEventService.php';
+
+class SubmissionService
+{
+    public const STATUS_INCOMPLETE = 'incomplete';
+    public const STATUS_SUBMITTED = 'submitted';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_REVISION = 'revision_needed';
+    public const STATUS_DRAFT = 'draft';
+
+    public const TYPE_ATTENDANCE = 'attendance';
+    public const TYPE_MARKLIST = 'marklist';
+    public const TYPE_REPORT = 'report';
+
+    /** Compatibility hook; schema is deployment-managed by migration 013. */
+    public static function ensureTable(\mysqli $conn): void
+    {
+    }
+
+    /**
+     * Compatibility hook — intentionally a no-op; runtime DDL was removed.
+     *
+     * Corrected 2026-10-02 (finding J): this previously claimed "unique keys
+     * are deployment-managed by migration 013". That was not true. Migration
+     * 013 creates `grade_submissions` with only NON-UNIQUE lookup keys
+     * (`sub_att_lookup`, `sub_mark_lookup`) and declares no UNIQUE key at all,
+     * so for a time nothing anywhere enforced one-packet-per-slot and the
+     * SELECT-then-INSERT upserts could duplicate a packet under concurrency.
+     *
+     * The slot constraints now live in sql/053_grade_submission_slot_uniqueness.sql
+     * (`uq_gs_attendance_slot`, `uq_gs_marklist_slot`) and are verified by
+     * sql/preflight/uniqueness_preflight.sql. Do not reintroduce DDL here.
+     */
+    public static function hardenUniques(\mysqli $conn): void
+    {
+    }
+
+    /**
+     * Score-limit rule (2026-10-22, owner): a mark list is accepted whole or
+     * not at all. Every save/submit path calls this BEFORE writing anything.
+     *
+     * Blank ('' / null) is valid and means "no score" (after submit: Did not
+     * take). Anything else must be a plain number with at most 2 decimals and
+     * be between 0 and the assessment's max. Before this rule the paths
+     * skipped an invalid row silently, still answered "success" and could
+     * lock the packet without that student; (float)"abc" also saved as 0.
+     *
+     * @param mixed $grades list of ['member_id'=>..,'score'=>..]
+     * @return list<array{member_id:int,value:string,reason:string,message:string}>
+     */
+    public static function invalidScores(\mysqli $conn, $grades, float $maxScore): array
+    {
+        if (!is_array($grades)) {
+            return [];
+        }
+        $bad = [];
+        $maxLabel = self::scoreLabel($maxScore);
+        foreach ($grades as $g) {
+            if (!is_array($g)) {
+                continue;
+            }
+            $mid = (int)($g['member_id'] ?? 0);
+            if ($mid <= 0 || !array_key_exists('score', $g)) {
+                continue;
+            }
+            $raw = $g['score'];
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+            if (is_bool($raw) || is_array($raw) || !is_scalar($raw)) {
+                $bad[] = ['member_id' => $mid, 'value' => '?', 'reason' => 'not_a_number'];
+                continue;
+            }
+            $txt = is_float($raw) || is_int($raw) ? self::scoreLabel((float)$raw) : trim((string)$raw);
+            if ($txt === '') {
+                continue;
+            }
+            if (!preg_match('/^\d{1,4}(\.\d{1,2})?$/', $txt)) {
+                $bad[] = ['member_id' => $mid, 'value' => mb_substr($txt, 0, 12), 'reason' => 'not_a_number'];
+                continue;
+            }
+            $v = (float)$txt;
+            if ($v > $maxScore + 1e-9) {
+                $bad[] = ['member_id' => $mid, 'value' => $txt, 'reason' => 'over_max'];
+            }
+        }
+        if (!$bad) {
+            return [];
+        }
+        $names = self::memberLabels($conn, array_column($bad, 'member_id'));
+        foreach ($bad as &$b) {
+            $who = $names[$b['member_id']] ?? ('Member #' . $b['member_id']);
+            $b['message'] = $b['reason'] === 'over_max'
+                ? "{$who}: {$b['value']} is more than the maximum {$maxLabel}"
+                : "{$who}: \"{$b['value']}\" is not a valid score (use a number from 0 to {$maxLabel})";
+        }
+        unset($b);
+        return $bad;
+    }
+
+    /** One-line summary for the 422 refusal shown to the teacher. */
+    public static function invalidScoresMessage(array $bad, float $maxScore): string
+    {
+        $n = count($bad);
+        $lines = array_slice(array_column($bad, 'message'), 0, 5);
+        return ($n === 1 ? '1 score is' : "{$n} scores are") . ' not allowed for this test (maximum '
+            . self::scoreLabel($maxScore) . '). Nothing was saved. Fix: ' . implode('; ', $lines)
+            . ($n > 5 ? '; and ' . ($n - 5) . ' more.' : '.');
+    }
+
+    public static function scoreLabel(float $v): string
+    {
+        return rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.');
+    }
+
+    /** @param list<int> $ids @return array<int,string> "Name Father (CODE)" */
+    private static function memberLabels(\mysqli $conn, array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (!$ids) {
+            return [];
+        }
+        $ids = array_slice($ids, 0, 200);
+        $out = [];
+        try {
+            $ph = implode(',', array_fill(0, count($ids), '?'));
+            $st = $conn->prepare("SELECT id, student_name, father_name, member_code FROM members WHERE id IN ($ph)");
+            if ($st) {
+                $st->bind_param(str_repeat('i', count($ids)), ...$ids);
+                $st->execute();
+                $r = $st->get_result();
+                while ($row = $r->fetch_assoc()) {
+                    $nm = trim((string)$row['student_name'] . ' ' . (string)($row['father_name'] ?? ''));
+                    $out[(int)$row['id']] = $nm . (!empty($row['member_code']) ? ' (' . $row['member_code'] . ')' : '');
+                }
+                $st->close();
+            }
+        } catch (\Throwable $e) {
+        }
+        return $out;
+    }
+
+    /**
+     * Max-score guard: an assessment's max may not be lowered below the
+     * highest score already saved for it (would leave e.g. 15/10 rows).
+     * @return array{count:int,highest:float}
+     */
+    public static function scoresAbove(\mysqli $conn, int $assessmentId, float $newMax): array
+    {
+        $st = $conn->prepare('SELECT COUNT(*) AS n, MAX(score) AS hi FROM academic_records WHERE assessment_id = ? AND score > ?');
+        if (!$st) {
+            return ['count' => 0, 'highest' => 0.0];
+        }
+        $st->bind_param('id', $assessmentId, $newMax);
+        $st->execute();
+        $row = $st->get_result()->fetch_assoc() ?: [];
+        $st->close();
+        return ['count' => (int)($row['n'] ?? 0), 'highest' => (float)($row['hi'] ?? 0)];
+    }
+
+    public static function staffCanOverride(array $auth): bool
+    {
+        $role = (string)($auth['rol'] ?? $auth['role'] ?? '');
+        return in_array($role, ['super_admin', 'school_admin', 'edu_dept'], true);
+    }
+
+    /** draft / incomplete / needs-revision can be changed by the teacher. */
+    public static function statusIsOpen(?string $status): bool
+    {
+        $status = self::normalizeStatus($status);
+        return in_array($status, [self::STATUS_DRAFT, self::STATUS_INCOMPLETE, self::STATUS_REVISION], true)
+            || $status === '';
+    }
+
+    public static function attendancePacketStatus(\mysqli $conn, int $classId, string $date): ?string
+    {
+        self::ensureTable($conn);
+        if ($classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return null;
+        }
+        $stmt = $conn->prepare(
+            "SELECT status FROM grade_submissions
+             WHERE class_id = ? AND attendance_date = ? AND submission_type = 'attendance'
+             ORDER BY id DESC LIMIT 1"
+        );
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('is', $classId, $date);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $row ? self::normalizeStatus($row['status'] ?? '') : null;
+    }
+
+    public static function marklistPacketStatus(\mysqli $conn, int $assessmentId): ?string
+    {
+        if ($assessmentId <= 0) {
+            return null;
+        }
+        $map = self::marklistPacketStatuses($conn, [$assessmentId]);
+        return $map[$assessmentId] ?? null;
+    }
+
+    /**
+     * Packet status for many assessments in ONE query.
+     *
+     * Added for the Academic Tracking student view, which lists every
+     * assessment across every subject a student takes and would otherwise
+     * call the single-id lookup once per row (N+1).
+     *
+     * This is deliberately the ONLY implementation of the precedence rule;
+     * marklistPacketStatus() above delegates here rather than keeping a
+     * second copy that could drift from it.
+     *
+     * PATCH C2/H8 precedence, unchanged: a submitted/approved packet is the
+     * workflow truth for the assessment — a *newer* draft packet (e.g. a
+     * staff correction) must never silently re-open a locked mark list.
+     *
+     * @param list<int> $assessmentIds
+     * @return array<int,string> assessment_id => normalised status (absent when no packet)
+     */
+    public static function marklistPacketStatuses(\mysqli $conn, array $assessmentIds): array
+    {
+        $out = [];
+        foreach (self::marklistPacketRefs($conn, $assessmentIds) as $aid => $ref) {
+            $out[$aid] = $ref['status'];
+        }
+        return $out;
+    }
+
+    /**
+     * The winning packet for each assessment: its id as well as its status.
+     *
+     * Added for Academic Tracking Phase 3, which needs the packet id to hand
+     * the user straight to the existing review screen. Status alone cannot
+     * open anything, and looking the id up separately would mean a second
+     * copy of the precedence rule deciding *which* packet is the right one.
+     *
+     * This is therefore the single implementation of that rule;
+     * marklistPacketStatuses() above is a projection of this result.
+     *
+     * PATCH C2/H8 precedence, unchanged: a submitted/approved packet is the
+     * workflow truth for the assessment — a *newer* draft packet (e.g. a
+     * staff correction) must never silently re-open a locked mark list.
+     *
+     * @param list<int> $assessmentIds
+     * @return array<int,array{id:int,status:string}> absent when no packet exists
+     */
+    public static function marklistPacketRefs(\mysqli $conn, array $assessmentIds): array
+    {
+        self::ensureTable($conn);
+
+        $ids = [];
+        foreach ($assessmentIds as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $ids[$id] = true;
+            }
+        }
+        if (!$ids) {
+            return [];
+        }
+        $ids = array_keys($ids);
+        $place = implode(',', array_fill(0, count($ids), '?'));
+
+        // Ascending id, so a later row overwrites an earlier one and the
+        // last writer wins — the same "ORDER BY id DESC LIMIT 1" answer the
+        // per-id query gives, computed for every id at once.
+        $sql = "SELECT assessment_id, status, id
+                  FROM grade_submissions
+                 WHERE submission_type = 'marklist'
+                   AND assessment_id IN ($place)
+                 ORDER BY id ASC";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            return [];
+        }
+        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        $latest = [];   // any packet
+        $locked = [];   // submitted/approved packets only
+        while ($row = $res->fetch_assoc()) {
+            $aid = (int)$row['assessment_id'];
+            $st = self::normalizeStatus($row['status'] ?? '');
+            $ref = ['id' => (int)$row['id'], 'status' => $st];
+            $latest[$aid] = $ref;
+            if ($st === self::STATUS_SUBMITTED || $st === self::STATUS_APPROVED) {
+                $locked[$aid] = $ref;
+            }
+        }
+        $stmt->close();
+
+        $out = [];
+        foreach ($ids as $aid) {
+            if (isset($locked[$aid])) {
+                $out[$aid] = $locked[$aid];
+            } elseif (isset($latest[$aid])) {
+                $out[$aid] = $latest[$aid];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Batched twin of resolvedMarklistStatus(): packet status, falling back
+     * to "submitted" for older sheets that carry marks but never got a
+     * packet. Keys with no packet AND no marks map to null — a real answer
+     * meaning the mark list was never started.
+     *
+     * @param list<int> $assessmentIds
+     * @return array<int,?string>
+     */
+    public static function resolvedMarklistStatuses(\mysqli $conn, array $assessmentIds): array
+    {
+        $out = [];
+        foreach (self::resolvedMarklistRefs($conn, $assessmentIds) as $id => $ref) {
+            $out[$id] = $ref['status'];
+        }
+        return $out;
+    }
+
+    /**
+     * Resolved status AND the packet it came from, in one pass.
+     *
+     * Academic Tracking Phase 3 needs both: the status to show, and the
+     * packet id to open the review screen with. Asking for them
+     * separately meant resolvedMarklistStatuses() and
+     * marklistPacketRefs() each running the same grade_submissions
+     * batch query — measured, two identical round trips per offering.
+     *
+     * Both answers come from one resolution here, so the precedence rule
+     * and the marks fallback each keep exactly one implementation and
+     * cost one query. resolvedMarklistStatuses() is a projection of this.
+     *
+     * submission_id is null when the status was inferred from marks
+     * rather than read from a packet: there is genuinely nothing to open.
+     *
+     * @param list<int> $assessmentIds
+     * @return array<int,array{status:?string,submission_id:?int}>
+     */
+    public static function resolvedMarklistRefs(\mysqli $conn, array $assessmentIds): array
+    {
+        $ids = [];
+        foreach ($assessmentIds as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $ids[$id] = true;
+            }
+        }
+        if (!$ids) {
+            return [];
+        }
+        $ids = array_keys($ids);
+
+        $packets = self::marklistPacketRefs($conn, $ids);
+
+        $missing = [];
+        foreach ($ids as $id) {
+            if (!isset($packets[$id])) {
+                $missing[] = $id;
+            }
+        }
+
+        $hasRows = [];
+        if ($missing) {
+            $place = implode(',', array_fill(0, count($missing), '?'));
+            $stmt = $conn->prepare(
+                "SELECT DISTINCT assessment_id FROM academic_records
+                  WHERE assessment_id IN ($place)"
+            );
+            if ($stmt) {
+                $stmt->bind_param(str_repeat('i', count($missing)), ...$missing);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $hasRows[(int)$row['assessment_id']] = true;
+                }
+                $stmt->close();
+            }
+        }
+
+        $out = [];
+        foreach ($ids as $id) {
+            if (isset($packets[$id])) {
+                $out[$id] = [
+                    'status' => $packets[$id]['status'],
+                    'submission_id' => $packets[$id]['id'],
+                ];
+            } elseif (isset($hasRows[$id])) {
+                // Marks exist but no packet was ever raised. The status is
+                // real; there is simply no packet to open.
+                $out[$id] = ['status' => self::STATUS_SUBMITTED, 'submission_id' => null];
+            } else {
+                $out[$id] = ['status' => null, 'submission_id' => null];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Reviewer feedback attached to the latest packet, for mobile clients.
+     * Returned only while the packet is in revision_needed so the teacher
+     * sees WHY Education handed the key back. Null otherwise.
+     *
+     * @return array{review_notes:string,reviewed_at:string,reviewer_name:string}|null
+     */
+    public static function attendanceReview(\mysqli $conn, int $classId, string $date): ?array
+    {
+        self::ensureTable($conn);
+        if ($classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return null;
+        }
+        $stmt = $conn->prepare(
+            "SELECT gs.review_notes, gs.reviewed_at, COALESCE(u.full_name, '') AS reviewer_name
+             FROM grade_submissions gs
+             LEFT JOIN users u ON gs.reviewed_by = u.id
+             WHERE gs.class_id = ? AND gs.attendance_date = ?
+               AND gs.submission_type = 'attendance' AND gs.status = 'revision_needed'
+             ORDER BY gs.id DESC LIMIT 1"
+        );
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('is', $classId, $date);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) {
+            return null;
+        }
+        return [
+            'review_notes' => (string)($row['review_notes'] ?? ''),
+            'reviewed_at' => (string)($row['reviewed_at'] ?? ''),
+            'reviewer_name' => (string)($row['reviewer_name'] ?? ''),
+        ];
+    }
+
+    /** @return array{review_notes:string,reviewed_at:string,reviewer_name:string}|null */
+    public static function marklistReview(\mysqli $conn, int $assessmentId): ?array
+    {
+        self::ensureTable($conn);
+        if ($assessmentId <= 0) {
+            return null;
+        }
+        $stmt = $conn->prepare(
+            "SELECT gs.review_notes, gs.reviewed_at, COALESCE(u.full_name, '') AS reviewer_name
+             FROM grade_submissions gs
+             LEFT JOIN users u ON gs.reviewed_by = u.id
+             WHERE gs.assessment_id = ? AND gs.submission_type = 'marklist'
+               AND gs.status = 'revision_needed'
+             ORDER BY gs.id DESC LIMIT 1"
+        );
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('i', $assessmentId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) {
+            return null;
+        }
+        return [
+            'review_notes' => (string)($row['review_notes'] ?? ''),
+            'reviewed_at' => (string)($row['reviewed_at'] ?? ''),
+            'reviewer_name' => (string)($row['reviewer_name'] ?? ''),
+        ];
+    }
+
+    public static function attendanceHasRows(\mysqli $conn, int $classId, string $date): bool
+    {
+        if ($classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return false;
+        }
+        $stmt = $conn->prepare(
+            "SELECT 1 FROM attendance WHERE class_id = ? AND attendance_date = ? LIMIT 1"
+        );
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('is', $classId, $date);
+        $stmt->execute();
+        $ok = $stmt->get_result()->num_rows > 0;
+        $stmt->close();
+        return $ok;
+    }
+
+    public static function marklistHasRows(\mysqli $conn, int $assessmentId): bool
+    {
+        if ($assessmentId <= 0) {
+            return false;
+        }
+        return self::marklistsHaveRows($conn, [$assessmentId])[$assessmentId] ?? false;
+    }
+
+    /**
+     * "Do marks exist yet?" for many assessments at once.
+     *
+     * Whether a mark list has rows is a different fact from whether a
+     * submission packet exists and from what state that packet is in, and
+     * Academic Tracking has to keep the three apart. Answering it one
+     * assessment at a time is N+1 across a class, so this is the batched
+     * form and marklistHasRows() above is now a projection of it — one
+     * implementation of the question, as with marklistPacketRefs().
+     *
+     * Existence only. No score is read and nothing is averaged; that
+     * remains ReportCardService's job.
+     *
+     * @param list<int> $assessmentIds
+     * @return array<int,bool> keyed by assessment id, false where absent
+     */
+    public static function marklistsHaveRows(\mysqli $conn, array $assessmentIds): array
+    {
+        $ids = [];
+        foreach ($assessmentIds as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $ids[$id] = true;
+            }
+        }
+        $ids = array_keys($ids);
+        if (!$ids) {
+            return [];
+        }
+
+        $out = array_fill_keys($ids, false);
+        $place = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $conn->prepare(
+            "SELECT DISTINCT assessment_id
+               FROM academic_records
+              WHERE assessment_id IN ($place)"
+        );
+        if (!$stmt) {
+            return $out;
+        }
+        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $out[(int)$row['assessment_id']] = true;
+        }
+        $stmt->close();
+        return $out;
+    }
+
+    /**
+     * Packet status, or "submitted" for older sheets that already have
+     * marks but never got a packet. Empty days stay open so a teacher
+     * can still take a missed Sunday.
+     */
+    public static function resolvedAttendanceStatus(\mysqli $conn, int $classId, string $date): ?string
+    {
+        $status = self::attendancePacketStatus($conn, $classId, $date);
+        if ($status !== null) {
+            return $status;
+        }
+        return self::attendanceHasRows($conn, $classId, $date) ? self::STATUS_SUBMITTED : null;
+    }
+
+    public static function resolvedMarklistStatus(\mysqli $conn, int $assessmentId): ?string
+    {
+        if ($assessmentId <= 0) {
+            return null;
+        }
+        $map = self::resolvedMarklistStatuses($conn, [$assessmentId]);
+        return $map[$assessmentId] ?? null;
+    }
+
+    public static function teacherMayWriteAttendance(\mysqli $conn, array $auth, int $classId, string $date): bool
+    {
+        if (self::staffCanOverride($auth)) {
+            return true;
+        }
+        $status = self::resolvedAttendanceStatus($conn, $classId, $date);
+        return $status === null || self::statusIsOpen($status);
+    }
+
+    /**
+     * The current semester of the ACTIVE academic year, or null when no
+     * active year / no current semester exists. Shared by the term-close
+     * write gate (below) and any surface that needs "what semester are we
+     * in" (mobile hero box, /app/config, /dashboard/stats).
+     *
+     * Scoping to the ACTIVE year matters: is_current is a per-year flag, so
+     * an unscoped read could return a semester of a closed year while the
+     * active year is running (the same bug fixed for set_current_term on
+     * 2026-10-08). Falls back to any is_current row only when no active
+     * year can be resolved at all (legacy databases).
+     */
+    public static function currentTermOfActiveYear(\mysqli $conn): ?array
+    {
+        try {
+            $stmt = $conn->prepare(
+                "SELECT t.id, t.term_name, t.term_number
+                 FROM academic_terms t
+                 JOIN academic_years y ON y.id = t.academic_year_id
+                 WHERE y.status = 'active' AND t.is_current = 1
+                 LIMIT 1"
+            );
+            if ($stmt) {
+                $stmt->execute();
+                $row = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                if ($row) {
+                    return $row;
+                }
+            }
+        } catch (\Exception $e) {
+            // fall through to the legacy fallback
+        }
+        try {
+            $r = $conn->query("SELECT id, term_name, term_number FROM academic_terms WHERE is_current = 1 LIMIT 1");
+            if ($r) {
+                $row = $r->fetch_assoc();
+                if ($row) {
+                    return $row;
+                }
+            }
+        } catch (\Exception $e) {
+            // no terms table / unreadable — callers treat null as "no fence"
+        }
+        return null;
+    }
+
+    /**
+     * Term-close gate (1.6.5). A teacher may write marks only into the
+     * CURRENT semester of the active year, or a semester the Education
+     * Department has explicitly reopened for corrections (sql/067).
+     * Staff (edu_dept / school_admin / super_admin) always pass — the
+     * department is the correction channel for closed semesters.
+     *
+     * A NULL term (legacy assessments created before terms existed) is
+     * always writable for teachers: those assessments predate the fence
+     * and are surfaced as "no semester assigned" by the entry screens.
+     */
+    public static function termWritableForTeachers(\mysqli $conn, array $auth, ?int $termId): bool
+    {
+        if (self::staffCanOverride($auth)) {
+            return true;
+        }
+        if ($termId === null || $termId <= 0) {
+            return true;
+        }
+        $current = self::currentTermOfActiveYear($conn);
+        if ($current !== null && (int)$current['id'] === $termId) {
+            return true;
+        }
+        try {
+            $stmt = $conn->prepare("SELECT is_reopened FROM academic_terms WHERE id = ? LIMIT 1");
+            if ($stmt) {
+                $stmt->bind_param('i', $termId);
+                $stmt->execute();
+                $row = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                return $row !== null && (int)$row['is_reopened'] === 1;
+            }
+        } catch (\Exception $e) {
+            // column missing (pre-067 database): the close gate must not
+            // brick grade entry — behave as "not reopened", but staff can
+            // still override.
+        }
+        return false;
+    }
+
+    /**
+     * Full write-gate reason (1.6.5). Returns null when the actor may
+     * write this marklist, or a user-safe reason when they may not:
+     *   1. staff always pass (department correction channel);
+     *   2. the assessment's semester must be writable for teachers
+     *      (current, reopened, or legacy NULL);
+     *   3. the marklist submission status must be open (pre-existing rule).
+     * Shared by the web and mobile save/submit paths so the two surfaces
+     * can never disagree.
+     */
+    public static function teacherWriteRefusal(\mysqli $conn, array $auth, int $assessmentId): ?string
+    {
+        if (self::staffCanOverride($auth)) {
+            return null;
+        }
+        $termId = null;
+        $termName = null;
+        try {
+            $stmt = $conn->prepare(
+                "SELECT a.term_id, t.term_name
+                 FROM assessments a
+                 LEFT JOIN academic_terms t ON t.id = a.term_id
+                 WHERE a.id = ? LIMIT 1"
+            );
+            if ($stmt) {
+                $stmt->bind_param('i', $assessmentId);
+                $stmt->execute();
+                $row = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                if ($row) {
+                    $termId = $row['term_id'] !== null ? (int)$row['term_id'] : null;
+                    $termName = $row['term_name'];
+                }
+            }
+        } catch (\Exception $e) {
+            // unreadable — treat as legacy (no fence)
+        }
+        if ($termId !== null && !self::termWritableForTeachers($conn, $auth, $termId)) {
+            $label = $termName !== null && $termName !== '' ? (' (' . $termName . ')') : '';
+            return 'This semester' . $label . ' is closed for editing. Teachers can view it for analysis; '
+                . 'ask the Education Department to reopen it for corrections.';
+        }
+        $status = self::resolvedMarklistStatus($conn, $assessmentId);
+        if ($status !== null && !self::statusIsOpen($status)) {
+            return 'This test is already submitted. Only Education can change scores now.';
+        }
+        return null;
+    }
+
+    public static function teacherMayWriteMarklist(\mysqli $conn, array $auth, int $assessmentId): bool
+    {
+        return self::teacherWriteRefusal($conn, $auth, $assessmentId) === null;
+    }
+
+    public static function isLockedForTeacher(?string $status, array $auth): bool
+    {
+        if (self::staffCanOverride($auth)) {
+            return false;
+        }
+        return $status !== null && $status !== '' && !self::statusIsOpen($status);
+    }
+
+    /**
+     * H9: reviewer decisions are only valid on packets AWAITING review.
+     * Returns null when the transition is allowed, or a user-safe reason
+     * explaining why the packet cannot be decided in its current state
+     * (reviewing a draft, approving a rejected list, rejecting an approved
+     * one, …). Shared by the web and mobile review endpoints.
+     *
+     * 2026-10-02: the rule itself moved to ReviewTransitionPolicy so that
+     * HR and Mezmur enforce the identical state machine without depending
+     * on this (Education) service. Messages are unchanged — "list" /
+     * "teacher" is Education's vocabulary.
+     */
+    public static function reviewTransitionError(?string $current, string $target): ?string
+    {
+        return ReviewTransitionPolicy::error($current, $target, 'list', 'teacher');
+    }
+
+    /** True when the member has any enrolment row (active or historical) in the class. */
+    public static function memberBelongsToClass(\mysqli $conn, int $memberId, int $classId): bool
+    {
+        $stmt = $conn->prepare('SELECT 1 FROM class_enrollments WHERE member_id = ? AND class_id = ? LIMIT 1');
+        if (!$stmt) {
+            return true; // never block grading on a lookup failure; the sheet itself is roster-built
+        }
+        $stmt->bind_param('ii', $memberId, $classId);
+        $stmt->execute();
+        $ok = (bool)$stmt->get_result()->fetch_row();
+        $stmt->close();
+        return $ok;
+    }
+
+    /** One score per student per test. Always update the existing row. */
+    public static function upsertScore(\mysqli $conn, array $row): int
+    {
+        self::hardenUniques($conn);
+        $assessmentId = (int)($row['assessment_id'] ?? 0);
+        $memberId = (int)($row['member_id'] ?? 0);
+        if ($assessmentId <= 0 || $memberId <= 0) {
+            return 0;
+        }
+        $score = array_key_exists('score', $row) ? $row['score'] : null;
+        $remarks = trim((string)($row['remarks'] ?? $row['remark'] ?? ''));
+        $recordedBy = (int)($row['recorded_by'] ?? 0);
+        $classId = (int)($row['class_id'] ?? 0);
+        $subjectId = (int)($row['subject_id'] ?? 0);
+        $yearId = isset($row['year_id']) ? (int)$row['year_id'] : null;
+        $termId = isset($row['term_id']) ? (int)$row['term_id'] : null;
+        $maxScore = isset($row['max_score']) ? (float)$row['max_score'] : 100;
+        $submissionId = isset($row['submission_id']) ? (int)$row['submission_id'] : null;
+
+        $find = $conn->prepare(
+            "SELECT id FROM academic_records WHERE assessment_id = ? AND member_id = ? ORDER BY id DESC LIMIT 1"
+        );
+        $existing = 0;
+        if ($find) {
+            $find->bind_param('ii', $assessmentId, $memberId);
+            $find->execute();
+            $got = $find->get_result()->fetch_assoc();
+            $find->close();
+            $existing = (int)($got['id'] ?? 0);
+        }
+        // Audit 2026-10-20: a NEW mark may only be created for a member who is
+        // (or was) enrolled in the assessment's class. Neither the web nor the
+        // mobile sheet checked this, so a stray member_id would have created an
+        // academic_records row for a student who never sat in the class.
+        // Re-saves of an existing row are untouched (history stays editable).
+        if ($existing <= 0 && $classId > 0 && !self::memberBelongsToClass($conn, $memberId, $classId)) {
+            return 0;
+        }
+        if ($existing > 0) {
+            $up = $conn->prepare(
+                "UPDATE academic_records SET score = ?, remarks = ?, recorded_by = ?,
+                        submission_id = COALESCE(?, submission_id)
+                 WHERE id = ?"
+            );
+            if (!$up) {
+                return 0;
+            }
+            $up->bind_param('dsiii', $score, $remarks, $recordedBy, $submissionId, $existing);
+            $up->execute();
+            $up->close();
+            return $existing;
+        }
+        $ins = $conn->prepare(
+            "INSERT INTO academic_records
+                (member_id, class_id, subject_id, academic_year_id, term_id, assessment_id, submission_id, score, max_score, remarks, recorded_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        if (!$ins) {
+            return 0;
+        }
+        $ins->bind_param(
+            'iiiiiiiddsi',
+            $memberId,
+            $classId,
+            $subjectId,
+            $yearId,
+            $termId,
+            $assessmentId,
+            $submissionId,
+            $score,
+            $maxScore,
+            $remarks,
+            $recordedBy
+        );
+        $ins->execute();
+        $id = (int)$ins->insert_id;
+        $ins->close();
+        return $id;
+    }
+
+    public static function normalizeStatus(?string $status): string
+    {
+        $status = strtolower(trim((string)$status));
+        $ok = [
+            self::STATUS_INCOMPLETE,
+            self::STATUS_SUBMITTED,
+            self::STATUS_APPROVED,
+            self::STATUS_REJECTED,
+            self::STATUS_REVISION,
+            self::STATUS_DRAFT,
+        ];
+        return in_array($status, $ok, true) ? $status : self::STATUS_INCOMPLETE;
+    }
+
+    /**
+     * Create or update one attendance packet.
+     *
+     * @param array{teacher_id:int,class_id:int,date:string,status:string,student_count?:int,year_id?:?int,present?:int,absent?:int,late?:int,excused?:int} $opts
+     * @return array{ok:bool,id:int,status:string,message:string}
+     */
+    public static function upsertAttendance(\mysqli $conn, array $opts): array
+    {
+        self::ensureTable($conn);
+        $teacherId = (int)($opts['teacher_id'] ?? 0);
+        $classId = (int)($opts['class_id'] ?? 0);
+        $date = trim((string)($opts['date'] ?? ''));
+        $status = self::normalizeStatus($opts['status'] ?? self::STATUS_INCOMPLETE);
+        if ($status === self::STATUS_DRAFT) {
+            $status = self::STATUS_INCOMPLETE;
+        }
+        $count = (int)($opts['student_count'] ?? 0);
+        $yearId = isset($opts['year_id']) && $opts['year_id'] ? (int)$opts['year_id'] : null;
+        $present = (int)($opts['present'] ?? 0);
+        $absent = (int)($opts['absent'] ?? 0);
+        $late = (int)($opts['late'] ?? 0);
+        $excused = (int)($opts['excused'] ?? 0);
+        $zero = 0;
+
+        if ($teacherId <= 0 || $classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return ['ok' => false, 'id' => 0, 'status' => $status, 'message' => 'Class, teacher, and date are required.'];
+        }
+
+        $existingId = 0;
+        $stmt = $conn->prepare(
+            "SELECT id FROM grade_submissions
+             WHERE class_id = ? AND submission_type = 'attendance' AND attendance_date = ?
+             ORDER BY id DESC LIMIT 1"
+        );
+        if ($stmt) {
+            $stmt->bind_param('is', $classId, $date);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            $existingId = (int)($row['id'] ?? 0);
+        }
+
+        $submittedAt = $status === self::STATUS_SUBMITTED ? date('Y-m-d H:i:s') : null;
+
+        if ($existingId > 0) {
+            $cur = $conn->prepare("SELECT status FROM grade_submissions WHERE id = ? LIMIT 1");
+            $curStatus = '';
+            if ($cur) {
+                $cur->bind_param('i', $existingId);
+                $cur->execute();
+                $curStatus = (string)($cur->get_result()->fetch_assoc()['status'] ?? '');
+                $cur->close();
+            }
+            if (!self::statusIsOpen($curStatus) && empty($opts['force'])) {
+                return [
+                    'ok' => false,
+                    'id' => $existingId,
+                    'status' => self::normalizeStatus($curStatus),
+                    'message' => 'This attendance is already submitted. Only Education can change it.',
+                ];
+            }
+            // H10 (extended 2026-10-02): upsertMarklist() has always cleared
+            // the stale reviewer trail on (re)submission; this attendance
+            // sibling did not, so a returned attendance packet re-entered the
+            // Education inbox still showing the previous reviewer's decision.
+            // Same rule, same condition — clear on ENTERING the submitted
+            // state only; corrections that keep the status are untouched.
+            $entersReviewQueue = $status === self::STATUS_SUBMITTED
+                && self::normalizeStatus($curStatus) !== self::STATUS_SUBMITTED;
+            $clearReview = $entersReviewQueue
+                ? ', review_notes = NULL, reviewed_by = NULL, reviewed_at = NULL'
+                : '';
+            // Finding K (2026-10-02): the open-status check above is a
+            // SELECT, so Education could approve this packet between that
+            // read and this write, letting a save silently overwrite
+            // approved data and wipe the reviewer trail. Re-assert the same
+            // precondition inside the UPDATE so the race cannot land. An
+            // explicit staff override ('force') intentionally bypasses it.
+            $lockGuard = empty($opts['force'])
+                ? " AND status IN ('draft','incomplete','revision_needed')"
+                : '';
+            $sql = "UPDATE grade_submissions
+                    SET status = ?, student_count = ?, present_count = ?, absent_count = ?, late_count = ?, excused_count = ?,
+                        academic_year_id = ?, submitted_at = COALESCE(?, submitted_at), updated_at = NOW()
+                        $clearReview
+                    WHERE id = ?$lockGuard";
+            $up = $conn->prepare($sql);
+            if (!$up) {
+                return ['ok' => false, 'id' => $existingId, 'status' => $status, 'message' => 'Could not update attendance packet.'];
+            }
+            $up->bind_param('siiiiiisi', $status, $count, $present, $absent, $late, $excused, $yearId, $submittedAt, $existingId);
+            $ok = $up->execute();
+            $changed = $up->affected_rows;
+            $up->close();
+            // affected_rows can be 0 for a genuine no-op save, so re-read
+            // before blaming the lock (finding K).
+            if ($ok && $changed === 0 && empty($opts['force'])) {
+                $verify = $conn->prepare("SELECT status FROM grade_submissions WHERE id = ? LIMIT 1");
+                if ($verify) {
+                    $verify->bind_param('i', $existingId);
+                    $verify->execute();
+                    $vRow = $verify->get_result()->fetch_assoc() ?: [];
+                    $verify->close();
+                    $vStatus = (string)($vRow['status'] ?? '');
+                    if ($vStatus !== '' && !self::statusIsOpen($vStatus)) {
+                        return [
+                            'ok' => false,
+                            'id' => $existingId,
+                            'status' => self::normalizeStatus($vStatus),
+                            'message' => 'This attendance is already submitted. Only Education can change it.',
+                        ];
+                    }
+                }
+            }
+            // Phase 3 (attendance alerting): durable "who submitted / when"
+            // trail — the packet row keeps one teacher_id and clears the
+            // reviewer columns on resubmission, so append the step here.
+            if ($ok && $changed > 0 && $entersReviewQueue) {
+                AttendanceSubmissionEventService::record(
+                    $conn, 'edu', $existingId, self::normalizeStatus($curStatus), self::STATUS_SUBMITTED,
+                    $teacherId, '', (string)($opts['channel'] ?? 'web')
+                );
+            }
+            return [
+                'ok' => (bool)$ok,
+                'id' => $existingId,
+                'status' => $status,
+                'message' => $status === self::STATUS_SUBMITTED
+                    ? 'Attendance submitted.'
+                    : 'Saved as a draft for Education.',
+            ];
+        }
+
+        $ins = $conn->prepare(
+            "INSERT INTO grade_submissions
+                (teacher_id, class_id, subject_id, academic_year_id, attendance_date, submission_type, status,
+                 student_count, present_count, absent_count, late_count, excused_count, submitted_at)
+             VALUES (?, ?, ?, ?, ?, 'attendance', ?, ?, ?, ?, ?, ?, ?)"
+        );
+        if (!$ins) {
+            return ['ok' => false, 'id' => 0, 'status' => $status, 'message' => 'Could not create attendance packet.'];
+        }
+        $ins->bind_param(
+            'iiiissiiiiis',
+            $teacherId,
+            $classId,
+            $zero,
+            $yearId,
+            $date,
+            $status,
+            $count,
+            $present,
+            $absent,
+            $late,
+            $excused,
+            $submittedAt
+        );
+        $ok = $ins->execute();
+        $insErrno = $ins->errno;
+        $id = (int)$ins->insert_id;
+        $ins->close();
+        // Finding J (2026-10-02): this is the losing side of a SELECT-then-
+        // INSERT race. Once uq_gs_attendance_slot exists (migration 053) the
+        // duplicate INSERT is refused with errno 1062 instead of silently
+        // creating a second packet for the same (class, date). The packet we
+        // were trying to create now exists, so converge on it through the
+        // normal update path rather than failing the teacher's save. One
+        // retry only — if it still fails, report instead of looping.
+        if (!$ok && $insErrno === 1062 && empty($opts['__slot_retry'])) {
+            $opts['__slot_retry'] = true;
+            return self::upsertAttendance($conn, $opts);
+        }
+        if (!$ok && $insErrno === 1062) {
+            return [
+                'ok' => false,
+                'id' => 0,
+                'status' => $status,
+                'message' => 'Another save for this class and date is in progress. Please try again.',
+            ];
+        }
+        if ($ok && $id > 0 && $status === self::STATUS_SUBMITTED) {
+            AttendanceSubmissionEventService::record(
+                $conn, 'edu', $id, '', self::STATUS_SUBMITTED, $teacherId, '', (string)($opts['channel'] ?? 'web')
+            );
+        }
+        return [
+            'ok' => (bool)$ok,
+            'id' => $id,
+            'status' => $status,
+            'message' => $status === self::STATUS_SUBMITTED
+                ? 'Attendance submitted.'
+                : 'Saved as a draft for Education.',
+        ];
+    }
+
+    /**
+     * Roles that may RETURN, REOPEN or REJECT an attendance packet
+     * (attendance alerting Phase 3; owner decision Q-1 2026-10-19):
+     * every non-approve decision on an attendance sheet — whether it is
+     * awaiting review or already approved — is a department action only.
+     * School / Super Admin may still approve a submitted sheet; they are
+     * otherwise read-only on attendance alerting (Phase 2 rule). Mark
+     * lists keep the historical reviewer roles (see the callers).
+     */
+    public const ATTENDANCE_REOPEN_ROLES = ['edu_dept'];
+
+    /** Bell type for the teacher / taker when a sheet is returned, reopened or rejected (Q-2). */
+    public const REVIEW_NOTIFICATION_TYPE = 'attendance_submission_review';
+
+    /**
+     * Phase 3: ONE implementation of the Education review decision, shared
+     * by the web console (api_communication.php review_submission) and the
+     * mobile API (POST /grades/submission-review).
+     *
+     * Rules:
+     *  - approve / return / reject a packet awaiting review: unchanged
+     *    (ReviewTransitionPolicy::error, race-safe guarded UPDATE);
+     *  - ATTENDANCE packets only: an already APPROVED packet may be returned
+     *    (revision_needed) or rejected by edu_dept, with a reason — this is
+     *    the requirements §5 "reopen / reject with reason";
+     *  - every non-approve decision needs a reason of >= 3 characters;
+     *  - every transition is audited (SecurityAuditService), appended to
+     *    attendance_submission_events, and — for attendance packets — the
+     *    members on the sheet are re-evaluated so reopened / rejected rows
+     *    stop counting and open warnings are flagged, never deleted.
+     *
+     * @return array{ok:bool,message:string,code?:string,http?:int,new_status?:string,previous_status?:string,recalc?:array}
+     */
+    public static function reviewPacket(
+        \mysqli $conn,
+        int $submissionId,
+        string $newStatus,
+        string $notes,
+        int $actorId,
+        string $actorRole,
+        string $channel = 'web'
+    ): array {
+        $notes = trim($notes);
+        if ($submissionId <= 0 || !in_array($newStatus, ['approved', 'rejected', 'revision_needed'], true)) {
+            return ['ok' => false, 'http' => 422, 'code' => 'invalid_parameters', 'message' => 'Invalid review parameters.'];
+        }
+        // A returned/rejected packet must tell the teacher what to fix —
+        // otherwise the unlock is meaningless.
+        if ($newStatus !== 'approved' && mb_strlen($notes) < 3) {
+            return ['ok' => false, 'http' => 422, 'code' => 'reason_required', 'message' => 'Write a short reason so the teacher knows what to fix.'];
+        }
+        if (mb_strlen($notes) > 500) {
+            $notes = mb_substr($notes, 0, 500);
+        }
+
+        $stmt = $conn->prepare(
+            "SELECT teacher_id, class_id, submission_type, attendance_date,
+                    assessment_id, status
+             FROM grade_submissions WHERE id = ? LIMIT 1"
+        );
+        if (!$stmt) {
+            return ['ok' => false, 'http' => 500, 'code' => 'storage', 'message' => 'Could not open the submission.'];
+        }
+        $stmt->bind_param('i', $submissionId);
+        $stmt->execute();
+        $packet = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$packet) {
+            return ['ok' => false, 'http' => 404, 'code' => 'not_found', 'message' => 'Submission not found.'];
+        }
+        $previousStatus = (string)($packet['status'] ?? '');
+        $isAttendance = (string)($packet['submission_type'] ?? '') === self::TYPE_ATTENDANCE;
+        $reopen = $isAttendance
+            && self::normalizeStatus($previousStatus) === self::STATUS_APPROVED
+            && $newStatus !== 'approved';
+
+        // Q-1: returning / rejecting an attendance sheet (submitted OR
+        // approved) is the department's call — admins may only approve.
+        if ($isAttendance && $newStatus !== 'approved' && !in_array($actorRole, self::ATTENDANCE_REOPEN_ROLES, true)) {
+            return ['ok' => false, 'http' => 403, 'code' => 'forbidden',
+                    'message' => $reopen
+                        ? 'Only the Education department can reopen an approved attendance sheet.'
+                        : 'Only the Education department can return or reject an attendance sheet.'];
+        }
+        if ($reopen) {
+            $transitionError = ReviewTransitionPolicy::reopenError($previousStatus, $newStatus, 'list', 'teacher');
+        } else {
+            // H9: only packets AWAITING review may be decided — no approving
+            // rejected lists, rejecting approved ones, or "reviewing" drafts.
+            $transitionError = self::reviewTransitionError($previousStatus, $newStatus);
+        }
+        if ($transitionError !== null) {
+            return ['ok' => false, 'http' => 422, 'code' => 'invalid_transition', 'message' => $transitionError];
+        }
+
+        // Guarded update: the status must still be what we read when the
+        // write lands (race-safe against a concurrent decision, resubmission
+        // or another reopen).
+        $expected = $reopen ? self::STATUS_APPROVED : self::STATUS_SUBMITTED;
+        $up = $conn->prepare("UPDATE grade_submissions
+            SET status = ?, reviewed_by = ?, reviewed_at = NOW(), review_notes = ?
+            WHERE id = ? AND status = ?");
+        if (!$up) {
+            return ['ok' => false, 'http' => 500, 'code' => 'storage', 'message' => 'Could not update the submission.'];
+        }
+        $up->bind_param('sisis', $newStatus, $actorId, $notes, $submissionId, $expected);
+        $ok = $up->execute();
+        $affected = $up->affected_rows;
+        $up->close();
+        if (!$ok) {
+            return ['ok' => false, 'http' => 500, 'code' => 'storage', 'message' => 'Could not update the submission.'];
+        }
+        if ($affected < 1) {
+            // affected_rows = 0 means the packet changed state between our
+            // read and this write (concurrent decision/resubmit).
+            return ['ok' => false, 'http' => 409, 'code' => 'not_awaiting_review',
+                    'message' => $reopen
+                        ? 'This list is no longer approved. Refresh the inbox and try again.'
+                        : 'This list is no longer awaiting review. Refresh the inbox and try again.'];
+        }
+
+        // Immutable trail: who decided, from which state, and why.
+        $auditDetails = [
+            'new_status' => $newStatus,
+            'previous_status' => $previousStatus,
+            'reason' => $notes,
+            'kind' => (string)$packet['submission_type'],
+            'class_id' => (int)$packet['class_id'],
+            'attendance_date' => (string)($packet['attendance_date'] ?? ''),
+            'assessment_id' => (int)($packet['assessment_id'] ?? 0),
+            'teacher_id' => (int)$packet['teacher_id'],
+        ];
+        if ($channel !== 'web') {
+            $auditDetails['channel'] = $channel;
+        }
+        if ($reopen) {
+            $auditDetails['reopened'] = true;
+        }
+        if (class_exists('\App\Services\SecurityAuditService')) {
+            SecurityAuditService::record($conn, 'Submission Reviewed', $auditDetails, 'grade_submission', $submissionId);
+        }
+
+        $recalc = null;
+        if ($isAttendance) {
+            AttendanceSubmissionEventService::record(
+                $conn, 'edu', $submissionId, self::normalizeStatus($previousStatus), $newStatus, $actorId, $notes, $channel
+            );
+            // Requirements §5: reopened / rejected records must not create
+            // false absence warnings — recompute streaks, month rates and
+            // open warnings for everyone on this sheet. Never fails the review.
+            $recalc = self::recalculateAttendanceWarnings(
+                $conn, (int)$packet['class_id'], (string)($packet['attendance_date'] ?? ''), $actorId
+            );
+            // Q-2: tell the teacher (bell, in-app only) when the sheet is
+            // returned, reopened or rejected — with the reason.
+            if ($newStatus !== 'approved') {
+                self::notifyTeacherOfReview($conn, $packet, $submissionId, $previousStatus, $newStatus, $notes, $actorId, $reopen);
+            }
+        }
+
+        $friendly = [
+            'approved' => 'Approved',
+            'rejected' => $reopen ? 'Rejected — the sheet no longer counts' : 'Rejected',
+            'revision_needed' => $reopen ? 'Reopened — returned to the teacher for correction' : 'Returned to the teacher for correction',
+        ];
+        return [
+            'ok' => true,
+            'message' => $friendly[$newStatus],
+            'new_status' => $newStatus,
+            'previous_status' => $previousStatus,
+            'reopened' => $reopen,
+            'recalc' => $recalc,
+        ];
+    }
+
+    /**
+     * Q-2 (2026-10-19): in-app bell to the teacher who owns the sheet when
+     * Education returns, reopens or rejects it. Targets ONE user
+     * (target_user_id); never fails the review. Dates in the text are
+     * Ethiopian calendar; the data block keeps the machine date for the
+     * mobile deep-link (class_id + attendance_date → attendance sheet).
+     *
+     * @param array<string,mixed> $packet
+     */
+    public static function notifyTeacherOfReview(\mysqli $conn, array $packet, int $submissionId, string $previousStatus, string $newStatus, string $reason, ?int $actorId, bool $reopen): void
+    {
+        try {
+            $teacherId = (int)($packet['teacher_id'] ?? 0);
+            $classId = (int)($packet['class_id'] ?? 0);
+            $date = (string)($packet['attendance_date'] ?? '');
+            if ($teacherId <= 0 || $classId <= 0 || $date === '') {
+                return;
+            }
+            $className = '';
+            $cs = $conn->prepare('SELECT class_name FROM classes WHERE id = ? LIMIT 1');
+            if ($cs) {
+                $cs->bind_param('i', $classId);
+                $cs->execute();
+                $className = (string)($cs->get_result()->fetch_assoc()['class_name'] ?? '');
+                $cs->close();
+            }
+            if (!function_exists('ethio_date_format')) {
+                require_once dirname(__DIR__) . '/ethiopian_date.php';
+            }
+            $dateEc = ethio_date_format(new \DateTime($date), 'F j, Y');
+            $what = $newStatus === 'rejected'
+                ? ($reopen ? 'rejected (it was approved)' : 'rejected')
+                : ($reopen ? 'reopened for correction (it was approved)' : 'returned for correction');
+            $whatAm = $newStatus === 'rejected' ? 'ውድቅ ተደርጓል' : 'ለማስተካከያ ተመልሷል';
+            $title = ($newStatus === 'rejected' ? 'Attendance sheet rejected' : 'Attendance sheet returned')
+                . ' · ' . $whatAm;
+            $message = "Your attendance sheet for {$className} on {$dateEc} was {$what}.\nReason: {$reason}\n"
+                . "የ{$className} የ{$dateEc} የተገኝነት ሉህ {$whatAm}። ምክንያት፡ {$reason}";
+            $data = json_encode([
+                'submission_id' => $submissionId, 'department' => 'edu', 'class_id' => $classId,
+                'attendance_date' => $date, 'attendance_date_ec' => $dateEc,
+                'previous_status' => $previousStatus, 'new_status' => $newStatus, 'reopened' => $reopen ? 1 : 0,
+                'reason' => $reason,
+            ], JSON_UNESCAPED_UNICODE);
+            $stmt = $conn->prepare(
+                'INSERT INTO notifications (type, title, message, data, priority, source_dept, source_user_id, target_roles, target_user_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)'
+            );
+            if (!$stmt) {
+                return;
+            }
+            $type = self::REVIEW_NOTIFICATION_TYPE;
+            $priority = $newStatus === 'rejected' ? 'high' : 'normal';
+            $sourceDept = 'edu_dept';
+            $stmt->bind_param('ssssssii', $type, $title, $message, $data, $priority, $sourceDept, $actorId, $teacherId);
+            $stmt->execute();
+            $stmt->close();
+        } catch (\Throwable $e) {
+            error_log('Attendance review notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Re-evaluate attendance warnings for every member on one class/day
+     * sheet (Phase 2 evaluator; no-op when the feature is off or tables are
+     * missing). Best-effort: errors are logged, never thrown.
+     *
+     * @return array{evaluated:int,actions:int}|null
+     */
+    public static function recalculateAttendanceWarnings(\mysqli $conn, int $classId, string $date, ?int $actorId): ?array
+    {
+        if ($classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return null;
+        }
+        try {
+            if (!class_exists('\App\Services\AttendanceWarningService')) {
+                require_once __DIR__ . '/AttendanceWarningService.php';
+            }
+            $ids = AttendanceWarningService::memberIdsFromRecords(self::attendanceRows($conn, $classId, $date));
+            return AttendanceWarningService::safeEvaluateMany($conn, 'edu', $ids, $date, $actorId);
+        } catch (\Throwable $e) {
+            error_log('Attendance warning recalculation failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Create or update one mark-list packet.
+     *
+     * @param array{teacher_id:int,class_id:int,subject_id:int,assessment_id:int,status:string,student_count?:int,average?:?float,year_id?:?int,term_id?:?int} $opts
+     */
+    public static function upsertMarklist(\mysqli $conn, array $opts): array
+    {
+        self::ensureTable($conn);
+        $teacherId = (int)($opts['teacher_id'] ?? 0);
+        $classId = (int)($opts['class_id'] ?? 0);
+        $subjectId = (int)($opts['subject_id'] ?? 0);
+        $assessmentId = (int)($opts['assessment_id'] ?? 0);
+        $status = self::normalizeStatus($opts['status'] ?? self::STATUS_DRAFT);
+        $count = (int)($opts['student_count'] ?? 0);
+        $avg = isset($opts['average']) && $opts['average'] !== null ? (float)$opts['average'] : null;
+        $yearId = isset($opts['year_id']) && $opts['year_id'] ? (int)$opts['year_id'] : null;
+        $termId = isset($opts['term_id']) && $opts['term_id'] ? (int)$opts['term_id'] : null;
+
+        if ($teacherId <= 0 || $classId <= 0 || $assessmentId <= 0) {
+            return ['ok' => false, 'id' => 0, 'status' => $status, 'message' => 'Class, teacher, and assessment are required.'];
+        }
+
+        // PATCH C2/H8: the packet is the workflow record OF THE ASSESSMENT.
+        // Bind to the canonical packet regardless of which user is saving,
+        // preferring a locked (submitted/approved) one over newer drafts.
+        $existingId = 0;
+        $existingTeacherId = 0;
+        foreach (
+            [
+                "SELECT id, teacher_id FROM grade_submissions
+                 WHERE assessment_id = ? AND submission_type = 'marklist'
+                   AND status IN ('submitted','approved')
+                 ORDER BY id DESC LIMIT 1",
+                "SELECT id, teacher_id FROM grade_submissions
+                 WHERE assessment_id = ? AND submission_type = 'marklist'
+                 ORDER BY id DESC LIMIT 1",
+            ] as $sql
+        ) {
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                continue;
+            }
+            $stmt->bind_param('i', $assessmentId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($row) {
+                $existingId = (int)$row['id'];
+                $existingTeacherId = (int)$row['teacher_id'];
+                break;
+            }
+        }
+
+        $force = !empty($opts['force']);
+        // Staff corrections keep ownership with the responsible teacher;
+        // a teacher saving claims ownership of their own mark list.
+        $ownerId = $existingId > 0 && $force ? $existingTeacherId : $teacherId;
+
+        if ($existingId > 0) {
+            $cur = $conn->prepare("SELECT status FROM grade_submissions WHERE id = ? LIMIT 1");
+            $curStatus = '';
+            if ($cur) {
+                $cur->bind_param('i', $existingId);
+                $cur->execute();
+                $curStatus = (string)($cur->get_result()->fetch_assoc()['status'] ?? '');
+                $cur->close();
+            }
+            if (!self::statusIsOpen($curStatus) && !$force) {
+                return [
+                    'ok' => false,
+                    'id' => $existingId,
+                    'status' => self::normalizeStatus($curStatus),
+                    'message' => 'This mark list is already submitted. Only Education can change it.',
+                ];
+            }
+            // Never regress a locked packet: a staff correction updates the
+            // numbers but the list stays submitted/approved. On an open
+            // packet, a draft save keeps the current open status (so a
+            // revision_needed signal is not erased); only a submit advances.
+            $curNorm = self::normalizeStatus($curStatus);
+            if (!self::statusIsOpen($curNorm)) {
+                $finalStatus = $curNorm;
+                $finalMessage = $curNorm === self::STATUS_APPROVED
+                    ? 'Correction saved to the approved list.'
+                    : 'Correction saved to the submitted list.';
+            } elseif ($status === self::STATUS_SUBMITTED) {
+                $finalStatus = $status;
+                $finalMessage = 'Mark list submitted.';
+            } else {
+                $finalStatus = $curNorm === '' ? $status : $curNorm;
+                $finalMessage = 'Saved as a draft for Education.';
+            }
+            $newSubmit = $finalStatus === self::STATUS_SUBMITTED && $curNorm !== self::STATUS_SUBMITTED
+                ? date('Y-m-d H:i:s') : null;
+            // H10: a (re)submission means the teacher addressed the review
+            // note — clear the stale reviewer feedback so the packet's next
+            // review cycle starts clean. Corrections that keep the current
+            // status leave the review trail untouched.
+            $clearReview = $newSubmit !== null ? ', review_notes = NULL, reviewed_by = NULL, reviewed_at = NULL' : '';
+            // Finding K (2026-10-02): re-assert the open-status precondition
+            // inside the UPDATE. The check above is a SELECT, so Education
+            // could approve between the read and this write, letting a save
+            // overwrite an approved mark list. A staff override skips it.
+            $lockGuard = $force ? '' : " AND status IN ('draft','incomplete','revision_needed')";
+            $up = $conn->prepare(
+                "UPDATE grade_submissions
+                 SET teacher_id = ?, status = ?, student_count = ?, average_score = ?, class_id = ?, subject_id = ?,
+                     academic_year_id = ?, term_id = ?, submitted_at = COALESCE(?, submitted_at), updated_at = NOW()
+                     $clearReview
+                 WHERE id = ?$lockGuard"
+            );
+            if (!$up) {
+                return ['ok' => false, 'id' => $existingId, 'status' => $finalStatus, 'message' => 'Could not update mark list.'];
+            }
+            $up->bind_param(
+                'isidiiiisi',
+                $ownerId,
+                $finalStatus,
+                $count,
+                $avg,
+                $classId,
+                $subjectId,
+                $yearId,
+                $termId,
+                $newSubmit,
+                $existingId
+            );
+            $ok = $up->execute();
+            $changed = $up->affected_rows;
+            $up->close();
+            // affected_rows can be 0 for a genuine no-op save, so re-read
+            // before blaming the lock (finding K).
+            if ($ok && $changed === 0 && !$force) {
+                $verify = $conn->prepare("SELECT status FROM grade_submissions WHERE id = ? LIMIT 1");
+                if ($verify) {
+                    $verify->bind_param('i', $existingId);
+                    $verify->execute();
+                    $vRow = $verify->get_result()->fetch_assoc() ?: [];
+                    $verify->close();
+                    $vStatus = (string)($vRow['status'] ?? '');
+                    if ($vStatus !== '' && !self::statusIsOpen($vStatus)) {
+                        return [
+                            'ok' => false,
+                            'id' => $existingId,
+                            'status' => self::normalizeStatus($vStatus),
+                            'message' => 'This mark list is already submitted. Only Education can change it.',
+                        ];
+                    }
+                }
+            }
+            return [
+                'ok' => (bool)$ok,
+                'id' => $existingId,
+                'status' => $finalStatus,
+                'message' => $finalMessage,
+            ];
+        }
+
+        $ins = $conn->prepare(
+            "INSERT INTO grade_submissions
+                (teacher_id, class_id, subject_id, academic_year_id, term_id, assessment_id, submission_type, status,
+                 student_count, average_score, submitted_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'marklist', ?, ?, ?, ?)"
+        );
+        if (!$ins) {
+            return ['ok' => false, 'id' => 0, 'status' => $status, 'message' => 'Could not create mark list.'];
+        }
+        $insSubmittedAt = $status === self::STATUS_SUBMITTED ? date('Y-m-d H:i:s') : null;
+        $ins->bind_param(
+            'iiiiiisids',
+            $teacherId,
+            $classId,
+            $subjectId,
+            $yearId,
+            $termId,
+            $assessmentId,
+            $status,
+            $count,
+            $avg,
+            $insSubmittedAt
+        );
+        $ok = $ins->execute();
+        $insErrno = $ins->errno;
+        $id = (int)$ins->insert_id;
+        $ins->close();
+        // Finding J (2026-10-02): losing side of the SELECT-then-INSERT race,
+        // refused by uq_gs_marklist_slot (migration 053). Converge on the
+        // packet that won instead of failing the teacher's save. One retry.
+        if (!$ok && $insErrno === 1062 && empty($opts['__slot_retry'])) {
+            $opts['__slot_retry'] = true;
+            return self::upsertMarklist($conn, $opts);
+        }
+        if (!$ok && $insErrno === 1062) {
+            return [
+                'ok' => false,
+                'id' => 0,
+                'status' => $status,
+                'message' => 'Another save for this mark list is in progress. Please try again.',
+            ];
+        }
+        return [
+            'ok' => (bool)$ok,
+            'id' => $id,
+            'status' => $status,
+            'message' => $status === self::STATUS_SUBMITTED
+                ? 'Mark list submitted.'
+                : 'Saved as a draft for Education.',
+        ];
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public static function list(\mysqli $conn, array $filters): array
+    {
+        return self::listQuery($conn, $filters, 200, 0);
+    }
+
+    /** Allowed page sizes for the paged review list (Phase 3 paging). */
+    public const LIST_PAGE_SIZES = [25, 50, 100, 200];
+
+    /**
+     * Paged review list (Phase 3, 2026-10-22). Same filters and order as
+     * list(); returns the Mezmur inbox shape so every client pages alike:
+     * ['items' => rows, 'total', 'page', 'total_pages', 'per_page'].
+     * list() itself is unchanged (newest 200) for callers that do not page.
+     */
+    public static function listPaged(\mysqli $conn, array $filters, $page, $perPage): array
+    {
+        $perPage = (int)$perPage;
+        if (!in_array($perPage, self::LIST_PAGE_SIZES, true)) {
+            $perPage = 50;
+        }
+        $page = max(1, (int)$page);
+        $total = self::listCount($conn, $filters);
+        $totalPages = max(1, (int)ceil($total / $perPage));
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+        $items = $total > 0 ? self::listQuery($conn, $filters, $perPage, ($page - 1) * $perPage) : [];
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'total_pages' => $totalPages,
+            'per_page' => $perPage,
+        ];
+    }
+
+    private static function listCount(\mysqli $conn, array $filters): int
+    {
+        self::ensureTable($conn);
+        [$where, $params, $types] = self::listWhere($filters);
+        $stmt = $conn->prepare('SELECT COUNT(*) AS c FROM grade_submissions gs WHERE ' . implode(' AND ', $where));
+        if (!$stmt) {
+            throw new \RuntimeException('Could not count submissions.');
+        }
+        if ($params) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $c = (int)($stmt->get_result()->fetch_assoc()['c'] ?? 0);
+        $stmt->close();
+        return $c;
+    }
+
+    /** @return array{0: string[], 1: array, 2: string} */
+    private static function listWhere(array $filters): array
+    {
+        $where = ['1=1'];
+        $params = [];
+        $types = '';
+
+        if (!empty($filters['teacher_id'])) {
+            $where[] = 'gs.teacher_id = ?';
+            $params[] = (int)$filters['teacher_id'];
+            $types .= 'i';
+        }
+        if (!empty($filters['class_id'])) {
+            $where[] = 'gs.class_id = ?';
+            $params[] = (int)$filters['class_id'];
+            $types .= 'i';
+        }
+        $type = trim((string)($filters['type'] ?? ''));
+        if (in_array($type, [self::TYPE_ATTENDANCE, self::TYPE_MARKLIST, self::TYPE_REPORT], true)) {
+            $where[] = 'gs.submission_type = ?';
+            $params[] = $type;
+            $types .= 's';
+        }
+        $status = trim((string)($filters['status'] ?? ''));
+        if ($status === 'attention') {
+            $where[] = "gs.status IN ('incomplete','submitted','draft')";
+        } elseif ($status === 'draft') {
+            $where[] = "gs.status IN ('draft','incomplete')";
+        } elseif ($status !== '' && $status !== 'all') {
+            $status = self::normalizeStatus($status);
+            $where[] = 'gs.status = ?';
+            $params[] = $status;
+            $types .= 's';
+        }
+        return [$where, $params, $types];
+    }
+
+    private static function listQuery(\mysqli $conn, array $filters, int $limit, int $offset): array
+    {
+        self::ensureTable($conn);
+        [$where, $params, $types] = self::listWhere($filters);
+        $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
+
+        $sql = "SELECT gs.id, gs.teacher_id, gs.class_id, gs.subject_id, gs.academic_year_id,
+                       gs.term_id, gs.assessment_id, gs.attendance_date, gs.submission_type, gs.status,
+                       gs.student_count, gs.average_score, gs.present_count, gs.absent_count,
+                       gs.late_count, gs.excused_count, gs.submitted_at, gs.reviewed_by, gs.reviewed_at,
+                       gs.review_notes, gs.created_at, gs.updated_at,
+                       u.full_name AS teacher_name,
+                       c.class_name, c.class_name_en,
+                       s.subject_name, s.subject_name_en,
+                       a.assessment_name, a.max_score,
+                       ay.year_name,
+                       rv.full_name AS reviewer_name
+                FROM grade_submissions gs
+                LEFT JOIN users u ON gs.teacher_id = u.id
+                LEFT JOIN classes c ON gs.class_id = c.id
+                LEFT JOIN subjects s ON gs.subject_id = s.id AND gs.subject_id > 0
+                LEFT JOIN assessments a ON gs.assessment_id = a.id
+                LEFT JOIN academic_years ay ON gs.academic_year_id = ay.id
+                LEFT JOIN users rv ON gs.reviewed_by = rv.id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY gs.updated_at DESC, gs.id DESC
+                LIMIT {$limit} OFFSET {$offset}";
+
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new \RuntimeException('Could not read submissions.');
+        }
+        if ($params) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $rows = [];
+        $r = $stmt->get_result();
+        while ($row = $r->fetch_assoc()) {
+            $rows[] = self::presentRow($row);
+        }
+        $stmt->close();
+        return $rows;
+    }
+
+    public static function stats(\mysqli $conn, array $filters = []): array
+    {
+        self::ensureTable($conn);
+        $where = ['1=1'];
+        $params = [];
+        $types = '';
+        if (!empty($filters['teacher_id'])) {
+            $where[] = 'teacher_id = ?';
+            $params[] = (int)$filters['teacher_id'];
+            $types .= 'i';
+        }
+
+        $sql = "SELECT
+                    SUM(status IN ('incomplete','draft')) AS incomplete,
+                    SUM(status = 'submitted') AS pending,
+                    SUM(status = 'approved') AS approved,
+                    SUM(status = 'rejected') AS rejected,
+                    SUM(status = 'revision_needed') AS revision_needed,
+                    SUM(submission_type = 'attendance') AS attendance_count,
+                    SUM(submission_type = 'marklist') AS marklist_count,
+                    COUNT(*) AS total
+                FROM grade_submissions
+                WHERE " . implode(' AND ', $where);
+        $stmt = $conn->prepare($sql);
+        $out = [
+            'incomplete' => 0,
+            'pending' => 0,
+            'approved' => 0,
+            'rejected' => 0,
+            'revision_needed' => 0,
+            'attendance_count' => 0,
+            'marklist_count' => 0,
+            'total' => 0,
+            'today_present' => 0,
+            'today_absent' => 0,
+            'today_late' => 0,
+            'today_excused' => 0,
+            'today_recorded' => 0,
+        ];
+        if ($stmt) {
+            if ($params) {
+                $stmt->bind_param($types, ...$params);
+            }
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc() ?: [];
+            $stmt->close();
+            foreach ($out as $k => $v) {
+                if (isset($row[$k])) {
+                    $out[$k] = (int)$row[$k];
+                }
+            }
+        }
+
+        $today = date('Y-m-d');
+        $att = $conn->prepare(
+            "SELECT
+                COUNT(*) AS recorded,
+                SUM(status = 'present') AS present_count,
+                SUM(status = 'absent') AS absent_count,
+                SUM(status = 'late') AS late_count,
+                SUM(status = 'excused') AS excused_count
+             FROM attendance WHERE attendance_date = ?"
+        );
+        if ($att) {
+            $att->bind_param('s', $today);
+            $att->execute();
+            $a = $att->get_result()->fetch_assoc() ?: [];
+            $att->close();
+            $out['today_recorded'] = (int)($a['recorded'] ?? 0);
+            $out['today_present'] = (int)($a['present_count'] ?? 0);
+            $out['today_absent'] = (int)($a['absent_count'] ?? 0);
+            $out['today_late'] = (int)($a['late_count'] ?? 0);
+            $out['today_excused'] = (int)($a['excused_count'] ?? 0);
+        }
+        return $out;
+    }
+
+    /**
+     * Charts + tables for Education. No extra PII.
+     *
+     * @return array{days:list<array<string,mixed>>,classes:list<array<string,mixed>>,packets:array<string,int>}
+     */
+    public static function analytics(\mysqli $conn): array
+    {
+        self::ensureTable($conn);
+        $days = [];
+        $from = date('Y-m-d', strtotime('-13 days'));
+        $st = $conn->prepare(
+            "SELECT attendance_date AS d,
+                    COUNT(*) AS recorded,
+                    SUM(status = 'present') AS present_count,
+                    SUM(status = 'absent') AS absent_count,
+                    SUM(status = 'late') AS late_count,
+                    SUM(status = 'excused') AS excused_count
+             FROM attendance
+             WHERE attendance_date >= ?
+             GROUP BY attendance_date
+             ORDER BY attendance_date ASC"
+        );
+        if ($st) {
+            $st->bind_param('s', $from);
+            $st->execute();
+            $r = $st->get_result();
+            while ($row = $r->fetch_assoc()) {
+                $rec = (int)$row['recorded'];
+                $present = (int)$row['present_count'];
+                $days[] = [
+                    'date' => $row['d'],
+                    'recorded' => $rec,
+                    'present' => $present,
+                    'absent' => (int)$row['absent_count'],
+                    'late' => (int)$row['late_count'],
+                    'excused' => (int)$row['excused_count'],
+                    'rate' => $rec > 0 ? round($present / $rec * 100, 1) : 0,
+                ];
+            }
+            $st->close();
+        }
+
+        $classes = [];
+        $today = date('Y-m-d');
+        $cs = $conn->prepare(
+            "SELECT c.id, c.class_name,
+                    COUNT(a.id) AS recorded,
+                    SUM(a.status = 'present') AS present_count,
+                    SUM(a.status = 'absent') AS absent_count,
+                    SUM(a.status = 'late') AS late_count
+             FROM classes c
+             LEFT JOIN attendance a ON a.class_id = c.id AND a.attendance_date = ?
+             WHERE c.is_active = 1
+             GROUP BY c.id, c.class_name
+             ORDER BY c.level_order, c.class_name"
+        );
+        if ($cs) {
+            $cs->bind_param('s', $today);
+            $cs->execute();
+            $r = $cs->get_result();
+            while ($row = $r->fetch_assoc()) {
+                $rec = (int)$row['recorded'];
+                $present = (int)($row['present_count'] ?? 0);
+                $classes[] = [
+                    'id' => (int)$row['id'],
+                    'class_name' => $row['class_name'] ?? '',
+                    'recorded' => $rec,
+                    'present' => $present,
+                    'absent' => (int)($row['absent_count'] ?? 0),
+                    'late' => (int)($row['late_count'] ?? 0),
+                    'rate' => $rec > 0 ? round($present / $rec * 100, 1) : null,
+                ];
+            }
+            $cs->close();
+        }
+
+        return [
+            'days' => $days,
+            'classes' => $classes,
+            'packets' => self::stats($conn),
+        ];
+    }
+
+    /**
+     * @return array<string,mixed>|null
+     */
+    public static function detail(\mysqli $conn, int $id): ?array
+    {
+        self::ensureTable($conn);
+        if ($id <= 0) {
+            return null;
+        }
+        $stmt = $conn->prepare(
+            "SELECT gs.*, u.full_name AS teacher_name, c.class_name, c.class_name_en,
+                    s.subject_name, s.subject_name_en, a.assessment_name, a.max_score,
+                    ay.year_name, rv.full_name AS reviewer_name
+             FROM grade_submissions gs
+             LEFT JOIN users u ON gs.teacher_id = u.id
+             LEFT JOIN classes c ON gs.class_id = c.id
+             LEFT JOIN subjects s ON gs.subject_id = s.id AND gs.subject_id > 0
+             LEFT JOIN assessments a ON gs.assessment_id = a.id
+             LEFT JOIN academic_years ay ON gs.academic_year_id = ay.id
+             LEFT JOIN users rv ON gs.reviewed_by = rv.id
+             WHERE gs.id = ? LIMIT 1"
+        );
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $raw = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$raw) {
+            return null;
+        }
+        $packet = self::presentRow($raw);
+
+        $packet['rows'] = [];
+        $packet['events'] = [];
+        if (($packet['submission_type'] ?? '') === self::TYPE_ATTENDANCE) {
+            $packet['rows'] = self::attendanceRows($conn, (int)$packet['class_id'], (string)($packet['attendance_date'] ?? ''));
+            // Phase 3: durable per-packet history (submitted / returned /
+            // reopened / rejected, with actor, reason, EC timestamp).
+            $packet['events'] = AttendanceSubmissionEventService::forPacket($conn, 'edu', $id);
+            $packet['can_reopen'] = ReviewTransitionPolicy::isReopenable((string)($packet['status'] ?? ''));
+            // Phase 6: when the day was derived from teacher lesson sheets the
+            // reviewer sees which lessons (subject, lesson no., teacher, counts).
+            $packet['lessons'] = [];
+            try {
+                if (!class_exists('\\App\\Services\\LessonAttendanceService')) {
+                    require_once __DIR__ . '/LessonAttendanceService.php';
+                }
+                $packet['lessons'] = LessonAttendanceService::sessionsForDay($conn, (int)$packet['class_id'], (string)($packet['attendance_date'] ?? ''), true);
+            } catch (\Throwable $e) {
+                $packet['lessons'] = [];
+            }
+        } elseif (($packet['submission_type'] ?? '') === self::TYPE_MARKLIST && !empty($packet['assessment_id'])) {
+            $packet['rows'] = self::marklistRows($conn, (int)$packet['assessment_id']);
+            // "Did not take" (2026-10-22, owner): once a mark list leaves the
+            // teacher (submitted / approved / rejected) a blank score means the
+            // student did not take the test; while it is still open it is
+            // simply "not entered yet". Every enrolled student is listed.
+            $open = self::statusIsOpen((string)($packet['status'] ?? ''));
+            $scored = 0;
+            $blank = 0;
+            foreach ($packet['rows'] as &$mr) {
+                if ($mr['score'] === null) {
+                    $blank++;
+                    $mr['score_state'] = $open ? 'not_entered' : 'not_taken';
+                    $mr['score_label'] = $open ? 'Not entered yet' : 'Did not take';
+                } else {
+                    $scored++;
+                    $mr['score_state'] = 'scored';
+                    $mr['score_label'] = '';
+                }
+            }
+            unset($mr);
+            $packet['scored_count'] = $scored;
+            $packet['not_taken_count'] = $open ? 0 : $blank;
+            $packet['not_entered_count'] = $open ? $blank : 0;
+            $packet['blank_label'] = $open ? 'Not entered yet' : 'Did not take';
+        }
+        return $packet;
+    }
+
+    /**
+     * Attendance sheet for one class/day — name, code, status, note only.
+     */
+    public static function attendanceRows(\mysqli $conn, int $classId, string $date): array
+    {
+        if ($classId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return [];
+        }
+        $stmt = $conn->prepare(
+            "SELECT a.id, a.member_id, a.status, a.notes, m.student_name, m.father_name, m.member_code
+             FROM attendance a
+             JOIN members m ON m.id = a.member_id
+             WHERE a.class_id = ? AND a.attendance_date = ?
+             ORDER BY a.id ASC"
+        );
+        if (!$stmt) {
+            return [];
+        }
+        $stmt->bind_param('is', $classId, $date);
+        $stmt->execute();
+        $byMember = [];
+        $r = $stmt->get_result();
+        while ($row = $r->fetch_assoc()) {
+            $mid = (int)$row['member_id'];
+            $byMember[$mid] = [
+                'member_id' => $mid,
+                'student_name' => $row['student_name'] ?? '',
+                'father_name' => $row['father_name'] ?? '',
+                'member_code' => $row['member_code'] ?? '',
+                'status' => $row['status'] ?? '',
+                'notes' => $row['notes'] ?? '',
+            ];
+        }
+        $stmt->close();
+        $rows = array_values($byMember);
+        usort($rows, static function ($a, $b) {
+            return strcasecmp((string)$a['student_name'], (string)$b['student_name']);
+        });
+        return $rows;
+    }
+
+    public static function marklistRows(\mysqli $conn, int $assessmentId): array
+    {
+        if ($assessmentId <= 0) {
+            return [];
+        }
+        $stmt = $conn->prepare(
+            "SELECT ar.id, ar.member_id, ar.score, ar.max_score, ar.remarks,
+                    m.student_name, m.father_name, m.member_code
+             FROM academic_records ar
+             JOIN members m ON m.id = ar.member_id
+             WHERE ar.assessment_id = ?
+             ORDER BY ar.id ASC"
+        );
+        if (!$stmt) {
+            return [];
+        }
+        $stmt->bind_param('i', $assessmentId);
+        $stmt->execute();
+        $byMember = [];
+        $r = $stmt->get_result();
+        while ($row = $r->fetch_assoc()) {
+            $mid = (int)$row['member_id'];
+            $score = $row['score'] !== null ? (float)$row['score'] : null;
+            $max = $row['max_score'] !== null ? (float)$row['max_score'] : null;
+            $byMember[$mid] = [
+                'member_id' => $mid,
+                'student_name' => $row['student_name'] ?? '',
+                'father_name' => $row['father_name'] ?? '',
+                'member_code' => $row['member_code'] ?? '',
+                'score' => $score,
+                'max_score' => $max,
+                'remarks' => $row['remarks'] ?? '',
+            ];
+        }
+        $stmt->close();
+        // Every student enrolled in the assessment's class/year is listed —
+        // the same roster the teacher grades (/grades/students). A student
+        // without a row used to be invisible to the reviewer.
+        foreach (self::assessmentRoster($conn, $assessmentId) as $m) {
+            $mid = (int)$m['member_id'];
+            if (isset($byMember[$mid])) {
+                continue;
+            }
+            $byMember[$mid] = [
+                'member_id' => $mid,
+                'student_name' => $m['student_name'] ?? '',
+                'father_name' => $m['father_name'] ?? '',
+                'member_code' => $m['member_code'] ?? '',
+                'score' => null,
+                'max_score' => $m['max_score'] !== null ? (float)$m['max_score'] : null,
+                'remarks' => '',
+            ];
+        }
+        $rows = array_values($byMember);
+        usort($rows, static function ($a, $b) {
+            return strcasecmp((string)$a['student_name'], (string)$b['student_name']);
+        });
+        return $rows;
+    }
+
+    /**
+     * Active enrolment of the assessment's class in the assessment's year.
+     * @return list<array<string,mixed>>
+     */
+    public static function assessmentRoster(\mysqli $conn, int $assessmentId): array
+    {
+        if ($assessmentId <= 0) {
+            return [];
+        }
+        $out = [];
+        try {
+            $st = $conn->prepare(
+                "SELECT ce.member_id, m.student_name, m.father_name, m.member_code, a.max_score
+                 FROM assessments a
+                 JOIN class_enrollments ce ON ce.class_id = a.class_id
+                      AND ce.academic_year_id = a.academic_year_id AND ce.status = 'active'
+                 JOIN members m ON m.id = ce.member_id
+                 WHERE a.id = ?
+                 ORDER BY m.student_name"
+            );
+            if (!$st) {
+                return [];
+            }
+            $st->bind_param('i', $assessmentId);
+            $st->execute();
+            $r = $st->get_result();
+            while ($row = $r->fetch_assoc()) {
+                $out[] = $row;
+            }
+            $st->close();
+        } catch (\Throwable $e) {
+            return [];
+        }
+        return $out;
+    }
+
+    /**
+     * One student's results for the class + subject + semester of an
+     * assessment (Phase 2, owner D2 2026-10-22: "the big result screen have
+     * to contain other assesment results also"). Private: only this student.
+     *
+     * state: scored | not_taken (blank after submit) | not_entered (draft).
+     * Totals count scored tests only — "Did not take" is shown, not counted
+     * (owner D1).
+     *
+     * @return array{status:string, message?:string, student?:array, subject?:array, results?:list<array>, totals?:array}
+     */
+    public static function studentResults(\mysqli $conn, int $assessmentId, int $memberId): array
+    {
+        if ($assessmentId <= 0 || $memberId <= 0) {
+            return ['status' => 'error', 'code' => 'invalid', 'message' => 'Choose a student and a test.'];
+        }
+        $st = $conn->prepare(
+            "SELECT a.id, a.class_id, a.subject_id, a.academic_year_id, a.term_id,
+                    s.subject_name, c.class_name, t.term_name
+             FROM assessments a
+             LEFT JOIN subjects s ON s.id = a.subject_id
+             LEFT JOIN classes c ON c.id = a.class_id
+             LEFT JOIN academic_terms t ON t.id = a.term_id
+             WHERE a.id = ?"
+        );
+        if (!$st) {
+            return ['status' => 'error', 'code' => 'server', 'message' => 'Could not load results.'];
+        }
+        $st->bind_param('i', $assessmentId);
+        $st->execute();
+        $a = $st->get_result()->fetch_assoc();
+        $st->close();
+        if (!$a) {
+            return ['status' => 'error', 'code' => 'not_found', 'message' => 'Test not found.'];
+        }
+        $classId = (int)$a['class_id'];
+        if (!self::memberBelongsToClass($conn, $memberId, $classId)) {
+            return ['status' => 'error', 'code' => 'not_found', 'message' => 'This student is not in this class.'];
+        }
+
+        $st = $conn->prepare('SELECT id, student_name, father_name, member_code FROM members WHERE id = ?');
+        $st->bind_param('i', $memberId);
+        $st->execute();
+        $m = $st->get_result()->fetch_assoc();
+        $st->close();
+        if (!$m) {
+            return ['status' => 'error', 'code' => 'not_found', 'message' => 'Student not found.'];
+        }
+
+        // Same class + subject + year; same semester when the test has one.
+        $termId = (int)($a['term_id'] ?? 0);
+        $sql = "SELECT a.id, a.assessment_name, a.assessment_type, a.max_score, a.weight_percentage, a.due_date,
+                       ar.score, ar.remarks
+                FROM assessments a
+                LEFT JOIN academic_records ar ON ar.assessment_id = a.id AND ar.member_id = ?
+                WHERE a.class_id = ? AND a.subject_id = ? AND a.academic_year_id = ?";
+        $types = 'iiii';
+        $params = [$memberId, $classId, (int)$a['subject_id'], (int)$a['academic_year_id']];
+        if ($termId > 0) {
+            $sql .= ' AND (a.term_id = ? OR a.term_id IS NULL OR a.term_id = 0)';
+            $types .= 'i';
+            $params[] = $termId;
+        }
+        $sql .= ' ORDER BY COALESCE(a.assessment_order, 9999), a.due_date IS NULL, a.due_date, a.id';
+        $st = $conn->prepare($sql);
+        $st->bind_param($types, ...$params);
+        $st->execute();
+        $res = $st->get_result();
+        $rows = [];
+        while ($r = $res->fetch_assoc()) {
+            $rows[] = $r;
+        }
+        $st->close();
+
+        $statuses = self::resolvedMarklistStatuses($conn, array_map(static fn($r) => (int)$r['id'], $rows));
+        $out = [];
+        $sum = 0.0;
+        $sumMax = 0.0;
+        $counts = ['scored' => 0, 'not_taken' => 0, 'not_entered' => 0];
+        foreach ($rows as $r) {
+            $id = (int)$r['id'];
+            $max = (float)$r['max_score'];
+            $packet = (string)($statuses[$id] ?? '');
+            $hasScore = $r['score'] !== null && $r['score'] !== '';
+            if ($hasScore) {
+                $state = 'scored';
+                $sum += (float)$r['score'];
+                $sumMax += $max;
+            } elseif (in_array($packet, [self::STATUS_SUBMITTED, self::STATUS_APPROVED], true)) {
+                $state = 'not_taken';
+            } else {
+                $state = 'not_entered';
+            }
+            $counts[$state]++;
+            $out[] = [
+                'assessment_id' => $id,
+                'assessment_name' => (string)$r['assessment_name'],
+                'assessment_type' => (string)($r['assessment_type'] ?? ''),
+                'max_score' => $max,
+                'weight' => (float)($r['weight_percentage'] ?? 0),
+                'score' => $hasScore ? (float)$r['score'] : null,
+                'score_state' => $state,
+                'score_label' => $hasScore ? self::scoreLabel((float)$r['score']) . ' / ' . self::scoreLabel($max)
+                    : ($state === 'not_taken' ? 'Did not take' : 'Not entered yet'),
+                'remarks' => (string)($r['remarks'] ?? ''),
+                'packet_status' => $packet,
+                'is_current' => $id === $assessmentId,
+            ];
+        }
+
+        return [
+            'status' => 'success',
+            'student' => [
+                'member_id' => (int)$m['id'],
+                'student_name' => (string)$m['student_name'],
+                'father_name' => (string)($m['father_name'] ?? ''),
+                'member_code' => (string)($m['member_code'] ?? ''),
+            ],
+            'subject' => [
+                'class_id' => $classId,
+                'class_name' => (string)($a['class_name'] ?? ''),
+                'subject_id' => (int)$a['subject_id'],
+                'subject_name' => (string)($a['subject_name'] ?? ''),
+                'term_name' => (string)($a['term_name'] ?? ''),
+            ],
+            'results' => $out,
+            'totals' => $counts + [
+                'score' => round($sum, 2),
+                'max' => round($sumMax, 2),
+                'percent' => $sumMax > 0 ? round($sum / $sumMax * 100, 1) : null,
+                'label' => $sumMax > 0 ? self::scoreLabel($sum) . ' / ' . self::scoreLabel($sumMax) : '—',
+            ],
+        ];
+    }
+
+    public static function countsFromRecords(array $records): array
+    {
+        $out = ['present' => 0, 'absent' => 0, 'late' => 0, 'excused' => 0, 'student_count' => 0];
+        foreach ($records as $rec) {
+            if (!is_array($rec)) {
+                continue;
+            }
+            $st = strtolower(trim((string)($rec['status'] ?? '')));
+            if (isset($out[$st])) {
+                $out[$st]++;
+                $out['student_count']++;
+            }
+        }
+        return $out;
+    }
+
+    private static function presentRow(array $row): array
+    {
+        $status = self::normalizeStatus($row['status'] ?? '');
+        $uiStatus = ($status === self::STATUS_INCOMPLETE) ? self::STATUS_DRAFT : $status;
+        return [
+            'id' => (int)$row['id'],
+            'teacher_id' => (int)($row['teacher_id'] ?? 0),
+            'class_id' => (int)($row['class_id'] ?? 0),
+            'subject_id' => (int)($row['subject_id'] ?? 0),
+            'academic_year_id' => isset($row['academic_year_id']) ? (int)$row['academic_year_id'] : null,
+            'term_id' => isset($row['term_id']) ? (int)$row['term_id'] : null,
+            'assessment_id' => isset($row['assessment_id']) ? (int)$row['assessment_id'] : null,
+            'attendance_date' => $row['attendance_date'] ?? null,
+            'submission_type' => $row['submission_type'] ?? self::TYPE_MARKLIST,
+            'status' => $uiStatus,
+            'status_label' => self::statusLabel($uiStatus),
+            'student_count' => (int)($row['student_count'] ?? 0),
+            'average_score' => $row['average_score'] !== null ? (float)$row['average_score'] : null,
+            'present_count' => (int)($row['present_count'] ?? 0),
+            'absent_count' => (int)($row['absent_count'] ?? 0),
+            'late_count' => (int)($row['late_count'] ?? 0),
+            'excused_count' => (int)($row['excused_count'] ?? 0),
+            'submitted_at' => $row['submitted_at'] ?? null,
+            'reviewed_by' => isset($row['reviewed_by']) ? (int)$row['reviewed_by'] : null,
+            'reviewed_at' => $row['reviewed_at'] ?? null,
+            'review_notes' => $row['review_notes'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+            'updated_at' => $row['updated_at'] ?? null,
+            'teacher_name' => $row['teacher_name'] ?? '',
+            'class_name' => $row['class_name'] ?? '',
+            'class_name_en' => $row['class_name_en'] ?? '',
+            'subject_name' => $row['subject_name'] ?? '',
+            'subject_name_en' => $row['subject_name_en'] ?? '',
+            'assessment_name' => $row['assessment_name'] ?? '',
+            'max_score' => isset($row['max_score']) ? (float)$row['max_score'] : null,
+            'year_name' => $row['year_name'] ?? '',
+            'reviewer_name' => $row['reviewer_name'] ?? '',
+        ];
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        switch (self::normalizeStatus($status)) {
+            case self::STATUS_INCOMPLETE:
+            case self::STATUS_DRAFT:
+                return 'Incomplete';
+            case self::STATUS_SUBMITTED:
+                return 'Complete';
+            case self::STATUS_APPROVED:
+                return 'Approved';
+            case self::STATUS_REJECTED:
+                return 'Rejected';
+            case self::STATUS_REVISION:
+                return 'Needs revision';
+            default:
+                return $status;
+        }
+    }
+}

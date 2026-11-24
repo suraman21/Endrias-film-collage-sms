@@ -1,0 +1,112 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.arkeonethiopia.fkss"
+    compileSdk = flutter.compileSdkVersion
+    // Use the valid installed NDK for this workstation. The 27.0.12077973
+    // folder is partially downloaded/corrupted here and causes Gradle to fail
+    // with [CXX1101] before the app even starts compiling.
+    ndkVersion = "26.1.10909125"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.arkeonethiopia.fkss"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    // ── Release signing (P65) ─────────────────────────────────────────
+    // Industry-standard key.properties flow: create the file ONLY when a
+    // real keystore exists (see docs/RELEASE.md §Signing). Until then the
+    // app keeps building with the debug keys the installed fleet already
+    // trusts, so in-app updates keep working.
+    //
+    // ⚠ MIGRATION WARNING: switching to a new keystore changes the APK
+    // signature — Android REFUSES to update an app whose signature
+    // changed, so every phone needs a one-time uninstall + reinstall
+    // (which deletes the offline database on that phone). Only flip to a
+    // real keystore as a planned, communicated milestone.
+    def keystorePropertiesFile = rootProject.file("key.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    }
+
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Debug keys while no key.properties exists (fleet-compatible);
+            // the guarded release config above takes over the moment the
+            // admin completes the keystore migration in docs/RELEASE.md.
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// mobile_scanner 5.2.3 requests older bundled ML Kit/CameraX binaries whose
+// 64-bit LOAD segments are only 4 KiB aligned. Keep its Dart API and bundled
+// offline model; minimally align these existing native dependency families.
+// The app's API24 floor, SDK/NDK pins, permissions and signer are unchanged.
+dependencies {
+    constraints {
+        implementation('com.google.mlkit:barcode-scanning:17.3.0') {
+            because 'Bundled barcode native libraries must support 16 KiB pages'
+        }
+        ['camera-core', 'camera-camera2', 'camera-lifecycle'].each { module ->
+            implementation("androidx.camera:${module}:1.4.2") {
+                because 'Keep the existing CameraX runtime family aligned with 16 KiB native libraries'
+            }
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+// FKSS's server and updater require the same assigned build code for the
+// universal and per-device APKs. Flutter's split default adds ABI offsets,
+// which would break that contract and ordinary cross-artifact upgrades.
+// Register after Flutter's variant callback; preserve the existing base code,
+// signing, SDKs and dependency versions. Actual artifacts are checked in CI.
+android.applicationVariants.configureEach { variant ->
+    if (variant.buildType.name == 'release'
+            && project.findProperty('split-per-abi')?.toString()?.toBoolean()) {
+        variant.outputs.each { output ->
+            output.versionCodeOverride = flutter.versionCode
+        }
+    }
+}
+
+

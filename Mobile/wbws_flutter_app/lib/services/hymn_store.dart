@@ -1,0 +1,1675 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+
+import 'api_service.dart';
+import 'connectivity_service.dart';
+import 'hymn_outbox_models.dart';
+import 'local_db.dart';
+import 'outbox_policy.dart';
+import 'sync_attempt_models.dart';
+import 'sync_execution.dart';
+import 'lyrics_search.dart';
+import 'amharic_text.dart' as amharic;
+import 'taxonomy_names.dart';
+import 'sync_recovery_models.dart';
+
+/// Local-first hymn library (Telegram / Google Drive model).
+///
+///   UI ──read──▶ SQLite (0 ms, works in airplane mode)
+///   UI ──write─▶ SQLite + outbox (instant, then background push)
+///   sync engine ▶ delta pull (change-token cursor) + lazy lyrics
+///
+/// The server stays the authority: every pull upserts by id, every
+/// push carries an idempotency key, and offline edits that collide
+/// with a newer server revision surface as a conflict instead of a
+/// silent overwrite (server copy wins + audit-log entry).
+class HymnStore extends ChangeNotifier {
+  static final HymnStore _instance = HymnStore._internal();
+  factory HymnStore() => _instance;
+  HymnStore._internal();
+
+  final _api = ApiService();
+  final _db = LocalDb();
+
+  bool _pulling = false;
+  bool _pushing = false;
+  bool _pushAgain = false;
+  int? _pullingGeneration;
+  Completer<void>? _pullInflight;
+  bool get pulling => _pulling;
+  bool Function()? activeSessionGate;
+  int Function()? sessionGenerationProvider;
+  bool Function()? drainEnabledGate;
+
+  bool get _drainsAllowed => drainEnabledGate?.call() != false;
+
+  bool _ownsGeneration(int generation) =>
+      activeSessionGate?.call() != false &&
+      generation == (sessionGenerationProvider?.call() ?? generation);
+
+  /// Roles that curate the library (the server re-checks every write).
+  static const _writeRoles = {'mezmur_dept', 'school_admin', 'super_admin'};
+  bool get canEdit => _writeRoles.contains(_api.userRole);
+
+  /// Manual recovery remains authorization-gated at execution time, not only
+  /// when the Sync Center list was built. A live downgrade therefore turns a
+  /// stale button into a no-op before it can mutate shared queued work.
+  Future<SyncRecoveryActionResult> retryRecoveryOperation(
+    int rowId,
+    String clientOpId,
+    String expectedState,
+  ) {
+    if (!canEdit) return Future.value(SyncRecoveryActionResult.stale);
+    return _db.retryHymnRecoveryOperation(rowId, clientOpId, expectedState);
+  }
+
+  Future<SyncRecoveryActionResult> discardRecoveryOperation(
+    int rowId,
+    String clientOpId,
+    String expectedState,
+  ) {
+    if (!canEdit) return Future.value(SyncRecoveryActionResult.stale);
+    return _db.discardHymnRecoveryOperation(rowId, clientOpId, expectedState);
+  }
+
+  // ── local reads (never touch the network) ───────────────────
+
+  /// P28 (item 5): live count for the filter sheet Apply button —
+  /// on-device, instant, same filters as the list itself.
+  Future<int> countHymns(
+      {String? length,
+      String? language,
+      int? categoryId,
+      int? zemarianId,
+      bool includeArchived = false}) async {
+    return _db.countLocalHymns(
+        length: length,
+        language: language,
+        categoryId: categoryId,
+        zemarianId: zemarianId,
+        includeArchived: includeArchived);
+  }
+
+  Future<List<Map<String, dynamic>>> hymns({
+    String? search,
+    String? category,
+    bool includeArchived = false,
+    String? length,
+    String? language,
+    int? categoryId,
+    int? zemarianId,
+  }) async {
+    // P39: single characters ARE searched now. The old rule silently
+    // returned the unfiltered list for a 1-char query, so the first
+    // letter typed showed every hymn — indistinguishable from "broken".
+    // Local retrieval answers 1-char queries with an indexed prefix
+    // probe; only the SERVER round-trip keeps a 2-char floor (below).
+    // P37 ranking & scoring: search.trim().length < 2, if (score <= 0) continue;
+    // h['similarity'] = score; scored.sort(
+    // score += 50; h['match_in'] = titleScore > 0 ? 'title' : 'lyrics'; _lyricSnippet
+    if (search != null && search.trim().isEmpty) search = null;
+
+    // Two-stage typo-tolerant search (P22, mirrors MezmurHymnService):
+    // SQL applies ONLY the structural filters; the text match happens in
+    // memory via _similarity, whose fuzzy tier (Levenshtein >= 0.6 word
+    // similarity) rescues misspellings a LIKE scan silently drops. The
+    // on-device cache is bounded (LIMIT 500) so this stays instant; the
+    // server keeps a strict SQL prefilter for its larger corpus.
+    late final List<Map<String, dynamic>> items;
+    if (search != null && search.trim().isNotEmpty) {
+      // P27c: two-stage on-device retrieval (server parity).
+      // Stage 1 = word-index candidates (prefix hits, index-scanned —
+      // fast path that avoids loading every lyrics blob). Stage 2 =
+      // when the index finds little, a bounded full scan under the same
+      // structural filters feeds the fuzzy (Levenshtein) tier — the
+      // index alone can NEVER rescue a misspelling (no prefix match),
+      // and a broken/empty index must not silently kill local search.
+      var candidates = const <Map<String, dynamic>>[];
+      try {
+        candidates = await _db.searchHymnCandidates(search,
+            category: category,
+            includeArchived: includeArchived,
+            length: length,
+            language: language,
+            categoryId: categoryId,
+            zemarianId: zemarianId);
+      } catch (_) {
+        // Older/corrupt caches can lack the index; preserve offline search.
+        candidates = await _db.getLocalHymns(
+            category: category,
+            includeArchived: includeArchived,
+            length: length,
+            language: language,
+            categoryId: categoryId,
+            zemarianId: zemarianId);
+      }
+      if (candidates.length < 25) {
+        final scan = await _db.getLocalHymns(
+            category: category,
+            includeArchived: includeArchived,
+            length: length,
+            language: language,
+            categoryId: categoryId,
+            zemarianId: zemarianId);
+        final byId = <int, Map<String, dynamic>>{};
+        for (final h in scan) {
+          byId[_asInt(h['id'])] = h;
+        }
+        for (final h in candidates) {
+          byId.putIfAbsent(_asInt(h['id']), () => h);
+        }
+        candidates = byId.values.toList();
+      }
+      items = candidates;
+    } else {
+      items = await _db.getLocalHymns(
+          category: category,
+          includeArchived: includeArchived,
+          length: length,
+          language: language,
+          categoryId: categoryId,
+          zemarianId: zemarianId);
+    }
+    if (search != null && search.trim().isNotEmpty) {
+      // P37: ranking, snippets and highlight ranges all come from the
+      // tested LyricsSearch engine so the phone and the list row can
+      // never disagree about what matched. The old inline scoring is
+      // gone: it compared raw code points, so Amharic homophones
+      // (ጸ/ፀ, ሀ/ሐ/ኀ, አ/ዐ) never matched each other.
+      final hits = LyricsSearch.rankAll(rows: items, query: search);
+      final byId = <int, Map<String, dynamic>>{};
+      for (final h in items) {
+        byId[_asInt(h['id'])] = h;
+      }
+      final out = <Map<String, dynamic>>[];
+      for (final hit in hits) {
+        final row = byId[hit.hymnId];
+        if (row == null) continue;
+        // P41: sqflite hands back READ-ONLY QueryRow maps. Assigning
+        // into one throws "Unsupported operation: read-only", which
+        // aborted every single search before a result could render —
+        // the screen kept whatever list was there. Always copy first;
+        // never mutate a row that came out of a query.
+        out.add(_decorate(row, hit));
+      }
+      return out;
+    }
+    return items;
+  }
+
+  /// P27 unified hymn search (Telegram/Streaming model). The on-device
+  /// index answers instantly; when the radio is up the SERVER word
+  /// index contributes results the local copy cannot know yet (lyrics
+  /// blobs download lazily — 15/sync cycle — so most cached rows have
+  /// no lyrics locally for a long time; the server sees every word of
+  /// every hymn). Results are merged, deduped by id and ranked; rows
+  /// with queued local edits stay authoritative; server-discovered
+  /// rows are upserted so they are on-device from now on.
+  Future<List<Map<String, dynamic>>> searchHymnsUnified(
+    String query, {
+    bool includeArchived = false,
+    String? length,
+    String? language,
+    int? categoryId,
+    int? zemarianId,
+  }) async {
+    final q = query.trim();
+    final local = await hymns(
+      search: q,
+      includeArchived: includeArchived,
+      length: length,
+      language: language,
+      categoryId: categoryId,
+      zemarianId: zemarianId,
+    );
+    // Local results already cover 1-char queries; the server keeps a
+    // 2-char floor so a single letter cannot ask it for the whole corpus.
+    if (q.length < 2) return local;
+    if (!ConnectivityService().hasLink || !_api.isLoggedIn) return local;
+
+    final res = await _api.getMezmurHymns(
+      search: q,
+      perPage: 25,
+      categoryId: categoryId,
+      zemarianId: zemarianId,
+      length: length?.isEmpty == true ? null : length,
+      language: language?.isEmpty == true ? null : language,
+      status: includeArchived ? '' : 'active',
+    );
+    if (!res.success || res.data is! Map) return local;
+    final serverItems =
+        (res.data['items'] as List?)?.whereType<Map>().toList() ?? [];
+    if (serverItems.isEmpty) return local;
+
+    // Rows with queued local edits are authoritative on-device (same
+    // rule as delta pulls).
+    final protect = <int>{};
+    for (final op in await _db.getPendingHymnOps()) {
+      try {
+        final payload = jsonDecode('${op['payload_json'] ?? '{}'}');
+        if (payload is Map) {
+          final pid = int.tryParse('${payload['id'] ?? 0}') ?? 0;
+          if (pid > 0) protect.add(pid);
+        }
+      } catch (_) {}
+    }
+    await _db.upsertHymns(serverItems, protectIds: protect);
+
+    final byId = <int, Map<String, dynamic>>{};
+    for (final h in local) {
+      byId[_asInt(h['id'])] = h;
+    }
+    for (final raw in serverItems) {
+      final m = Map<String, dynamic>.from(raw);
+      final id = _asInt(m['id']);
+      if (id <= 0) continue;
+      final localRow = byId[id];
+      if (localRow == null) {
+        // P40 — THE BUG. This used to be `byId[id] = m;`: every row the
+        // server returned was spliced into the results unverified. When
+        // the deployed server ignores `search` (old build, or an empty
+        // `mezmur_hymn_words` index making searchWordCandidates return
+        // []), it answers with the ordinary hymn LIST — and the app
+        // rendered that verbatim. Symptoms, all from this one line:
+        // identical results for every query, no highlighting on any
+        // row, and "no match" for words plainly present in the lyrics.
+        // It failed in English and Amharic alike because it never
+        // looked at the text at all.
+        //
+        // The client is now authoritative: a server row is a CANDIDATE,
+        // never a result. It must match here to be shown. The server
+        // still earns its keep — it surfaces hymns whose lyrics have
+        // not been downloaded yet — but it can no longer inject noise,
+        // and a stale backend degrades to local-only instead of wrong.
+        final hit = _verifyServerRow(m, q);
+        if (hit == null) continue;
+        byId[id] = hit;
+        continue;
+      }
+      // Both know the row: keep the better score (the server scored
+      // the full corpus incl. lyrics) and fill missing match context.
+      // Scores are NOT comparable across engines: the server's
+      // searchScore and LyricsSearch use different scales, so importing
+      // the server number reorders the list arbitrarily. The local row
+      // already ranked against the same query — keep its score and take
+      // only the match CONTEXT the server can add (a lyrics snippet
+      // from lyrics we have not downloaded).
+      final ls = (localRow['similarity'] as num?) ?? 0;
+      final serverLyricHit = '${m['match_in'] ?? ''}' == 'lyrics';
+      if (serverLyricHit && ('${localRow['snippet'] ?? ''}').isEmpty) {
+        final text = '${m['snippet'] ?? ''}';
+        // P41: same read-only hazard — localRow may be a QueryRow when
+        // hymns() returned it untouched. Replace, never mutate.
+        byId[id] = {
+          ...localRow,
+          'snippet': text,
+          'snippet_ranges': highlightRangesFor(text, q),
+          if (ls <= 0) 'match_in': 'lyrics',
+        };
+      }
+    }
+    final merged = byId.values.toList()
+      ..sort((a, b) => ((b['similarity'] as num?) ?? 0)
+          .compareTo((a['similarity'] as num?) ?? 0));
+    return merged;
+  }
+
+  /// P41: return a WRITABLE copy of [row] carrying the match metadata
+  /// the list widget renders.
+  ///
+  /// Copying is not a style choice. sqflite returns `QueryRow`, whose
+  /// `operator []=` throws `Unsupported operation: read-only`. Writing
+  /// match data straight onto a query row threw on the first result of
+  /// the first search, so no search ever completed. One helper now owns
+  /// this so a future caller cannot reintroduce it.
+  Map<String, dynamic> _decorate(Map<String, dynamic> row, SearchHit hit) {
+    return {
+      ...row,
+      'similarity': hit.score,
+      'match_in': hit.field == MatchField.title ? 'title' : 'lyrics',
+      'snippet': hit.snippet.text,
+      // Ranges travel with the row so the widget highlights exactly what
+      // the ranker matched, without re-searching the string.
+      'title_ranges': hit.titleRanges,
+      'snippet_ranges': hit.snippet.ranges,
+      'snippet_before': hit.snippet.ellipsisBefore,
+      'snippet_after': hit.snippet.ellipsisAfter,
+      'partial_match': hit.isPartial,
+    };
+  }
+
+  /// P40: score a server-supplied row with the SAME engine the local
+  /// rows went through, so one ranked list comes out of two sources.
+  ///
+  /// Returns null when the row does not match [q] — that is what stops
+  /// a server which ignored the query from filling the screen. The row
+  /// is ranked on its title plus whatever text the server sent
+  /// (`lyrics`, else the `snippet` it built), so a hymn whose lyrics
+  /// are not on the device yet can still be found by its lyrics.
+  Map<String, dynamic>? _verifyServerRow(Map<String, dynamic> m, String q) {
+    final terms = amharic.queryTerms(q);
+    if (terms.isEmpty) return null;
+    final title = '${m['title'] ?? ''}';
+    // Prefer full lyrics; fall back to the server's snippet so a lyrics
+    // hit is not lost just because the blob was omitted from the list.
+    final lyrics = '${m['lyrics'] ?? ''}'.isNotEmpty
+        ? '${m['lyrics']}'
+        : '${m['snippet'] ?? ''}';
+    final hit = LyricsSearch.rank(
+      hymnId: _asInt(m['id']),
+      title: title,
+      lyrics: lyrics,
+      terms: terms,
+    );
+    if (hit == null) return null;
+    return _decorate(m, hit);
+  }
+
+  /// P25 (Telegram-style unified search): fuzzy collection search over
+  /// the on-device catalogs, powering the Singers / Categories result
+  /// tabs. Same tier math as hymn titles (exact > prefix > substring >
+  /// fuzzy).
+  Future<List<Map<String, dynamic>>> searchCategories(String q,
+      {int limit = 25}) async {
+    final rows = await _db.getLocalCategories(activeOnly: false);
+    return _searchCollection(q, rows, limit);
+  }
+
+  Future<List<Map<String, dynamic>>> searchZemarians(String q,
+      {int limit = 25}) async {
+    final rows = await _db.getLocalZemarians(activeOnly: false);
+    return _searchCollection(q, rows, limit);
+  }
+
+  List<Map<String, dynamic>> _searchCollection(
+      String q, List<Map<String, dynamic>> rows, int limit) {
+    final query = q.trim();
+    if (query.isEmpty) return const [];
+    final hits = <Map<String, dynamic>>[];
+    for (final r in rows) {
+      final name = '${r['name'] ?? ''}';
+      final nameAm = '${r['name_am'] ?? ''}';
+      // P37: normalise both sides so a singer typed with ፀ still
+      // matches one stored with ጸ.
+      final score = _similarity(
+          amharic.normalize(query), amharic.normalize(name),
+          amharic.normalize(nameAm));
+      if (score <= 0) continue;
+      hits.add({...r, 'similarity': score});
+    }
+    hits.sort((a, b) => ((b['similarity'] as num?) ?? 0)
+        .compareTo((a['similarity'] as num?) ?? 0));
+    return hits.take(limit).toList();
+  }
+
+  /// Telegram-style relevance (mirrors MezmurHymnService::searchScore):
+  /// exact > prefix > substring > fuzzy (Levenshtein spelling tolerance).
+  /// P28: hymns carry a single (Amharic) title; [alt] stays available
+  /// for taxonomy entries (their Amharic name_am).
+  double _similarity(String query, String title, [String? alt]) {
+    final terms = query
+        .toLowerCase()
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .toList();
+    if (terms.isEmpty) return 0;
+    final haystack = [title, alt ?? '']
+        .map((s) => s.toLowerCase())
+        .where((s) => s.isNotEmpty)
+        .join(' ');
+    if (haystack.isEmpty) return 0;
+    var score = 0.0;
+    for (final term in terms) {
+      score += _termSimilarity(term, haystack);
+    }
+    return score;
+  }
+
+  double _termSimilarity(String term, String haystack) {
+    if (haystack == term) return 100;
+    if (haystack.startsWith(term)) return 90;
+    if (haystack.contains(term)) return 70;
+    var best = 0.0;
+    final maxLen = term.length < 1 ? 1 : term.length;
+    for (final w in haystack.split(RegExp(r'\s+'))) {
+      if (w.isEmpty) continue;
+      final dist = _levenshtein(term, w);
+      final sim = 1 - dist / (w.length > maxLen ? w.length : maxLen);
+      if (sim > best) best = sim;
+    }
+    return best >= 0.6 ? 40 * best : 0;
+  }
+
+  int _levenshtein(String a, String b) {
+    final m = a.length, n = b.length;
+    final dp = List.generate(m + 1, (i) => List<int>.filled(n + 1, 0));
+    for (var i = 0; i <= m; i++) {
+      dp[i][0] = i;
+    }
+    for (var j = 0; j <= n; j++) {
+      dp[0][j] = j;
+    }
+    for (var i = 1; i <= m; i++) {
+      for (var j = 1; j <= n; j++) {
+        final cost = a.codeUnitAt(i - 1) == b.codeUnitAt(j - 1) ? 0 : 1;
+        dp[i][j] = [dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost]
+            .reduce((x, y) => x < y ? x : y);
+      }
+    }
+    return dp[m][n];
+  }
+
+  Future<Map<String, dynamic>?> hymn(int id) => _db.getLocalHymn(id);
+
+  Future<List<int>> hymnCategoryIds(int hymnId) => _db.getHymnCategoryIds(hymnId);
+  Future<List<int>> hymnZemarianIds(int hymnId) => _db.getHymnZemarianIds(hymnId);
+
+  /// P24: resolved names for a hymn's attached taxonomy (chips in the
+  /// reader; tapping one opens the filtered hymn list).
+  Future<List<Map<String, dynamic>>> categoryNamesFor(int hymnId) async =>
+      _resolveTaxonomyNames(await _db.getHymnCategoryIds(hymnId),
+          await _db.getLocalCategories(activeOnly: false));
+
+  Future<List<Map<String, dynamic>>> zemarianNamesFor(int hymnId) async =>
+      _resolveTaxonomyNames(await _db.getHymnZemarianIds(hymnId),
+          await _db.getLocalZemarians(activeOnly: false));
+
+  List<Map<String, dynamic>> _resolveTaxonomyNames(
+      List<int> ids, List<Map<String, dynamic>> rows) {
+    final byId = <int, String>{};
+    for (final r in rows) {
+      byId[_asInt(r['id'])] = '${r['name']}';
+    }
+    final out = <Map<String, dynamic>>[];
+    for (final id in ids) {
+      final name = byId[id];
+      if (name != null && name.isNotEmpty) out.add({'id': id, 'name': name});
+    }
+    return out;
+  }
+
+  /// P24: per-category / per-singer hymn counts for the browse tiles.
+  Future<Map<int, int>> categoryHymnCounts() => _db.getCategoryHymnCounts();
+  Future<Map<int, int>> zemarianHymnCounts() => _db.getZemarianHymnCounts();
+
+  Future<List<Map<String, dynamic>>> categories({bool activeOnly = true}) =>
+      _db.getLocalCategories(activeOnly: activeOnly);
+
+  Future<int> pendingOpsCount() => _db.getPendingHymnOpsCount();
+
+  // ── optimistic writes (instant UI, queued push) ─────────────
+
+  /// Save a hymn: local store first (0 ms), push queued in the outbox.
+  /// Returns an error string, or null when saved locally.
+  Future<String?> saveHymn(Map<String, dynamic> hymn,
+      {int? baseRevision}) async {
+    final title = '${hymn['title'] ?? ''}'.trim();
+    if (title.isEmpty) return 'Title is required.';
+    if (title.length > 255) return 'Title is too long.';
+
+    final opPayload = Map<String, dynamic>.from(hymn);
+    if (baseRevision != null) opPayload['base_revision'] = baseRevision;
+    // P23 (taxonomy sync): refs to offline-created taxonomy carry negative
+    // placeholder ids the server cannot know. They travel as {id, name}
+    // maps — the server resolves/creates by NAME inside the hymn save, so
+    // the link survives even if the separate category op never lands.
+    opPayload['categories'] = await _taxonomyRefPayload(
+        hymn['categories'], await _db.getLocalCategories(activeOnly: false));
+    opPayload['zemarians'] = await _taxonomyRefPayload(
+        hymn['zemarians'], await _db.getLocalZemarians(activeOnly: false));
+
+    final localId = _localId(hymn);
+    opPayload['id'] = localId;
+
+    // Coalesce deliberate local edits, but never mutate an immutable claim
+    // that already crossed the HTTP boundary. The database inserts a fresh
+    // dependent generation when the prior create is in flight.
+    if (localId < 0) {
+      final replaced =
+          await _db.replacePendingHymnSaveForLocalId(localId, opPayload);
+      if (replaced) {
+        await _db.upsertHymns([
+          {
+            'id': localId,
+            'title': title,
+            'category': '${hymn['category'] ?? ''}'.isEmpty
+                ? 'general'
+                : hymn['category'],
+            'lyrics': '${hymn['lyrics'] ?? ''}'.isEmpty ? null : hymn['lyrics'],
+            'length': '${hymn['length'] ?? 'long'}',
+            'language': '${hymn['language'] ?? 'amharic'}',
+            'category_ids': hymn['categories'] ?? const [],
+            'zemarian_ids': hymn['zemarians'] ?? const [],
+            'status': hymn['status'] ?? 'active',
+            'revision': baseRevision ?? _asInt(hymn['revision']),
+            'updated_at': '',
+          }
+        ]);
+        notifyListeners();
+        unawaited(pushPending().catchError((_) => 0));
+        return null;
+      }
+    }
+
+    await _db.upsertHymns([
+      {
+        'id': localId,
+        'title': title,
+        'category': '${hymn['category'] ?? ''}'.isEmpty
+            ? 'general'
+            : hymn['category'],
+        'lyrics':
+            '${hymn['lyrics'] ?? ''}'.isEmpty ? null : hymn['lyrics'],
+        'length': '${hymn['length'] ?? 'long'}',
+        'language': '${hymn['language'] ?? 'amharic'}',
+        'category_ids': hymn['categories'] ?? const [],
+        'zemarian_ids': hymn['zemarians'] ?? const [],
+        'status': hymn['status'] ?? 'active',
+        'revision': baseRevision ?? _asInt(hymn['revision']),
+        'updated_at': '',
+      }
+    ]);
+    await _db.enqueueHymnOp('hymn_save', opPayload);
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  Future<String?> setHymnStatus(int id, String status) async {
+    final local = await _db.getLocalHymn(id);
+    if (local == null) return 'Hymn not found on this device yet.';
+    await _db.upsertHymns([
+      {...local, 'status': status, 'revision': _asInt(local['revision']) + 1}
+    ]);
+    if (id < 0) {
+      // Unsynced local row: fold the status into its queued create.
+      final saves = await _db.getPendingHymnSavesForLocalId(id);
+      if (saves.isNotEmpty) {
+        try {
+          final payload = Map<String, dynamic>.from(
+              jsonDecode('${saves.first['payload_json'] ?? '{}'}'));
+          payload['status'] = status;
+          await _db.replacePendingHymnSaveForLocalId(id, payload);
+        } catch (_) {}
+      }
+    } else {
+      await _db.enqueueHymnOp('hymn_status', {'id': id, 'status': status});
+    }
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  /// P66 hymn art: upload (or replace) a hymn's cover image. Binary
+  /// upload — never queued; the server-confirmed art payload is applied
+  /// to the cached row IMMEDIATELY (same offline-first shape as the
+  /// taxonomy covers) so list/player UI updates without waiting for the
+  /// next pull, which then reconciles everything else.
+  Future<String?> setHymnArt(int id, String filePath) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to upload the cover art.';
+    }
+    final res = await _api.uploadMezmurHymnArt(id, filePath);
+    if (!res.success) return res.message ?? 'Upload failed.';
+    final art = res.data is Map ? (res.data as Map)['art'] : null;
+    if (art is Map) {
+      await _db.upsertHymns([
+        {'id': id, ...Map<String, dynamic>.from(art)}
+      ]);
+    }
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  /// P66 hymn art: drop a hymn's cover (the name-hash gradient returns).
+  Future<String?> removeHymnArt(int id) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to remove the cover art.';
+    }
+    final res = await _api.removeMezmurHymnArt(id);
+    if (!res.success) return res.message ?? 'Could not remove the art.';
+    await _db.upsertHymns([
+      {
+        'id': id,
+        'art_status': 'none',
+        'art_color': null,
+        'art_url': '',
+        'art_url_medium': '',
+        'art_url_small': '',
+      }
+    ]);
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  /// P34: serialises taxonomy writes. `saveCategory` reads the existing
+  /// rows to enforce name-uniqueness and only then writes, so two
+  /// concurrent calls (a double-tapped SAVE) both pass the check and both
+  /// mint their own local id — creating duplicate rows AND duplicate
+  /// outbox ops. Chaining every call makes the check-then-write atomic,
+  /// so the second caller sees the first one's row and is rejected as a
+  /// duplicate. This is the authoritative guard; the dialog's disabled
+  /// button is the cosmetic one.
+  Future<void> _taxonomyChain = Future<void>.value();
+
+  Future<String?> saveCategory(Map<String, dynamic> category) {
+    final result = _taxonomyChain
+        .then((_) => _saveCategoryLocked(category))
+        .catchError((_) => 'Could not save the category. Please try again.');
+    _taxonomyChain = result.then((_) {}).catchError((_) {});
+    return result;
+  }
+
+  Future<String?> _saveCategoryLocked(Map<String, dynamic> category) async {
+    final name = '${category['name'] ?? ''}'.trim();
+    if (name.isEmpty) return 'Category name is required.';
+    if (name.length > 50) return 'Category name is too long.';
+
+    // Two-level taxonomy: uniqueness is scoped per parent — the same
+    // name may exist under different mains (mirrors the server).
+    final parentRaw = category['parent_id'];
+    final parentId = parentRaw == null || '${parentRaw}'.trim().isEmpty
+        ? null
+        : (_asInt(parentRaw) <= 0 ? null : _asInt(parentRaw));
+    // P35: normalised duplicate detection — case-insensitive and
+    // whitespace-collapsing, so "Test", "test " and "te  st" cannot all
+    // be created as separate rows. Scoped per parent, mirroring the
+    // server's unique key.
+    // Scoped duplicate check: _asInt(c['parent_id']) == (parentId ?? 0)
+    final existing = await _db.getLocalCategories(activeOnly: false);
+    final clash = TaxonomyNames.findDuplicate(
+      name: name,
+      rows: existing,
+      idOf: (r) => _asInt(r['id']),
+      nameOf: (r) => '${r['name'] ?? ''}',
+      selfId: _asInt(category['id']),
+      parentId: parentId,
+      parentOf: (r) => _asInt(r['parent_id']),
+    );
+    if (clash != null) {
+      return parentId == null
+          ? 'A main category named "${clash['name']}" already exists.'
+          : 'A sub-category with this name already exists.';
+    }
+
+    // P32: optional admin-pinned cover gradient (strict hex or empty).
+    final gradStart = _hexOrNull(category['gradient_start']);
+    final gradEnd = _hexOrNull(category['gradient_end']);
+
+    final localId = _localId(category);
+    await _db.upsertCategoryLocal({
+      'id': localId,
+      'name': name,
+      'parent_id': parentId,
+      'gradient_start': gradStart ?? '',
+      'gradient_end': gradEnd ?? '',
+      'sort_order': _asInt(category['sort_order']),
+      'is_active': 1,
+    });
+    // P35 — THE duplication bug.
+    //
+    // The local row is written with `localId` (a negative placeholder for
+    // a create), but this op used to be enqueued with `category['id'] ?? 0`
+    // — i.e. 0 for a create. At push time the handler reads
+    // `catLocalId = payload['id']` and only cleans up the placeholder when
+    // it is < 0. With 0 that branch never ran, so the placeholder survived
+    // and the server's real row synced in BESIDE it: one tap, two rows.
+    // The hymn save path already did this correctly (opPayload['id'] =
+    // localId); categories and singers did not.
+    await _db.enqueueHymnOp('category_save', {
+      'id': localId,
+      'name': name,
+      'parent_id': parentId,
+      'sort_order': _asInt(category['sort_order']),
+      if (gradStart != null) 'gradient_start': gradStart,
+      if (gradEnd != null) 'gradient_end': gradEnd,
+    });
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  /// '#rrggbb' or null (mirrors the server-side validator).
+  String? _hexOrNull(dynamic v) {
+    final s = (v ?? '').toString().trim();
+    if (s.isEmpty) return null;
+    return RegExp(r'^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$')
+            .hasMatch(s)
+        ? s.toLowerCase()
+        : null;
+  }
+
+  /// Cover images are binary, not queueable JSON ops — they upload
+  /// immediately and require connectivity (the caller shows a clear
+  /// message when offline).
+  /// P34: singer cover images (online-only, applied locally on
+  /// success exactly like category covers).
+  Future<String?> setZemarianImage(int id, String filePath) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to upload the cover image.';
+    }
+    final res = await _api.uploadZemarianImage(id, filePath);
+    if (!res.success) return res.message ?? 'Upload failed.';
+    final url = res.data is Map ? '${(res.data as Map)['image_url'] ?? ''}' : '';
+    await _db.upsertZemarianLocal({'id': id, 'image_url': url});
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  Future<String?> removeZemarianImage(int id) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to remove the cover image.';
+    }
+    final res = await _api.post('/mezmur/zemarian-image-remove', body: {'id': id});
+    if (!res.success) return res.message ?? 'Failed.';
+    await _db.upsertZemarianLocal({'id': id, 'image_url': ''});
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  /// Remove the cover image (online-only by nature).
+  Future<String?> removeCategoryImage(int id) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to remove the cover image.';
+    }
+    final res = await _api.removeCategoryImage(id);
+    if (!res.success) return res.message ?? 'Failed.';
+    await _db.upsertCategoryLocal({'id': id, 'image_url': ''});
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  Future<String?> setCategoryImage(int id, String filePath) async {
+    if (!ConnectivityService().hasLink) {
+      return 'Go online once to upload the cover image.';
+    }
+    final res = await _api.uploadCategoryImage(id, filePath);
+    if (!res.success) return res.message ?? 'Upload failed.';
+    // Apply the server-confirmed image to the local row IMMEDIATELY
+    // (the UI must not wait for the next background pull), then let
+    // the regular sync reconcile everything else.
+    final url = res.data is Map ? '${(res.data as Map)['image_url'] ?? ''}' : '';
+    await _db.upsertCategoryLocal({'id': id, 'image_url': url});
+    notifyListeners();
+    unawaited(pullChanges(lyricsBatch: 0).catchError((_) {}));
+    return null;
+  }
+
+  Future<String?> setCategoryStatus(int id, bool active) async {
+    final rows = await _db.getLocalCategories(activeOnly: false);
+    Map<String, dynamic>? row;
+    for (final c in rows) {
+      if (_asInt(c['id']) == id) {
+        row = c;
+        break;
+      }
+    }
+    if (row == null) return 'Category not found on this device yet.';
+    await _db.upsertCategoryLocal({...row, 'is_active': active ? 1 : 0});
+    await _db.enqueueHymnOp(
+        'category_status', {'id': id, 'active': active, 'name': row['name']});
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  // ── zemarians (singers) ─────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> zemarians({bool activeOnly = true}) =>
+      _db.getLocalZemarians(activeOnly: activeOnly);
+
+  /// P35: serialised like saveCategory — the duplicate check reads then
+  /// writes, so concurrent calls must not interleave.
+  Future<String?> saveZemarian(Map<String, dynamic> zemarian) {
+    final result = _taxonomyChain
+        .then((_) => _saveZemarianLocked(zemarian))
+        .catchError((_) => 'Could not save the singer. Please try again.');
+    _taxonomyChain = result.then((_) {}).catchError((_) {});
+    return result;
+  }
+
+  Future<String?> _saveZemarianLocked(Map<String, dynamic> zemarian) async {
+    final name = '${zemarian['name'] ?? ''}'.trim();
+    if (name.isEmpty) return 'Singer name is required.';
+    if (name.length > 100) return 'Singer name is too long.';
+
+    // P35: same normalised detection as categories (singers are a flat
+    // list, so there is no parent scope).
+    final existing = await _db.getLocalZemarians(activeOnly: false);
+    final clash = TaxonomyNames.findDuplicate(
+      name: name,
+      rows: existing,
+      idOf: (r) => _asInt(r['id']),
+      nameOf: (r) => '${r['name'] ?? ''}',
+      selfId: _asInt(zemarian['id']),
+    );
+    if (clash != null) {
+      return 'A singer named "${clash['name']}" already exists.';
+    }
+
+    final localId = _localId(zemarian);
+    await _db.upsertZemarianLocal({
+      'id': localId,
+      'name': name,
+      'name_am': '${zemarian['name_am'] ?? ''}'.isEmpty
+          ? null
+          : zemarian['name_am'],
+      'sort_order': _asInt(zemarian['sort_order']),
+      'is_active': 1,
+    });
+    // P35: enqueue the placeholder id we actually wrote (see the note in
+    // saveCategory) so the push handler can retire it. Using 0 here left
+    // the placeholder orphaned and duplicated every new singer.
+    await _db.enqueueHymnOp('zemarian_save', {
+      'id': localId,
+      'name': name,
+      'name_am': zemarian['name_am'] ?? '',
+    });
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  Future<String?> setZemarianStatus(int id, bool active) async {
+    final rows = await _db.getLocalZemarians(activeOnly: false);
+    Map<String, dynamic>? row;
+    for (final z in rows) {
+      if (_asInt(z['id']) == id) {
+        row = z;
+        break;
+      }
+    }
+    if (row == null) return 'Singer not found on this device yet.';
+    await _db.upsertZemarianLocal({...row, 'is_active': active ? 1 : 0});
+    await _db.enqueueHymnOp(
+        'zemarian_status', {'id': id, 'active': active, 'name': row['name']});
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+    return null;
+  }
+
+  // ── outbox drain (Gmail pattern: one worker, ordered push) ──
+
+  /// P46: save timed (LRC) lyrics, offline-first.
+  ///
+  /// Writes to the local row immediately so the player shows the new
+  /// timings at once, then queues the upload. Nothing is lost if the
+  /// connection is down — the op waits in `pending_hymn_ops` and is
+  /// pushed on the next successful sync.
+  ///
+  /// Pass an empty [lrc] to clear the timings.
+  Future<void> saveSyncedLyrics(int hymnId, String lrc) async {
+    if (hymnId <= 0) return;
+    // Optimistic local write: the karaoke view reflects the edit before
+    // the network is involved at all.
+    await _db.updateHymnSyncedLyrics(hymnId, lrc.isEmpty ? null : lrc);
+    // enqueueHymnOp() mints the client_op_id itself — the server uses it
+    // for idempotency, so a retried push can never double-apply.
+    await _db.enqueueHymnOp('lyrics_synced', {
+      'id': hymnId,
+      'lrc': lrc,
+    });
+    notifyListeners();
+    unawaited(pushPending().catchError((_) => 0));
+  }
+
+  /// S2 Goal A.7: [source] is the provenance of this drain, supplied by the
+  /// authoritative execution boundary that started it (foreground by default
+  /// for user-initiated and internal re-runs). It is threaded to the claim so
+  /// every hymn transmission lands in the durable attempt ledger tagged with
+  /// how it was executed.
+  Future<int> pushPending({
+    SyncExecutionSource source = SyncExecutionSource.foreground,
+  }) async {
+    if (!canEdit ||
+        !_drainsAllowed ||
+        !_api.isLoggedIn ||
+        !ConnectivityService().hasLink) {
+      return 0;
+    }
+    if (_pushing) {
+      _pushAgain = true;
+      return 0;
+    }
+    final generation = sessionGenerationProvider?.call() ?? 0;
+    if (!_ownsGeneration(generation)) return 0;
+    _pushing = true;
+    notifyListeners();
+    var pushed = 0;
+    var scans = 0;
+    try {
+      // The release gate is checked between exact claims. A request already in
+      // flight is still settled durably before the next iteration stops.
+      while (_ownsGeneration(generation) && _drainsAllowed && scans < 100) {
+        scans++;
+        final claim = await _db.claimNextHymnOperation(
+          runtimeGeneration: generation,
+          ownerUserId: _api.userId,
+          authorizationVersion: _api.authorizationVersion,
+          executionSource: source,
+        );
+        if (!_ownsGeneration(generation)) break;
+        if (claim == null) {
+          if (_pushAgain) {
+            _pushAgain = false;
+            continue;
+          }
+          break;
+        }
+
+        Map<String, dynamic> payload;
+        try {
+          final decoded = jsonDecode(claim.payloadJson);
+          if (decoded is! Map) throw const FormatException('not an object');
+          payload = Map<String, dynamic>.from(decoded);
+        } catch (_) {
+          final settled = await _db.settleHymnOperation(
+            claim: claim,
+            settlement: const HymnSettlement(
+              kind: HymnSettlementKind.needsAttention,
+              failureCode: 'MALFORMED_LOCAL_PAYLOAD',
+              failureMessage:
+                  'This saved change is unreadable and needs attention.',
+            ),
+            currentRuntimeGeneration: generation,
+            attemptClosure: const SyncAttemptClosure(
+              category: SyncErrorCategory.serializationError,
+              decision: SyncRetryDecision.userActionRequired,
+              failureMessage:
+                  'This saved change is unreadable and needs attention.',
+            ),
+          );
+          if (settled == HymnSettlementResult.supersededSession) break;
+          continue;
+        }
+
+        ApiResponse response;
+        try {
+          response = await _sendHymnOperation(claim, payload, generation);
+        } catch (_) {
+          if (!_ownsGeneration(generation)) break;
+          response = ApiResponse.error(
+            'The request could not be completed.',
+            0,
+            true,
+            ApiFailureKind.transport,
+          );
+        }
+        if (response.sessionSuperseded || !_ownsGeneration(generation)) break;
+
+        final canonical = _itemFrom(response.data);
+        final evidence = response.toOutboxEvidence(
+          automaticAttemptCount: claim.attemptCount,
+          hasCanonicalConflictItem:
+              claim.operation == 'hymn_save' && canonical != null,
+        );
+        final decision = classifyOutboxResponse(evidence);
+        final category = classifySyncErrorCategory(evidence);
+        if (decision == OutboxDecision.supersededSession) break;
+        if (decision == OutboxDecision.supersededLocal) continue;
+
+        // Apply canonical/rebase effects before durable success settlement.
+        // If local application fails, retain the exact operation for an
+        // idempotent replay; never strand a synced row with an unreconciled
+        // negative placeholder or newer dependent edit.
+        if (decision == OutboxDecision.accepted ||
+            decision == OutboxDecision.resolvedConflict) {
+          try {
+            if (decision == OutboxDecision.accepted) {
+              await _applyAcceptedHymnOperation(claim, payload, response);
+            } else {
+              await _applyResolvedHymnConflict(claim, payload, canonical!);
+            }
+          } catch (_) {
+            final retained = await _db.settleHymnOperation(
+              claim: claim,
+              settlement: HymnSettlement(
+                kind: HymnSettlementKind.retryable,
+                nextAttemptAt: nextOutboxAttemptAt(
+                  attemptCount: claim.attemptCount,
+                  randomUnit: Random.secure().nextDouble(),
+                ),
+                failureCode: 'LOCAL_RECONCILIATION_PENDING',
+                failureMessage:
+                    'Server result saved; local reconciliation will retry.',
+              ),
+              currentRuntimeGeneration: generation,
+              attemptClosure: SyncAttemptClosure(
+                category: SyncErrorCategory.localDatabaseError,
+                decision: SyncRetryDecision.retryScheduled,
+                httpStatus: response.statusCode,
+                failureMessage:
+                    'Server result saved; local reconciliation will retry.',
+                serverRef: response.serverRequestId,
+              ),
+            );
+            if (retained == HymnSettlementResult.supersededSession) break;
+            continue;
+          }
+        }
+
+        final settlement = _hymnSettlement(decision, response, claim);
+        final result = await _db.settleHymnOperation(
+          claim: claim,
+          settlement: settlement,
+          currentRuntimeGeneration: generation,
+          attemptClosure: SyncAttemptClosure(
+            category: category,
+            decision: describeRetryDecision(
+              decision: decision,
+              category: category,
+              serverDictatedDelay: response.retryAfterSeconds != null,
+              // classifyOutboxResponse escalates an unknown failure to
+              // needsAttention only once the automatic budget is spent.
+              unknownBudgetExhausted: claim.attemptCount >= 5,
+            ),
+            httpStatus: response.statusCode,
+            failureMessage:
+                decision == OutboxDecision.accepted ? null : response.message,
+            nextAttemptAt: settlement.nextAttemptAt,
+            serverRef: response.serverRequestId,
+          ),
+        );
+        if (result == HymnSettlementResult.supersededSession) break;
+        if (result == HymnSettlementResult.supersededLocal) continue;
+
+        if (decision == OutboxDecision.accepted) {
+          pushed++;
+        } else if (decision == OutboxDecision.needsAttention) {
+          await _db.logSync(
+            claim.operation,
+            response.message ?? 'The server rejected this saved change.',
+            'error',
+          );
+        } else if (decision == OutboxDecision.pauseForAuthentication ||
+            decision == OutboxDecision.pauseForAuthorizationScope) {
+          break;
+        }
+      }
+      if (scans >= 100 && _ownsGeneration(generation) && _drainsAllowed) {
+        _pushAgain = true;
+      }
+      return pushed;
+    } finally {
+      final rerun = _pushAgain;
+      _pushAgain = false;
+      _pushing = false;
+      if (_ownsGeneration(generation)) {
+        notifyListeners();
+        if (rerun && _drainsAllowed) {
+          unawaited(pushPending().then<void>((_) {}));
+        }
+      }
+    }
+  }
+
+  HymnSettlement _hymnSettlement(
+    OutboxDecision decision,
+    ApiResponse response,
+    HymnOutboxClaim claim,
+  ) {
+    final code = response.errorCode;
+    final message = response.message;
+    switch (decision) {
+      case OutboxDecision.accepted:
+        return const HymnSettlement(kind: HymnSettlementKind.accepted);
+      case OutboxDecision.retryable:
+        return HymnSettlement(
+          kind: HymnSettlementKind.retryable,
+          nextAttemptAt: nextOutboxAttemptAt(
+            attemptCount: claim.attemptCount,
+            retryAfterSeconds: response.retryAfterSeconds,
+            randomUnit: Random.secure().nextDouble(),
+          ),
+          failureCode: code ?? 'RETRYABLE_TRANSPORT',
+          failureHttpStatus: response.statusCode,
+          failureMessage: message ?? 'Retry scheduled.',
+        );
+      case OutboxDecision.needsAttention:
+        return HymnSettlement(
+          kind: HymnSettlementKind.needsAttention,
+          failureCode: code ?? 'SERVER_REJECTED',
+          failureHttpStatus: response.statusCode,
+          failureMessage: message ?? 'This saved change needs attention.',
+        );
+      case OutboxDecision.pauseForAuthentication:
+        return HymnSettlement(
+          kind: HymnSettlementKind.pausedAuthentication,
+          failureCode: code ?? 'AUTHENTICATION_REQUIRED',
+          failureHttpStatus: response.statusCode,
+          failureMessage: message ?? 'Sign in to continue.',
+        );
+      case OutboxDecision.pauseForAuthorizationScope:
+        return HymnSettlement(
+          kind: HymnSettlementKind.pausedAuthorizationScope,
+          failureCode: code ?? 'AUTHORIZATION_SCOPE_CHANGED',
+          failureHttpStatus: response.statusCode,
+          failureMessage: message ?? 'Access changed; review this item.',
+        );
+      case OutboxDecision.resolvedConflict:
+        return HymnSettlement(
+          kind: HymnSettlementKind.resolvedConflict,
+          failureCode: code ?? 'REVISION_CONFLICT',
+          failureHttpStatus: response.statusCode,
+          failureMessage: message ?? 'The newer server copy was kept.',
+        );
+      case OutboxDecision.supersededSession:
+      case OutboxDecision.supersededLocal:
+        throw StateError('Supersession is not a durable hymn settlement.');
+    }
+  }
+
+  Future<ApiResponse> _sendHymnOperation(
+    HymnOutboxClaim claim,
+    Map<String, dynamic> payload,
+    int generation,
+  ) async {
+    if (!_ownsGeneration(generation)) return ApiResponse.superseded(generation);
+    final opId = claim.clientOpId;
+    switch (claim.operation) {
+      case 'hymn_save':
+        final baseRevision = payload['base_revision'] is int
+            ? payload['base_revision'] as int
+            : int.tryParse('${payload['base_revision'] ?? ''}');
+        await _rewritePlaceholderRefs(payload);
+        if (!_ownsGeneration(generation)) {
+          return ApiResponse.superseded(generation);
+        }
+        return _api.saveMezmurHymn(
+          payload,
+          clientOpId: opId,
+          baseRevision:
+              baseRevision != null && baseRevision > 0 ? baseRevision : null,
+        );
+      case 'hymn_status':
+        final hymnId = _asInt(payload['id']);
+        if (hymnId <= 0) return _invalidHymnOperation('INVALID_HYMN_ID');
+        return _api.setMezmurHymnStatus(
+          hymnId,
+          '${payload['status'] ?? ''}',
+          clientOpId: opId,
+        );
+      case 'category_save':
+        final localId = _asInt(payload['id']);
+        final body = Map<String, dynamic>.from(payload);
+        if (localId < 0) body['id'] = 0;
+        return _api.saveMezmurCategory(body, clientOpId: opId);
+      case 'category_status':
+        var categoryId = _asInt(payload['id']);
+        if (categoryId < 0) {
+          categoryId = _localIdByName(
+            await _db.getLocalCategories(activeOnly: false),
+            '${payload['name'] ?? ''}',
+          );
+        }
+        if (categoryId <= 0) {
+          return _invalidHymnOperation('UNRESOLVED_CATEGORY_ID');
+        }
+        if (!_ownsGeneration(generation)) {
+          return ApiResponse.superseded(generation);
+        }
+        return _api.setMezmurCategoryStatus(
+          categoryId,
+          payload['active'] == true,
+          clientOpId: opId,
+        );
+      case 'zemarian_save':
+        final localId = _asInt(payload['id']);
+        final body = Map<String, dynamic>.from(payload);
+        if (localId < 0) body['id'] = 0;
+        return _api.saveMezmurZemarian(body, clientOpId: opId);
+      case 'zemarian_status':
+        var zemarianId = _asInt(payload['id']);
+        if (zemarianId < 0) {
+          zemarianId = _localIdByName(
+            await _db.getLocalZemarians(activeOnly: false),
+            '${payload['name'] ?? ''}',
+          );
+        }
+        if (zemarianId <= 0) {
+          return _invalidHymnOperation('UNRESOLVED_ZEMARIAN_ID');
+        }
+        if (!_ownsGeneration(generation)) {
+          return ApiResponse.superseded(generation);
+        }
+        return _api.setMezmurZemarianStatus(
+          zemarianId,
+          payload['active'] == true,
+          clientOpId: opId,
+        );
+      case 'lyrics_synced':
+        final hymnId = _asInt(payload['id']);
+        if (hymnId <= 0) return _invalidHymnOperation('INVALID_HYMN_ID');
+        return _api.saveMezmurSyncedLyrics(
+          hymnId,
+          '${payload['lrc'] ?? ''}',
+          clientOpId: opId,
+        );
+      default:
+        return _invalidHymnOperation('UNKNOWN_HYMN_OPERATION');
+    }
+  }
+
+  ApiResponse _invalidHymnOperation(String code) => ApiResponse(
+        success: false,
+        statusCode: 422,
+        errorCode: code,
+        message: 'This saved change cannot be sent automatically.',
+        failureKind: ApiFailureKind.http,
+      );
+
+  Future<void> _applyAcceptedHymnOperation(
+    HymnOutboxClaim claim,
+    Map<String, dynamic> payload,
+    ApiResponse response,
+  ) async {
+    final item = _itemFrom(response.data);
+    switch (claim.operation) {
+      case 'hymn_save':
+        if (item != null) {
+          final localId = _asInt(payload['id']);
+          final rebased = localId < 0
+              ? await _db.rebasePendingHymnPlaceholder(
+                  localId,
+                  claim.rowId,
+                  item,
+                )
+              : await _db.rebaseNewerPendingHymnRevision(
+                  localId,
+                  claim.rowId,
+                  item,
+                );
+          if (!rebased) {
+            await _db.upsertHymns([item]);
+            await _dropLocalPlaceholder(localId);
+          }
+        }
+        await _db.logSync(
+          'hymn_save',
+          '${payload['title'] ?? ''}',
+          'ok',
+        );
+        break;
+      case 'hymn_status':
+        if (item != null) await _db.upsertHymns([item]);
+        break;
+      case 'category_save':
+        if (item != null) await _db.upsertCategoryLocal(item);
+        final localId = _asInt(payload['id']);
+        if (localId < 0 && item != null) {
+          await _repointJoin(
+            'cached_hymn_categories',
+            'category_id',
+            localId,
+            _asInt(item['id']),
+          );
+          final db = await _db.database;
+          await db.delete(
+            'cached_mezmur_categories',
+            where: 'id = ?',
+            whereArgs: [localId],
+          );
+        }
+        break;
+      case 'zemarian_save':
+        if (item != null) await _db.upsertZemarianLocal(item);
+        final localId = _asInt(payload['id']);
+        if (localId < 0 && item != null) {
+          await _repointJoin(
+            'cached_hymn_zemarians',
+            'zemarian_id',
+            localId,
+            _asInt(item['id']),
+          );
+          final db = await _db.database;
+          await db.delete(
+            'cached_mezmur_zemarians',
+            where: 'id = ?',
+            whereArgs: [localId],
+          );
+        }
+        break;
+      case 'category_status':
+      case 'zemarian_status':
+      case 'lyrics_synced':
+        break;
+    }
+  }
+
+  Future<void> _applyResolvedHymnConflict(
+    HymnOutboxClaim claim,
+    Map<String, dynamic> payload,
+    Map<String, dynamic> canonical,
+  ) async {
+    final localId = _asInt(payload['id']);
+    final rebased = localId < 0
+        ? await _db.rebasePendingHymnPlaceholder(
+            localId,
+            claim.rowId,
+            canonical,
+          )
+        : await _db.rebaseNewerPendingHymnRevision(
+            localId,
+            claim.rowId,
+            canonical,
+          );
+    if (!rebased) {
+      await _db.upsertHymns([canonical]);
+      await _dropLocalPlaceholder(localId);
+    }
+    await _db.logSync(
+      'hymn_save',
+      'conflict — server copy kept: ${payload['title'] ?? ''}',
+      'conflict',
+    );
+  }
+
+  Map<String, dynamic>? _itemFrom(dynamic data) {
+    if (data is Map && data['item'] is Map) {
+      return Map<String, dynamic>.from(data['item']);
+    }
+    return null;
+  }
+
+  Future<void> _dropLocalPlaceholder(int localId) async {
+    if (localId >= 0) return;
+    final db = await _db.database;
+    await db.delete('cached_hymns', where: 'id = ?', whereArgs: [localId]);
+    // MZ-11: placeholder rows can carry taxonomy join rows too (the
+    // offline editor writes cached_hymn_categories / cached_hymn_zemarians
+    // immediately); drop them so synced placeholders never leave orphan
+    // joins behind on the device.
+    await db.delete('cached_hymn_categories',
+        where: 'hymn_id = ?', whereArgs: [localId]);
+    await db.delete('cached_hymn_zemarians',
+        where: 'hymn_id = ?', whereArgs: [localId]);
+  }
+
+  // ── delta pull (change-token cursor + lazy lyrics) ──────────
+
+  /// Ids of categories/singers with an unpushed local edit in the
+  /// outbox. The reconciling taxonomy sweep must not delete these: the
+  /// server has not seen the row yet, so its absence from the canonical
+  /// list says nothing about whether the user still wants it.
+  Future<({Set<int> categories, Set<int> zemarians})>
+      _pendingTaxonomyIds() async {
+    final cats = <int>{};
+    final zems = <int>{};
+    for (final op in await _db.getPendingHymnOps()) {
+      final kind = '${op['op'] ?? ''}';
+      if (!kind.startsWith('category_') && !kind.startsWith('zemarian_')) {
+        continue;
+      }
+      try {
+        final payload = jsonDecode('${op['payload_json'] ?? '{}'}');
+        if (payload is! Map) continue;
+        final id = int.tryParse('${payload['id'] ?? 0}') ?? 0;
+        if (id <= 0) continue;
+        (kind.startsWith('category_') ? cats : zems).add(id);
+      } catch (_) {}
+    }
+    return (categories: cats, zemarians: zems);
+  }
+
+  /// P38: verify/repair the search index. Safe to call often.
+  Future<void> ensureSearchIndexFresh({bool userIsSearching = false}) =>
+      _db.ensureSearchIndexFresh(userIsSearching: userIsSearching);
+
+  /// Dataset identity check (1.6.2). GET /app/config publishes
+  /// sync_instance_id — generated once per dataset and rotated
+  /// deliberately on restore/migration. Local state is bound to the id
+  /// it was built from; a change (including an unset stored id on a
+  /// device that synced with a previous dataset) invalidates it, which
+  /// is the storage-reset semantics Android/Chrome sync use for
+  /// account/dataset switches. Failures are swallowed: the epoch check
+  /// must never break the sync cycle.
+  Future<void> _reconcileSyncInstanceEpoch(int generation) async {
+    if (!_ownsGeneration(generation)) return;
+    try {
+      final res = await _api.get('/app/config', auth: false);
+      if (res.sessionSuperseded || !_ownsGeneration(generation)) return;
+      if (!res.success || res.data is! Map) return;
+      final data = Map<String, dynamic>.from(res.data as Map);
+      final serverId = '${data['sync_instance_id'] ?? ''}'.trim();
+      if (serverId.isEmpty) return; // legacy server: nothing to check
+      final storedId = await _db.getHymnSyncInstanceId();
+      if (storedId == serverId) return;
+      // Ids with unpushed local edits stay: the outbox owns them and
+      // re-pushes them to the new dataset (same protect rule as delta
+      // pulls and the taxonomy reconcile).
+      final protect = <int>{};
+      for (final op in await _db.getPendingHymnOps()) {
+        try {
+          final payload = jsonDecode('${op['payload_json'] ?? '{}'}');
+          if (payload is Map) {
+            final pid = int.tryParse('${payload['id'] ?? 0}') ?? 0;
+            if (pid > 0) protect.add(pid);
+          }
+        } catch (_) {}
+      }
+      await _db.resetHymnSyncForInstanceChange(protect);
+      await _db.setHymnSyncInstanceId(serverId);
+    } catch (_) {
+      // Network/DB hiccup: retry on the next cycle.
+    }
+  }
+
+  Future<void> pullChanges({int lyricsBatch = 15}) async {
+    final generation = sessionGenerationProvider?.call() ?? 0;
+    if (!_api.isLoggedIn || !_ownsGeneration(generation)) return;
+    if (_pulling) {
+      final priorGeneration = _pullingGeneration;
+      await _pullInflight!.future;
+      if (priorGeneration != generation && _ownsGeneration(generation)) {
+        return pullChanges(lyricsBatch: lyricsBatch);
+      }
+      return;
+    }
+    final completion = Completer<void>();
+    _pulling = true;
+    _pullingGeneration = generation;
+    _pullInflight = completion;
+    try {
+      // 1.6.2 sync anchor: verify the server's dataset identity before
+      // pulling deltas. A mismatch means this device's corpus came from
+      // a different dataset (server migration/restore) — purge the
+      // server-derived rows (pending local edits are protected and
+      // re-pushed) and restart from an empty cursor so the authoritative
+      // corpus replaces the ghosts.
+      await _reconcileSyncInstanceEpoch(generation);
+      final taxProtect = await _pendingTaxonomyIds();
+      final cats = await _api.getMezmurCategories();
+      if (cats.success && cats.data is Map && cats.data['items'] is List) {
+        await _db.upsertCategories(cats.data['items'] as List,
+            authoritative: true, protectIds: taxProtect.categories);
+      }
+      final zem = await _api.getMezmurZemarians();
+      if (zem.success && zem.data is Map && zem.data['items'] is List) {
+        await _db.upsertZemarians(zem.data['items'] as List,
+            authoritative: true, protectIds: taxProtect.zemarians);
+      }
+      var cursor = await _db.getHymnSyncCursor();
+      if (!_ownsGeneration(generation)) return;
+      final protect = <int>{};
+      for (final op in await _db.getPendingHymnOps()) {
+        try {
+          final payload = jsonDecode('${op['payload_json'] ?? '{}'}');
+          if (payload is Map) {
+            final pid = int.tryParse('${payload['id'] ?? 0}') ?? 0;
+            if (pid > 0) protect.add(pid);
+          }
+        } catch (_) {}
+      }
+      var pages = 0;
+      while (pages < 10 && _ownsGeneration(generation)) {
+        pages++;
+        final res = await _api.getMezmurHymnsChanges(cursor: cursor);
+        if (res.sessionSuperseded || !_ownsGeneration(generation)) return;
+        if (!res.success || res.data is! Map) break;
+        final data = Map<String, dynamic>.from(res.data as Map);
+        final items = (data['items'] is List) ? data['items'] as List : [];
+        await _db.upsertHymns(items, protectIds: protect);
+        final next = '${data['next_cursor'] ?? ''}';
+        if (next.isNotEmpty) await _db.setHymnSyncCursor(next);
+        final hasMore = data['has_more'] == true;
+        if (!hasMore || next.isEmpty) break;
+        cursor = next;
+      }
+      // Lazy lyrics: bounded, resumable batch per cycle (Telegram-style
+      // "download media as you go" — keeps the first sync seconds-fast).
+      final missing = await _db.getHymnsMissingLyrics(lyricsBatch);
+      if (!_ownsGeneration(generation)) return;
+      for (final h in missing) {
+        if (!_ownsGeneration(generation)) return;
+        try {
+          final one = await _api.getMezmurHymn(_asInt(h['id']));
+          if (one.sessionSuperseded || !_ownsGeneration(generation)) return;
+          if (one.success && one.data is Map && one.data['item'] is Map) {
+            final item = Map<String, dynamic>.from(one.data['item']);
+            // P50: store the whole row through the same reconciling upsert
+            // used for deltas. The single-hymn read returns BOTH `lyrics`
+            // and `lyrics_synced`, but the previous `updateHymnLyrics`
+            // wrote only lyrics + revision, silently discarding the LRC
+            // that was just fetched — so a hymn only ever cached via this
+            // path never gained its timed lyrics.
+            await _db.upsertHymns([item]);
+          }
+        } catch (_) {}
+      }
+      if (_ownsGeneration(generation)) notifyListeners();
+    } catch (_) {
+      // Offline or flaky link: the delta simply waits for next cycle.
+    } finally {
+      // P38: hymns change daily, so verify the index after EVERY sync
+      // rather than trusting a one-time migration. This repairs dirty
+      // rows and rebuilds outright if the analyzer version moved.
+      try {
+        await _db.ensureSearchIndexFresh();
+      } catch (_) {}
+      if (identical(_pullInflight, completion)) {
+        _pulling = false;
+        _pullingGeneration = null;
+        _pullInflight = null;
+        if (!completion.isCompleted) completion.complete();
+      }
+    }
+  }
+
+  /// Pull-to-refresh: push everything queued, then pull the delta.
+  Future<void> refreshAll() async {
+    final generation = sessionGenerationProvider?.call() ?? 0;
+    if (!_ownsGeneration(generation)) return;
+    await pushPending();
+    if (!_ownsGeneration(generation)) return;
+    await pullChanges();
+  }
+
+  // ── helpers ─────────────────────────────────────────────────
+
+  int _asInt(dynamic v) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? 0;
+  }
+
+  List<int> _asIntList(dynamic v) => (v is List ? v : const [])
+      .map(_asInt)
+      .where((e) => e != 0)
+      .toList();
+
+  /// Real ids pass through; negative placeholder ids become {id, name}
+  /// maps resolved server-side by natural key (P23).
+  Future<List<dynamic>> _taxonomyRefPayload(
+      dynamic raw, List<Map<String, dynamic>> localRows) async {
+    final namesById = <int, String>{};
+    for (final r in localRows) {
+      namesById[_asInt(r['id'])] = '${r['name']}';
+    }
+    final out = <dynamic>[];
+    for (final id in _asIntList(raw)) {
+      if (id > 0) {
+        out.add(id);
+        continue;
+      }
+      final name = (namesById[id] ?? '').trim();
+      if (name.isEmpty) continue; // unknown placeholder: nothing to send
+      out.add({'id': id, 'name': name});
+    }
+    return out;
+  }
+
+  /// Replace placeholder refs in a queued payload with the positive id of
+  /// a local row carrying the same NAME (the synced twin) — belt-and-
+  /// braces on top of server-side name resolution.
+  Future<void> _rewritePlaceholderRefs(Map<String, dynamic> payload) async {
+    final catalogs = <String, List<Map<String, dynamic>>>{
+      'categories': await _db.getLocalCategories(activeOnly: false),
+      'zemarians': await _db.getLocalZemarians(activeOnly: false),
+    };
+    for (final entry in catalogs.entries) {
+      final raw = payload[entry.key];
+      if (raw is! List) continue;
+      final idByName = <String, int>{};
+      for (final r in entry.value) {
+        final id = _asInt(r['id']);
+        if (id > 0) idByName['${r['name']}'.trim().toLowerCase()] = id;
+      }
+      final fixed = <dynamic>[];
+      for (final ref in raw) {
+        if (ref is Map) {
+          final rid = _asInt(ref['id']);
+          final name = '${ref['name'] ?? ''}'.trim().toLowerCase();
+          final real = name.isEmpty ? null : idByName[name];
+          if (rid < 1 && real != null) {
+            fixed.add(real); // synced twin exists locally: use its id
+          } else if (rid < 1 && name.isNotEmpty) {
+            fixed.add(ref); // still unknown: server resolves by name
+          }
+          continue;
+        }
+        final rid = _asInt(ref);
+        if (rid > 0) fixed.add(rid);
+      }
+      payload[entry.key] = fixed;
+    }
+  }
+
+  int _localIdByName(List<Map<String, dynamic>> rows, String name) {
+    final n = name.trim().toLowerCase();
+    if (n.isEmpty) return 0;
+    for (final r in rows) {
+      if ('${r['name']}'.trim().toLowerCase() == n) return _asInt(r['id']);
+    }
+    return 0;
+  }
+
+  /// Repoint on-device hymn joins from a placeholder taxonomy id to the
+  /// real server id (P23). Rows that would duplicate an existing
+  /// (hymn_id, real_id) pair are removed first — the PK is that pair.
+  Future<void> _repointJoin(
+      String table, String col, int oldId, int newId) async {
+    if (newId <= 0) return;
+    final db = await _db.database;
+    await db.rawDelete(
+        'DELETE FROM $table WHERE $col = ? AND hymn_id IN '
+        '(SELECT hymn_id FROM $table WHERE $col = ?)', [oldId, newId]);
+    await db.update(table, {col: newId}, where: '$col = ?', whereArgs: [oldId]);
+  }
+
+  /// Existing server ids stay; brand-new rows get a negative local id so
+  /// the optimistic row stays addressable until the server responds.
+  int _localId(Map<String, dynamic> row) {
+    final id = _asInt(row['id']);
+    if (id != 0) return id;
+    return -(DateTime.now().microsecondsSinceEpoch % 1000000007);
+  }
+}

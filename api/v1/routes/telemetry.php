@@ -1,0 +1,474 @@
+<?php
+/**
+ * ============================================================
+ * REST API v1 — Mobile App Telemetry & Fleet Analytics Router
+ * ============================================================
+ * Endpoints:
+ *   POST /api/v1/telemetry/heartbeat  — Periodic device heartbeat / launch ping
+ *   POST /api/v1/telemetry/event      — Telemetry event (sync, crash, update)
+ *   POST /api/v1/telemetry            — General telemetry ingestion
+ * ============================================================
+ */
+
+if ($method !== 'POST') {
+    err('Method not allowed. Use POST.', 405);
+}
+
+$action = $ROUTE['id'] ?? 'heartbeat';
+
+// Rate limiting by client IP to prevent flooding. The installation bucket below
+// prevents one installation from rotating IPs to evade the companion limit.
+if (isApiRateLimited('telemetry_ip', 120)) {
+    err('Too many telemetry requests. Please slow down.', 429);
+}
+
+// Telemetry is intentionally small: device facts plus a bounded typed event.
+$input = getBody(8192);
+if (!is_array($input)) {
+    $input = $_POST;
+}
+
+$readString = static function (
+    string $field,
+    string $default,
+    int $maxLength,
+    bool $nullable = false
+) use (&$input): ?string {
+    if (!array_key_exists($field, $input)) return $nullable ? null : $default;
+    $value = $input[$field];
+    if ($value === null && $nullable) return null;
+    if (!is_string($value)) err("Invalid {$field}.", 422);
+    $value = trim($value);
+    if (strlen($value) > $maxLength) err("Invalid {$field}.", 422);
+    return $value;
+};
+
+$readInt = static function (
+    string $field,
+    int $default,
+    int $min,
+    int $max
+) use (&$input): int {
+    if (!array_key_exists($field, $input)) return $default;
+    $value = $input[$field];
+    if (is_int($value)) {
+        $parsed = $value;
+    } elseif (is_string($value) && preg_match('/^\\d+$/', $value)) {
+        $parsed = (int)$value;
+    } else {
+        err("Invalid {$field}.", 422);
+    }
+    if ($parsed < $min || $parsed > $max) err("Invalid {$field}.", 422);
+    return $parsed;
+};
+
+$installIdValue = $input['installation_id'] ?? null;
+if (!is_string($installIdValue)
+    || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $installIdValue)) {
+    err('Invalid or missing installation_id.', 422);
+}
+$installId = strtolower(trim($installIdValue));
+apiEnforceRateLimits([
+    [
+        'action' => 'telemetry_installation',
+        'subject' => $installId,
+        'limit' => 60,
+        'window' => 60,
+    ],
+]);
+
+// Clean and type-check telemetry metrics. Invalid structures are rejected,
+// rather than coerced into misleading zeroes or durable strings.
+$appVersion = $readString('app_version', '1.0.0', 32) ?? '1.0.0';
+$appBuild = $readInt('app_build', 1, 1, 4294967295);
+$osVersion = $readString('os_version', '', 32) ?? '';
+$sdkInt = $readInt('sdk_int', 0, 0, 65535);
+$deviceBrand = $readString('device_brand', '', 64) ?? '';
+$deviceModel = $readString('device_model', '', 64) ?? '';
+$abi = $readString('abi', '', 32) ?? '';
+$ramMb = $readInt('ram_mb', 0, 0, 1048576);
+$isLowRamValue = $input['is_low_ram'] ?? false;
+if (is_bool($isLowRamValue)) {
+    $isLowRam = $isLowRamValue ? 1 : 0;
+} elseif (is_int($isLowRamValue) && ($isLowRamValue === 0 || $isLowRamValue === 1)) {
+    $isLowRam = $isLowRamValue;
+} else {
+    err('Invalid is_low_ram.', 422);
+}
+$roleHint = $readString('role_hint', '', 32, true);
+if ($roleHint === '') $roleHint = null;
+
+$eventTypeValue = $input['event_type'] ?? ($action === 'event' ? 'event' : 'launch');
+if (!is_string($eventTypeValue)) err('Invalid event_type.', 422);
+$eventType = trim($eventTypeValue);
+$allowedEventTypes = [
+    'event', 'launch', 'heartbeat',
+    'sync_success', 'sync_completed', 'sync_failed', 'sync_error',
+    'sync_pass_completed', 'crash', 'crash_recorded', 'crash_signature',
+    'update_downloaded',
+];
+if ($eventType === '' || strlen($eventType) > 48
+    || !in_array($eventType, $allowedEventTypes, true)) {
+    err('Unsupported telemetry event type.', 422);
+}
+
+$eventDataInput = $input['event_data'] ?? null;
+if ($eventDataInput !== null && !is_array($eventDataInput)) {
+    err('Telemetry event_data must be an object.', 422);
+}
+$eventData = null;
+$normalisedEventData = null;
+$crashDedupeKey = null;
+$syncPassSuccess = 0;
+$syncPassFail = 0;
+
+$assertAllowedKeys = static function (array $data, array $allowed): void {
+    foreach (array_keys($data) as $key) {
+        if (!is_string($key) || !in_array($key, $allowed, true)) {
+            err('Unsupported telemetry event field.', 422);
+        }
+    }
+};
+$readEventCount = static function (array $data, string $key): int {
+    if (!array_key_exists($key, $data)) return 0;
+    $value = $data[$key];
+    if (is_int($value)) {
+        $parsed = $value;
+    } elseif (is_string($value) && preg_match('/^\\d+$/', $value)) {
+        $parsed = (int)$value;
+    } else {
+        err("Invalid telemetry count: {$key}.", 422);
+    }
+    if ($parsed < 0 || $parsed > 100000) {
+        err("Invalid telemetry count: {$key}.", 422);
+    }
+    return $parsed;
+};
+
+if ($eventType === 'sync_pass_completed') {
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    $assertAllowedKeys($data, [
+        'operations', 'attempts', 'retries', 'succeeded',
+        'waiting_retry', 'needs_attention',
+    ]);
+    $normalisedEventData = [];
+    foreach ([
+        'operations', 'attempts', 'retries', 'succeeded',
+        'waiting_retry', 'needs_attention',
+    ] as $countKey) {
+        $normalisedEventData[$countKey] = $readEventCount($data, $countKey);
+    }
+    $syncPassSuccess = $normalisedEventData['succeeded'];
+    $syncPassFail = min(
+        100000,
+        $normalisedEventData['waiting_retry'] + $normalisedEventData['needs_attention']
+    );
+} elseif ($eventType === 'crash' || $eventType === 'crash_recorded') {
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    // Current clients send only a hash identity. A bounded legacy summary is
+    // accepted for rollout compatibility, but is discarded and never reaches
+    // durable event_data; it also has no dedupe key and cannot affect the new
+    // exact-once crash path.
+    $assertAllowedKeys($data, ['crash_key', 'kind', 'summary']);
+    $crashKey = $data['crash_key'] ?? null;
+    $kind = $data['kind'] ?? null;
+    if ($crashKey !== null) {
+        if (!is_string($crashKey)
+            || !preg_match('/^[0-9a-f]{64}$/i', $crashKey)
+            || !is_string($kind)
+            || !in_array($kind, ['native', 'dart'], true)) {
+            err('Crash telemetry requires a hash key and kind.', 422);
+        }
+        $crashDedupeKey = strtolower($crashKey);
+        $normalisedEventData = [
+            'crash_key' => $crashDedupeKey,
+            'kind' => $kind,
+        ];
+    } else {
+        $legacySummary = $data['summary'] ?? null;
+        if (!is_string($legacySummary) || strlen($legacySummary) > 300) {
+            err('Legacy crash telemetry summary is invalid.', 422);
+        }
+        $normalisedEventData = [
+            'kind' => 'legacy',
+            'legacy_summary_present' => true,
+        ];
+    }
+} elseif ($eventType === 'crash_signature') {
+    // The readable companion to a crash identity: WHERE the crash happened,
+    // in bounded, privacy-safe form — exception class plus up to three
+    // first-party frame names (file + function only). Never messages,
+    // argument values, or user data; the same SHA-256 crash_key as the
+    // crash event makes delivery exact-once per installation.
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    $assertAllowedKeys($data, ['crash_key', 'signature_class', 'frames']);
+    $crashKey = $data['crash_key'] ?? null;
+    if (!is_string($crashKey) || !preg_match('/^[0-9a-f]{64}$/i', $crashKey)) {
+        err('Crash signature requires a hash key.', 422);
+    }
+    $signatureClass = $data['signature_class'] ?? null;
+    if (!is_string($signatureClass)
+        || !preg_match('/^[A-Za-z0-9 .:_\/<>()$#-]{1,120}$/D', $signatureClass)) {
+        err('Invalid crash signature class.', 422);
+    }
+    $framesInput = $data['frames'] ?? null;
+    if (!is_array($framesInput) || count($framesInput) > 3) {
+        err('Invalid crash signature frames.', 422);
+    }
+    $signatureFrames = [];
+    foreach ($framesInput as $frame) {
+        if (!is_string($frame)
+            || !preg_match('/^[A-Za-z0-9 .:_\/<>()$#-]{1,120}$/D', $frame)) {
+            err('Invalid crash signature frame.', 422);
+        }
+        $signatureFrames[] = $frame;
+    }
+    $crashDedupeKey = strtolower($crashKey);
+    $normalisedEventData = [
+        'crash_key' => $crashDedupeKey,
+        'class' => $signatureClass,
+        'frames' => $signatureFrames,
+    ];
+    $encoded = json_encode($normalisedEventData, JSON_UNESCAPED_UNICODE);
+    if (!is_string($encoded) || strlen($encoded) > 512) {
+        err('Crash signature is too large.', 422);
+    }
+} elseif ($eventType === 'update_downloaded') {
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    $assertAllowedKeys($data, ['target_version', 'target_build']);
+    $targetVersion = $data['target_version'] ?? null;
+    if (!is_string($targetVersion) || trim($targetVersion) === '' || strlen($targetVersion) > 32) {
+        err('Update telemetry requires target_version.', 422);
+    }
+    $normalisedEventData = [
+        'target_version' => trim($targetVersion),
+        'target_build' => $readEventCount($data, 'target_build'),
+    ];
+} elseif ($eventType === 'sync_completed' || $eventType === 'sync_failed'
+    || $eventType === 'sync_success' || $eventType === 'sync_error') {
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    $assertAllowedKeys($data, ['items_count', 'error_code', 'error']);
+    $normalisedEventData = [
+        'items_count' => $readEventCount($data, 'items_count'),
+    ];
+    if (array_key_exists('error_code', $data)) {
+        if (!is_string($data['error_code'])
+            || !in_array($data['error_code'], ['operations_pending_retry', 'unknown', 'legacy_error'], true)) {
+            err('Invalid telemetry error_code.', 422);
+        }
+        $normalisedEventData['error_code'] = $data['error_code'];
+    } elseif (array_key_exists('error', $data)) {
+        if (!is_string($data['error']) || strlen($data['error']) > 200) {
+            err('Legacy telemetry error is invalid.', 422);
+        }
+        // Preserve the old client's successful response without retaining its
+        // free-form error text in the event table.
+        $normalisedEventData['error_code'] = 'legacy_error';
+    }
+} else {
+    $data = is_array($eventDataInput) ? $eventDataInput : [];
+    $assertAllowedKeys($data, []);
+    if ($data !== []) $normalisedEventData = [];
+}
+
+if ($normalisedEventData !== null) {
+    $eventData = json_encode($normalisedEventData, JSON_UNESCAPED_UNICODE);
+    if (!is_string($eventData) || strlen($eventData) > 2048) {
+        err('Telemetry event_data is too large.', 422);
+    }
+}
+
+$ip = (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+$ipHashSecret = defined('TELEMETRY_HASH_SECRET') && TELEMETRY_HASH_SECRET !== ''
+    ? TELEMETRY_HASH_SECRET
+    : JWT_SECRET;
+$ipHash = hash_hmac('sha256', $ip . '::' . gmdate('Ymd'), $ipHashSecret);
+
+$transactionOpen = false;
+try {
+    if (!isset($conn) || !($conn instanceof mysqli)) {
+        err('Database unavailable.', 503);
+    }
+
+    $conn->begin_transaction();
+    $transactionOpen = true;
+
+    // Insert event detail before the installation upsert. Crash events carry a
+    // unique hash identity; a duplicate delivery is accepted as a no-op and
+    // must not increment the lifetime crash counter a second time.
+    $eventInserted = true;
+    if ($eventType !== '' && $eventType !== 'heartbeat') {
+        $evStmt = $conn->prepare("INSERT INTO app_telemetry_events (
+            installation_id, event_type, event_data, dedupe_key, app_version, app_build, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        if (!$evStmt) {
+            throw new RuntimeException('Could not prepare telemetry event.');
+        }
+        try {
+            if (!$evStmt->bind_param(
+                'sssssi',
+                $installId, $eventType, $eventData, $crashDedupeKey,
+                $appVersion, $appBuild
+            )) {
+                throw new RuntimeException('Could not bind telemetry event.');
+            }
+            if (!$evStmt->execute()) {
+                $duplicateCrash = $crashDedupeKey !== null && $evStmt->errno === 1062;
+                if (!$duplicateCrash) {
+                    throw new RuntimeException('Could not record telemetry event.');
+                }
+                $eventInserted = false;
+            }
+        } finally {
+            $evStmt->close();
+        }
+    }
+
+    // Maintain the crash-signature companion table (migration 063).
+    // Best-effort by design: if that migration has not been applied yet,
+    // the event itself is still recorded and committed — signature
+    // bookkeeping must never alter the telemetry outcome. A statement-level
+    // failure here does not abort the surrounding transaction.
+    if ($eventInserted && $crashDedupeKey !== null) {
+        try {
+            if ($eventType === 'crash_signature') {
+                $sigStmt = $conn->prepare(
+                    'INSERT INTO app_crash_signatures
+                     (crash_key, signature_class, signature_frames, first_seen_at,
+                      last_seen_at, total_events, app_version_last, app_build_last)
+                     VALUES (?, ?, ?, NOW(), NOW(), 0, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                        signature_class = VALUES(signature_class),
+                        signature_frames = VALUES(signature_frames),
+                        last_seen_at = NOW(),
+                        app_version_last = VALUES(app_version_last),
+                        app_build_last = VALUES(app_build_last)'
+                );
+                if ($sigStmt) {
+                    $framesJson = json_encode($signatureFrames ?? [], JSON_UNESCAPED_UNICODE);
+                    $sigStmt->bind_param(
+                        'ssssi',
+                        $crashDedupeKey,
+                        $signatureClass,
+                        $framesJson,
+                        $appVersion,
+                        $appBuild
+                    );
+                    $sigStmt->execute();
+                    $sigStmt->close();
+                }
+            } elseif ($eventType === 'crash' || $eventType === 'crash_recorded') {
+                $cntStmt = $conn->prepare(
+                    'INSERT INTO app_crash_signatures
+                     (crash_key, signature_class, signature_frames, first_seen_at,
+                      last_seen_at, total_events, app_version_last, app_build_last)
+                     VALUES (?, \'\', NULL, NOW(), NOW(), 1, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                        total_events = total_events + 1,
+                        last_seen_at = NOW(),
+                        app_version_last = VALUES(app_version_last),
+                        app_build_last = VALUES(app_build_last)'
+                );
+                if ($cntStmt) {
+                    $cntStmt->bind_param('ssi', $crashDedupeKey, $appVersion, $appBuild);
+                    $cntStmt->execute();
+                    $cntStmt->close();
+                }
+            }
+
+            // Failure-issue registry (migration 064), same never-throw rules:
+            // a crash identity (or its signature) creates/updates one issue.
+            if (!class_exists('\\App\\Services\\FailureIssueService')) {
+                require_once __DIR__ . '/../../../admin/backend/services/FailureIssueService.php';
+            }
+            if ($eventType === 'crash_signature') {
+                \App\Services\FailureIssueService::recordCrashIssue(
+                    $conn,
+                    $crashDedupeKey,
+                    $signatureClass,
+                    $signatureFrames ?? []
+                );
+            } else {
+                \App\Services\FailureIssueService::recordCrashIssue($conn, $crashDedupeKey, '', []);
+            }
+        } catch (Throwable $ignored) {
+            // Signature aggregation is advisory; never fail the event for it.
+        }
+    }
+
+    // Upsert installation record
+    $incLaunch = ($eventType === 'launch' || $eventType === 'heartbeat') ? 1 : 0;
+    $incSyncSuccess = ($eventType === 'sync_success' || $eventType === 'sync_completed')
+        ? 1
+        : ($eventType === 'sync_pass_completed' ? $syncPassSuccess : 0);
+    $incSyncFail = ($eventType === 'sync_failed' || $eventType === 'sync_error')
+        ? 1
+        : ($eventType === 'sync_pass_completed' ? $syncPassFail : 0);
+    $incCrash = ($eventType === 'crash' || $eventType === 'crash_recorded') && $eventInserted
+        ? 1
+        : 0;
+
+    $stmt = $conn->prepare("INSERT INTO app_installations (
+        installation_id, app_version, app_build, os_version, sdk_int,
+        device_brand, device_model, abi, ram_mb, is_low_ram,
+        launch_count, sync_success_count, sync_fail_count, crash_count,
+        last_role_hint, ip_hash, first_seen_at, last_seen_at
+    ) VALUES (
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, NOW(), NOW()
+    ) ON DUPLICATE KEY UPDATE
+        app_version = VALUES(app_version),
+        app_build = VALUES(app_build),
+        os_version = IF(VALUES(os_version) != '', VALUES(os_version), os_version),
+        sdk_int = IF(VALUES(sdk_int) > 0, VALUES(sdk_int), sdk_int),
+        device_brand = IF(VALUES(device_brand) != '', VALUES(device_brand), device_brand),
+        device_model = IF(VALUES(device_model) != '', VALUES(device_model), device_model),
+        abi = IF(VALUES(abi) != '', VALUES(abi), abi),
+        ram_mb = IF(VALUES(ram_mb) > 0, VALUES(ram_mb), ram_mb),
+        is_low_ram = VALUES(is_low_ram),
+        launch_count = launch_count + ?,
+        sync_success_count = sync_success_count + ?,
+        sync_fail_count = sync_fail_count + ?,
+        crash_count = crash_count + ?,
+        last_role_hint = IF(VALUES(last_role_hint) IS NOT NULL, VALUES(last_role_hint), last_role_hint),
+        ip_hash = VALUES(ip_hash),
+        last_seen_at = NOW()");
+
+    if (!$stmt) {
+        throw new RuntimeException('Could not prepare telemetry heartbeat.');
+    }
+    try {
+        if (!$stmt->bind_param(
+            'ssisisssiiiiiissiiii',
+            $installId, $appVersion, $appBuild, $osVersion, $sdkInt,
+            $deviceBrand, $deviceModel, $abi, $ramMb, $isLowRam,
+            $incLaunch, $incSyncSuccess, $incSyncFail, $incCrash,
+            $roleHint, $ipHash,
+            $incLaunch, $incSyncSuccess, $incSyncFail, $incCrash
+        )) {
+            throw new RuntimeException('Could not bind telemetry heartbeat.');
+        }
+        if (!$stmt->execute()) {
+            throw new RuntimeException('Could not record telemetry heartbeat.');
+        }
+    } finally {
+        $stmt->close();
+    }
+
+    $conn->commit();
+    $transactionOpen = false;
+
+    ok([
+        'recorded' => true,
+        'installation_id' => $installId,
+        'server_time' => date('c'),
+    ]);
+} catch (Throwable $e) {
+    if ($transactionOpen && isset($conn) && $conn instanceof mysqli) {
+        $conn->rollback();
+    }
+    reportInternalError('Telemetry recording error: ' . $e->getMessage());
+    err('Failed to record telemetry.', 500);
+}

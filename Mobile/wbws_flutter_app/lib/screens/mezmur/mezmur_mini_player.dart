@@ -1,0 +1,148 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+
+import '../../services/mezmur_audio_player.dart';
+import '../../services/mezmur_download_manager.dart';
+import '../../utils/config.dart';
+import 'mezmur_player_screen.dart';
+import 'parchment_style.dart';
+
+/// Compact now-playing bar (the pattern used by music apps when the
+/// full player is dismissed while a session is live). Lives in the
+/// app shell so it follows the user to whatever screen they opened.
+/// Tap restores the parchment player; play/pause never leaves the
+/// page they are on. Solid fill (no BackdropFilter) so low-end
+/// phones stay smooth.
+class MezmurMiniPlayer extends StatelessWidget {
+  const MezmurMiniPlayer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = MezmurAudioPlayerController.instance;
+    return AnimatedBuilder(
+      animation: c,
+      builder: (context, _) {
+        if (!c.showMiniPlayer) return const SizedBox.shrink();
+        final track = c.viewTrack;
+        if (track == null) return const SizedBox.shrink();
+        return Material(
+          // Opaque: a translucent fill let the page behind bleed through
+          // and win hit-tests in some stacking contexts.
+          color: const Color(0xFFF3E4C4),
+          elevation: 6,
+          shadowColor: const Color(0x66000000),
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            // P35: a mouse/trackpad produces hover + focus states that a
+            // finger never does, and the default grey overlay on this
+            // light parchment fill made the bar look DISABLED when the
+            // pointer rested on it. Tint the overlays with the bronze
+            // accent instead so pointer input reads as interactive.
+            hoverColor: Parchment.bronze.withValues(alpha: 0.07),
+            focusColor: Parchment.bronze.withValues(alpha: 0.10),
+            highlightColor: Parchment.bronze.withValues(alpha: 0.10),
+            splashColor: Parchment.bronze.withValues(alpha: 0.16),
+            onTap: () => MezmurPlayerScreen.openSession(context),
+            child: SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  const SizedBox(width: 10),
+                  // P66: the hymn's own cover (160px rendition, decoded
+                  // at display size) replaces the generic note glyph —
+                  // the mini bar now identifies the hymn at a glance,
+                  // like every streaming app. No art → the bronze note.
+                  _MiniArt(track: track),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      track.title.isEmpty ? 'መዝሙር' : track.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'NotoSansEthiopic',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        color: Parchment.inkStrong,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: c.playing ? 'Pause' : 'Play',
+                    icon: Icon(
+                      c.playing
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Parchment.inkStrong,
+                    ),
+                    onPressed: c.canPlayControl ? c.toggle : null,
+                  ),
+                  IconButton(
+                    tooltip: 'Close player',
+                    icon: const Icon(Icons.close_rounded,
+                        color: Parchment.inkFaint, size: 20),
+                    onPressed: () {
+                      // P34: closing the bar ENDS the session, matching
+                      // YouTube Music's "dismiss queue" and YouTube's
+                      // miniplayer-close semantics — audio stops, the
+                      // queue is released, the bar goes away. Hiding a
+                      // bar while audio keeps playing leaves the user
+                      // with no way to stop it.
+                      c.stopAndClear();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// P66: 40px rounded cover for the mini bar. Solid, no blur — the bar
+/// is explicitly BackdropFilter-free for low-end phones. A downloaded
+/// hymn prefers its pinned local file so the cover survives offline.
+class _MiniArt extends StatelessWidget {
+  final MezmurTrack track;
+  const _MiniArt({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!track.hasArt) {
+      return const Icon(Icons.music_note_rounded,
+          color: Parchment.bronze, size: 22);
+    }
+    const glyph = Icon(Icons.music_note_rounded,
+        color: Parchment.bronze, size: 22);
+    Widget network() => Image.network(
+          '${AppConfig.siteOrigin}${track.artUrlSmall}',
+          fit: BoxFit.cover,
+          cacheWidth: 80,
+          gaplessPlayback: true,
+          // A broken load must never blank the bar — back to the glyph.
+          errorBuilder: (_, __, ___) => glyph,
+        );
+    final pinned =
+        MezmurDownloadManager.instance.artPathFor(track.hymnId);
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: pinned != null
+            ? Image.file(
+                File(pinned),
+                fit: BoxFit.cover,
+                cacheWidth: 80,
+                gaplessPlayback: true,
+                errorBuilder: (_, __, ___) => network(),
+              )
+            : network(),
+      ),
+    );
+  }
+}

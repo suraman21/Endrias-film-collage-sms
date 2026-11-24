@@ -1,0 +1,144 @@
+name: fkss_app
+description: FKSS Sunday School Management System — Mobile App
+publish_to: 'none'
+version: 1.8.5+48
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # HTTP & API
+  http: ^1.2.0
+
+  # Open tappable links in messages (https:/mailto:/tel:) externally.
+  # First-party Flutter plugin. P1 UX audit B1.
+  url_launcher: ^6.3.2
+
+  # Category cover images — pick from gallery (uploads go through the
+  # same hardened validator as the web manager).
+  image_picker: ^1.1.2
+
+  # Phone radio (Wi‑Fi / 4G / none) — Telegram-style "Waiting for network"
+  connectivity_plus: ^6.1.4
+
+  # App Lock: device biometrics (BiometricPrompt / LocalAuthentication).
+  # Requires FlutterFragmentActivity on Android (MainActivity.kt).
+  local_auth: ^2.2.0
+  
+  # Local storage (for JWT token — encrypted)
+  shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.2.0
+  
+  # State management
+  provider: ^6.1.0
+  
+  # Icons
+  cupertino_icons: ^1.0.6
+  flutter_feather_icons: ^2.0.0+1
+  
+  # Pull to refresh
+  pull_to_refresh_flutter3: ^2.0.2
+  
+  # Loading indicators
+  shimmer: ^3.0.0
+  
+  # Date formatting
+  intl: ^0.19.0
+
+  # QR-scan attendance taking (Phase 8): on-device ML Kit decoding,
+  # works fully offline; scans persist via the sqflite outbox below.
+  mobile_scanner: ^5.2.3
+
+  # Offline cache storage. The local DB is a sandboxed cache of server data;
+  # at-rest protection comes from the OS (app sandbox + device file-based
+  # encryption, the mainstream pattern). Tokens and the staff profile stay in
+  # platform secure storage (flutter_secure_storage above).
+  sqflite: ^2.3.0
+  path: ^1.8.0
+  crypto: ^3.0.3
+
+  # Offline photo capture & sync (P1 foundation / native camera and JPEG / ZIP export)
+  image: ^4.5.3          # Queued-photo thumbnail decoding
+  camera: ^0.12.2
+  flutter_image_compress: ^2.5.1 # Native JPEG compression; avoids blocking the UI on low-end phones
+  uuid: ^4.5.1           # client_op_id + per-install device_id (UUID v4)
+  archive: ^4.0.9        # ZIP packaging for the airlock export (store-only); pinned for image:^4.5.3 compatibility
+  share_plus: ^10.0.2    # Z1 — system share sheet for USB/AirDrop/email handoff
+
+  # Adaptive photo-capture framing (on-device only, no network):
+  # face landmarks drive the eye/head guide; pose landmarks drive the
+  # shoulder guide. Models are bundled into the APK via the
+  # com.google.mlkit.vision.DEPENDENCIES manifest entry so capture
+  # guidance works fully offline. Pose detection is used opportunistically —
+  # the guide degrades to face-based + manual guidance when unavailable.
+  google_mlkit_face_detection: ^1.0.3
+  google_mlkit_pose_detection: ^1.0.3
+
+  # P33 offline downloads: hymn audio is stored under the app-support
+  # directory (survives cache sweeps, excluded from cloud backup) so a
+  # downloaded mezmur plays with the radio off.
+  path_provider: ^2.1.4
+
+  # P0 mezmur audio player — streaming playback with background support.
+  # just_audio is the playback engine; just_audio_background (built on
+  # audio_service) adds the media notification, lock-screen transport +
+  # headset buttons for its single auto-managed player.
+  # audio_service is a DIRECT dependency so its public types (MediaItem,
+  # AudioProcessingState…) resolve in app code, and audio_session lets
+  # us configure the shared session for music (interruptions/ducking).
+  just_audio: ^0.10.6
+  just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.19
+  audio_session: ^0.2.4
+  # Android 13+ will not show the media notification (and therefore no
+  # lock-screen transport) unless POST_NOTIFICATIONS is granted at
+  # runtime; declaring it in the manifest alone is not enough.
+  permission_handler: ^11.3.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+  # A.11 only: runs the production sqflite LocalDb against native SQLite in
+  # Dart tests. This is test-only; Android production continues to use
+  # sqflite/sqflite_android. Pinned to the last FFI release compatible with
+  # the A.10 sqflite_common lock, avoiding unrelated dependency churn.
+  sqflite_common_ffi: 2.3.4+4
+  # sqflite_common_ffi 2.3.4+4 imports sqlite3/open.dart on all analyzer
+  # targets; sqlite3 3.x removed that compatibility entry point. Keep the
+  # native SQLite driver on the compatible 2.x line for this test-only path.
+  sqlite3: 2.9.4
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/
+
+  fonts:
+    - family: NotoSansEthiopic
+      fonts:
+        - asset: assets/fonts/NotoSansEthiopic-Regular.ttf
+        - asset: assets/fonts/NotoSansEthiopic-Bold.ttf
+          weight: 700
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "../app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "../app_icon.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "../splash_logo.png"
+  android_12:
+    image: "../splash_logo.png"
+    color: "#FFFFFF"

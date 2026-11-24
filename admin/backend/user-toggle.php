@@ -1,0 +1,159 @@
+<?php
+/**
+ * User Toggle Status API
+ * Toggle user active/inactive status.
+ *
+ * HARDENING (L1 + F8):
+ *  - CSRF token is now mandatory for this state-changing POST
+ *    (hr-dept / info-dept callers already send it; school_admin.js was
+ *    updated in the same change).
+ *  - Accepts BOTH caller conventions so no dashboard breaks:
+ *      user_id | id            target user
+ *      action  = toggle_status | activate | deactivate
+ *  - Self-lockout prevention: an admin can never deactivate their own
+ *    account through this endpoint.
+ */
+
+require_once __DIR__ . '/config.php';
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    exit;
+}
+
+if (empty($_SESSION['admin_logged_in'])) {
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
+
+
+
+// CSRF protection for this state-changing action.
+requireCsrf();
+
+$userId = (int)($_POST['user_id'] ?? ($_POST['id'] ?? 0));
+$action = $_POST['action'] ?? '';
+
+if (!$userId || !in_array($action, ['toggle_status', 'activate', 'deactivate'], true)) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid parameters']);
+    exit;
+}
+
+// Never allow an admin to deactivate their own account (lockout guard).
+if ($userId === (int)($_SESSION['admin_id'] ?? 0)) {
+    echo json_encode(['status' => 'error', 'message' => 'You cannot change the status of your own account.']);
+    exit;
+}
+
+$currentRole = $_SESSION['admin_role'] ?? '';
+
+// Check permissions - who can toggle which users
+$allowedToToggle = [
+    'super_admin' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'edu_dept', 'finance_dept', 'material_dept', 'mezmur_dept', 'teacher', 'attendance_taker', 'content_editor', 'mezmur_attendance_taker', 'hr_attendance_taker', 'accounts_office'],
+    'school_admin' => ['info_dept', 'hr_dept', 'edu_dept', 'finance_dept', 'material_dept', 'mezmur_dept', 'teacher', 'attendance_taker'],
+    'info_dept' => ['attendance_taker'],
+    'edu_dept' => ['teacher'],
+    'mezmur_dept' => ['attendance_taker'],
+];
+
+// Get target user role
+$stmt = $pdo->prepare("SELECT role, is_active FROM users WHERE id = ?");
+$stmt->execute([$userId]);
+$targetUser = $stmt->fetch();
+
+if (!$targetUser) {
+    echo json_encode(['status' => 'error', 'message' => 'User not found']);
+    exit;
+}
+
+$allowedRoles = $allowedToToggle[$currentRole] ?? [];
+if (!in_array($targetUser['role'], $allowedRoles)) {
+    echo json_encode(['status' => 'error', 'message' => 'You do not have permission to modify this user']);
+    exit;
+}
+
+// Resolve the target status from the requested action.
+switch ($action) {
+    case 'activate':
+        $newStatus = 1;
+        break;
+    case 'deactivate':
+        $newStatus = 0;
+        break;
+    default: // toggle_status
+        $newStatus = $targetUser['is_active'] ? 0 : 1;
+}
+
+if ((int)$targetUser['is_active'] === $newStatus) {
+    echo json_encode([
+        'status' => 'success',
+        'message' => $newStatus ? 'User already active' : 'User already inactive',
+        'new_status' => $newStatus,
+    ]);
+    exit;
+}
+
+// S8: never resurrect a revoked (deactivated) ACM link. All
+// three login gates read only the bit, so a 0→1 flip would
+// let a dead account log in. 1→0 flips stay unguarded
+// (gating is always safe; S7 converges the drift). Re-entry
+// is a FRESH activation ticket, never a revive.
+if ($newStatus === 1) {
+    try {
+        $acmGuard = $pdo->prepare('SELECT status FROM acm_person_accounts WHERE user_id = ? LIMIT 1');
+        $acmGuard->execute([$userId]);
+        if ($acmGuard->fetchColumn() === 'revoked') {
+            echo json_encode(['status' => 'error', 'message' => 'This account was deactivated and cannot be re-enabled; start a fresh activation.']);
+            exit;
+        }
+    } catch (PDOException $e) {
+        // 42S02/42S22: pre-ACM deployment, no link table — proceed.
+        if ($e->getCode() !== '42S02' && $e->getCode() !== '42S22') {
+            echo json_encode(['status' => 'error', 'message' => 'Could not verify account links.']);
+            exit;
+        }
+    }
+}
+
+try {
+    $stmt = $pdo->prepare("UPDATE users SET is_active = ? WHERE id = ?");
+    $stmt->execute([$newStatus, $userId]);
+
+    // S10 (#38): a 1→0 flip is a staff deactivation — enrolled
+    // devices + refresh sessions + open enrollment requests die
+    // with the bit so nothing usable outlives it (the gate
+    // already fails closed on is_active = 0; this removes the
+    // rows instead of leaving them inert). 0→1 flips revive
+    // NOTHING: re-enrollment is a fresh request (S8 precedent).
+    // Each statement is 42S02/42S22-tolerant so pre-ACM/pre-S10
+    // deployments toggle exactly as before.
+    if ($newStatus === 0) {
+        $s10Closures = [
+            "UPDATE acm_devices SET status = 'revoked' WHERE user_id = ? AND status IN ('pending','active')",
+            'UPDATE api_refresh_sessions SET revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP) WHERE user_id = ?',
+            "UPDATE acm_staff_enrollment_requests SET status = 'canceled' WHERE user_id = ? AND status = 'requested'",
+            "UPDATE acm_activation_grants g JOIN acm_staff_enrollment_requests r ON r.grant_id = g.id SET g.revoked_at = COALESCE(g.revoked_at, NOW()), g.revocation_reason = 'staff account deactivated' WHERE r.user_id = ? AND g.revoked_at IS NULL AND g.consumed_at IS NULL",
+        ];
+        foreach ($s10Closures as $sql) {
+            try {
+                $close = $pdo->prepare($sql);
+                $close->execute([$userId]);
+            } catch (PDOException $e) {
+                if ($e->getCode() !== '42S02' && $e->getCode() !== '42S22') {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => $newStatus ? 'User activated' : 'User deactivated',
+        'new_status' => $newStatus
+    ]);
+} catch (Exception $e) {
+    error_log("User toggle error: " . $e->getMessage());
+    echo json_encode(['status' => 'error', 'message' => 'Database error']);
+}

@@ -1,0 +1,50 @@
+# WBSS Flutter App — ProGuard Rules
+
+# ── Flutter Engine ──
+-keep class io.flutter.** { *; }
+-keep class io.flutter.plugins.** { *; }
+
+# ── Flutter Secure Storage ──
+-keep class com.it_nomads.fluttersecurestorage.** { *; }
+
+# ── HTTP client ──
+-keep class org.apache.http.** { *; }
+-dontwarn org.apache.http.**
+
+# ── SQLite (sandboxed local cache; at-rest protected by OS device encryption) ──
+-keep class io.flutter.plugins.sqflite.** { *; }
+
+# ── Google Play Core (Flutter references these for deferred components) ──
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
+-dontwarn com.google.android.play.core.**
+
+# ── Kotlin ──
+-dontwarn kotlin.**
+-dontwarn kotlinx.**
+
+# ── Missing annotations (common R8 warnings) ──
+-dontwarn javax.annotation.**
+-dontwarn org.checkerframework.**
+-dontwarn com.google.errorprone.**
+
+# ── P0 background audio (audio_service + just_audio_background) ──
+# The audio service / media-button receiver are instantiated by the OS from
+# the manifest and reached through the platform channel, so R8 must keep
+# their full class shapes (state machine, reflection-free serialization).
+-keep class com.ryanheise.audioservice.** { *; }
+-dontwarn com.ryanheise.audioservice.**
+-keep class com.ryanheise.just_audio.** { *; }
+-dontwarn com.ryanheise.just_audio.**
+
+# ExoPlayer / media3 keep the manifest-declared playback classes reachable.
+-dontwarn androidx.media3.**
+-keep class androidx.media3.** { *; }
+
+# ── S3 A.8 background sync producer ──
+# BackgroundSyncReceiver is instantiated by the OS from the manifest and
+# BackgroundSyncProducer is reached from it and from the platform channel, so
+# R8 must not rename or remove either. The release build runs minifyEnabled +
+# shrinkResources, so without these an alarm would fire into a stripped class.
+-keep class com.arkeonethiopia.fkss.BackgroundSyncReceiver { *; }
+-keep class com.arkeonethiopia.fkss.BackgroundSyncProducer { *; }

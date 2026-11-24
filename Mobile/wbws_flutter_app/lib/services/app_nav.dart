@@ -1,0 +1,43 @@
+import 'dart:async';
+
+/// Tiny in-app switcher so Home can open the Attendance tab
+/// instead of pushing a second Attendance screen.
+class AppNav {
+  static final AppNav _instance = AppNav._internal();
+  factory AppNav() => _instance;
+  AppNav._internal();
+
+  int? attendanceClassId;
+  DateTime? _lastGradesLoad;
+  DateTime? _lastAttendanceLoad;
+
+  final _tab = StreamController<String>.broadcast();
+  Stream<String> get tabStream => _tab.stream;
+
+  void openAttendance({int? classId}) {
+    attendanceClassId = classId;
+    _tab.add('attendance');
+  }
+
+  /// Request an already-authorized shell tab by id. AppShell ignores ids that
+  /// are absent from the current role/feature scope.
+  void openTab(String id) => _tab.add(id);
+
+  void markAttendanceLoaded() => _lastAttendanceLoad = DateTime.now();
+  void markGradesLoaded() => _lastGradesLoad = DateTime.now();
+
+  /// Drop every shell-local navigation hint before a new authorization scope
+  /// builds its own tabs. No old class id or freshness timestamp may influence
+  /// the replacement shell.
+  void resetForAuthorizationScope() {
+    attendanceClassId = null;
+    _lastGradesLoad = null;
+    _lastAttendanceLoad = null;
+  }
+
+  bool shouldReload(String tab, {Duration freshFor = const Duration(seconds: 90)}) {
+    final last = tab == 'grades' ? _lastGradesLoad : _lastAttendanceLoad;
+    if (last == null) return true;
+    return DateTime.now().difference(last) > freshFor;
+  }
+}

@@ -1,0 +1,62 @@
+# Prevent PHP execution in uploads directory
+# Even if a malicious PHP file gets uploaded, it can't run
+<FilesMatch "\.ph(p[345]?|t|tml)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.ph(p[345]?|t|tml)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Also disable script execution via handler
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# Block access to cache subdirectory entirely
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^cache/ - [F,L]
+</IfModule>
+
+# ── Block direct access to sensitive files ──
+# Private member documents and guardian photos are streamed only by the
+# authenticated /admin/member_file.php controller. Student photos retain their
+# legacy URL contract for browser/mobile compatibility.
+# NOTE (L2): these rules are Apache-only. Nginx deployments MUST replicate
+# them — see docs/OPERATIONS.md section 2.4 — or private files go public.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^members/(docs|guardian_photos)/ - [F,L,NC]
+</IfModule>
+
+# Block backup files (SQL dumps, archives)
+<FilesMatch "\.(sql|gz|tar|bak|dump|sqlite)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Block entire backups directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^backups/ - [F,L]
+</IfModule>
+
+# Final denial wins over any earlier image allow rule. cPanel also executes
+# .php8 / .phtml, and a file.php.jpg can retain a PHP handler on Apache.
+Options -ExecCGI
+<FilesMatch "(?i)\.(?:php[0-9]*|phtml|pht|phar|phps|cgi|pl|py|sh|shtml)(?:\.|$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

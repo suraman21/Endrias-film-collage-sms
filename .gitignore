@@ -1,0 +1,95 @@
+# ============================================================
+# DO NOT COMMIT SECRETS, BACKUPS, LOGS, OR USER UPLOADS
+# ============================================================
+# These contain database credentials, student PII, or grow without
+# bound. They must live on the server, never in version control.
+
+# --- Secrets / environment ---
+.fkss_env.php
+.wbws_env.php
+*_env.php
+.env
+.fkss_app_release.php
+api/v1/app_release.local.php
+
+# --- Phone app packages (never commit APKs — they are large and not source) ---
+*.apk
+releases/
+fkss_releases/
+
+# --- Database backups (contain password hashes + full student PII) ---
+admin/uploads/backups/
+*.sql.gz
+*.sql.bak
+backup_*.sql
+auto_backup_*.sql
+
+# --- Error logs & runtime logs ---
+error.log
+error_log
+*.log
+admin/backend/error_log
+
+# --- Rate-limit / runtime cache (per-IP login data) ---
+admin/uploads/cache/
+
+# --- User-uploaded student files (photos, documents = PII) ---
+admin/uploads/members/
+# Keep denial rules, never uploaded content.
+!admin/uploads/members/
+admin/uploads/members/*
+!admin/uploads/members/docs/
+admin/uploads/members/docs/*
+!admin/uploads/members/docs/.htaccess
+!admin/uploads/members/guardian_photos/
+admin/uploads/members/guardian_photos/*
+!admin/uploads/members/guardian_photos/.htaccess
+uploads/gallery/*
+uploads/teachers/*
+!uploads/gallery/README.txt
+!uploads/teachers/README.txt
+
+# --- Generated QR codes (member card images) ---
+# Keep the directory and its .htaccess tracked so fresh clones/pulls always
+# provision admin/id_cards/assets/qr/ while generated PNGs stay untracked.
+admin/id_cards/assets/qr/*
+!admin/id_cards/assets/qr/.htaccess
+
+# --- Uploaded branding assets (logo, seal, signatures, ID card background) ---
+# Uploaded via Super Admin > Branding & Assets into admin/uploads/branding/
+# so custom uploads never overwrite git-tracked packaged defaults or block git pull.
+admin/uploads/branding/*
+!admin/uploads/branding/.htaccess
+# NOTE: the phpqrcode library's own frame cache
+# (admin/id_cards/libs/phpqrcode/cache/) is intentionally left tracked —
+# it is regenerable but harmless, and untracking it just adds noise.
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# Python test caches
+__pycache__/
+*.pyc
+uploads/mezmur_categories/*
+!uploads/mezmur_categories/.htaccess
+# singer (zemarian) cover images live here too — same rule
+uploads/mezmur_zemarians/*
+!uploads/mezmur_zemarians/.htaccess
+
+# --- Search index files (P0 engine; regenerable + contain PII tokens) ---
+/admin/var/search/*.index
+/admin/var/search/*.index-wal
+/admin/var/search/*.index-shm
+/admin/var/search/*.index-journal
+
+# --- Composer deps (run composer install on deploy) ---
+/vendor/
+
+# --- Patch files / scratch ---
+*.patch
+
+# Disposable large-APK browser fixtures and generated evidence
+/.cache/
+/browser-evidence/

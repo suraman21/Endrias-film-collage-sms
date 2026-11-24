@@ -1,0 +1,80 @@
+<?php
+/**
+ * School API v1 — Database Connection
+ * Loads the main config.php which establishes $conn (mysqli) and $pdo
+ * Also provides helper functions for common DB operations
+ */
+
+// Prevent config.php from starting output buffering or session redirects
+if (!defined('WBWS_API_REQUEST')) {
+    define('WBWS_API_REQUEST', true);
+}
+$_SERVER['SCRIPT_NAME'] = $_SERVER['SCRIPT_NAME'] ?? '/api/v1/index.php';
+
+// Load main config (2 levels up from /api/v1/core/)
+require_once __DIR__ . '/../../../config.php';
+
+$__enrollService = __DIR__ . '/../../../admin/backend/services/EnrollmentService.php';
+if (is_file($__enrollService)) {
+    require_once $__enrollService;
+}
+$__submissionService = __DIR__ . '/../../../admin/backend/services/SubmissionService.php';
+if (is_file($__submissionService)) {
+    require_once $__submissionService;
+}
+$__attendanceRecordService = __DIR__ . '/../../../admin/backend/services/AttendanceRecordService.php';
+if (is_file($__attendanceRecordService)) {
+    require_once $__attendanceRecordService;
+}
+if (is_file(__DIR__ . '/../../../admin/backend/services/AttendanceWarningService.php')) {
+    require_once __DIR__ . '/../../../admin/backend/services/AttendanceWarningService.php';
+}
+
+// Verify connection
+if (!isset($conn) || !$conn || $conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Database connection failed']);
+    exit;
+}
+
+/**
+ * Get current academic year (used by many endpoints)
+ */
+function getCurrentAcademicYear() {
+    global $conn;
+    // Delegates to the central resolver — the ACTIVE year (used for stamping).
+    if (function_exists('ay_active_year')) return ay_active_year($conn);
+    try {
+        $r = $conn->query("SELECT * FROM academic_years WHERE is_current = 1 LIMIT 1");
+        return $r ? $r->fetch_assoc() : null;
+    } catch (Exception $e) { return null; }
+}
+
+/**
+ * Log API activity
+ */
+/** Create / widen grade_submissions. Single source: SubmissionService. */
+function apiEnsureSubmissionsTable(): void
+{
+    $path = __DIR__ . '/../../../admin/backend/services/SubmissionService.php';
+    if (is_file($path)) {
+        require_once $path;
+    }
+    global $conn;
+    if ($conn && class_exists('\\App\\Services\\SubmissionService')) {
+        \App\Services\SubmissionService::ensureTable($conn);
+    }
+}
+
+function logApiAction($userId, $username, $action, $details = '') {
+    global $conn;
+    try {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, username, action, details, ip_address) VALUES (?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('issss', $userId, $username, $action, $details, $ip);
+            $stmt->execute();
+            $stmt->close();
+        }
+    } catch (Exception $e) { /* don't break API for logging failure */ }
+}

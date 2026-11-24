@@ -1,0 +1,125 @@
+<?php
+/**
+ * Sample ID card for the designer. Dummy names only — no real member PII.
+ */
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/libs/eth_date_helper.php';
+require_once __DIR__ . '/../backend/services/IdCardLayout.php';
+
+$role = (string)($_SESSION['admin_role'] ?? '');
+if (!in_array($role, ['super_admin', 'school_admin'], true)) {
+    http_response_code(403);
+    echo 'Not allowed.';
+    exit;
+}
+
+$side = ($_GET['side'] ?? 'front') === 'back' ? 'back' : 'front';
+$layout = \App\Services\IdCardLayout::load($conn);
+$idCardBg = \App\Services\IdCardLayout::background($conn);
+$ID_CARD_STYLE = \App\Services\IdCardLayout::cssVars($layout, $idCardBg);
+$ID_CARD_LAYOUT = $layout;
+$ID_CARD_SIDE = $side;
+
+$CONFIG = [
+    'logo'      => \App\Services\BrandingAssetService::assetUrl($conn, 'logo', '', true),
+    'seal'      => \App\Services\BrandingAssetService::assetUrl($conn, 'seal', '', true),
+    'sig_head'  => \App\Services\BrandingAssetService::assetUrl($conn, 'sig_head', '', true),
+    'sig_admin' => \App\Services\BrandingAssetService::assetUrl($conn, 'sig_admin', '', true),
+];
+
+$member = [
+    'gender' => 'male',
+    'member_code' => '69711',
+    'phone_number' => '+251911000000',
+    'address' => 'Addis Ababa, Bole',
+    'student_photo_path' => '',
+    'qr_code_path' => '',
+    'emergency_name' => 'መስፍን ታደሰ',
+    'emergency_phone' => '+251922000000',
+];
+$full_name = 'መስፍን መስፍን መስፍን';
+$christian_name = 'መስፍን';
+$age = 18;
+$issueDateEth = 'ሰኔ 12 ቀን 2018 ዓ.ም';
+$expiryDateEth = 'ሰኔ 12 ቀን 2022 ዓ.ም';
+$DISPLAY = [
+    'logo_size' => (int)$layout['logo_size'],
+    'logo_opacity' => (int)$layout['logo_opacity'],
+    'seal_size' => (int)$layout['seal_size'],
+    'seal_opacity' => (int)$layout['seal_opacity'],
+    'sig_head_size' => (int)$layout['sig_head_size'],
+    'sig_head_opacity' => (int)$layout['sig_head_opacity'],
+    'sig_admin_size' => (int)$layout['sig_admin_size'],
+    'sig_admin_opacity' => (int)$layout['sig_admin_opacity'],
+];
+?>
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ID preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="/admin/css/id_card.css?v=20260823c">
+<style>
+html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+</style>
+</head>
+<body>
+<?php include __DIR__ . '/id_card_template_layout.php'; ?>
+<script>
+(function () {
+    var edit = <?= json_encode(($_GET['edit'] ?? '') === '1') ?>;
+    if (edit) {
+        document.querySelectorAll('.id-card-template').forEach(function (el) {
+            el.classList.add('idc-edit');
+        });
+        document.body.addEventListener('click', function (e) {
+            var hit = e.target.closest('[data-idc]');
+            if (!hit) return;
+            e.preventDefault();
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'id-pick', id: hit.getAttribute('data-idc') }, window.location.origin);
+            }
+        });
+    }
+    function mark(id) {
+        document.querySelectorAll('[data-idc]').forEach(function (el) {
+            el.classList.toggle('idc-on', id && el.getAttribute('data-idc') === id);
+        });
+    }
+    window.addEventListener('message', function (e) {
+        if (e.origin !== window.location.origin) return;
+        if (!e.data || e.data.type !== 'id-layout') return;
+        var style = e.data.style || '';
+        document.querySelectorAll('.id-card-template').forEach(function (el) {
+            el.setAttribute('style', style);
+            if (edit) el.classList.add('idc-edit');
+        });
+        if (e.data.bg) {
+            document.querySelectorAll('.id-card-bg').forEach(function (el) {
+                el.style.backgroundImage = 'url(' + e.data.bg + ')';
+            });
+        }
+        if (e.data.pick) mark(e.data.pick);
+        if (e.data.texts && typeof e.data.texts === 'object') {
+            Object.keys(e.data.texts).forEach(function (k) {
+                document.querySelectorAll('[data-idc-text="' + k + '"]').forEach(function (el) {
+                    // Remember the server-rendered text once. An empty value means
+                    // "use the school default" on the real card
+                    // (id_card_template_layout.php), so show that default here too
+                    // instead of blanking the piece (front footer, back disclaimer).
+                    if (el.getAttribute('data-idc-default') === null) {
+                        el.setAttribute('data-idc-default', el.textContent);
+                    }
+                    var v = e.data.texts[k];
+                    v = (v === undefined || v === null) ? '' : String(v);
+                    el.textContent = v.trim() !== '' ? v : el.getAttribute('data-idc-default');
+                });
+            });
+        }
+    });
+})();
+</script>
+</body>
+</html>

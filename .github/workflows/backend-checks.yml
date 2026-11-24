@@ -1,0 +1,716 @@
+# Backend checks: PHP syntax, isolated security/regression fixtures, mobile
+# tests/build and migration hygiene. This workflow checks code; it does not
+# deploy or use production credentials. Database-backed tests use the disposable
+# MariaDB service below and the guarded synthetic HTTP world.
+#
+# Current setup, zero-skip policy and evidence boundaries:
+# docs/DEVELOPMENT_AND_TESTING.md and docs/TEST_STRATEGY.md.
+# The historical nonexecuting workflow template is retired; do not copy an old
+# text-file proposal into .github/workflows/ to activate duplicate/stale jobs.
+
+name: Backend checks
+
+on:
+  push:
+    # audit/** is included so remediation branches get a real run before they
+    # are merged. Finding L was that this workflow had never executed once:
+    # the GitHub API reported 0 registered workflows and 0 Actions runs in
+    # this repository's entire history.
+    branches: [main, 'audit/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php-lint:
+    name: PHP syntax (php -l)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Production runs PHP 8.4.25 (confirmed by the database export
+          # banner). Linting on 8.2 cannot see syntax that 8.4 rejects.
+          php-version: '8.4'
+          coverage: none
+
+      - name: Lint every first-party PHP file
+        run: |
+          set -uo pipefail
+          status=0
+          count=0
+          # Vendored and third-party trees are excluded: they are not ours to
+          # fix and phpqrcode in particular targets an older PHP.
+          while IFS= read -r file; do
+            count=$((count + 1))
+            if ! out=$(php -l "$file" 2>&1); then
+              echo "::error file=${file}::${out}"
+              status=1
+            fi
+          done < <(git ls-files '*.php' \
+                     | grep -v '^vendor/' \
+                     | grep -v '/vendor/' \
+                     | grep -v 'id_cards/libs/')
+          echo "Linted ${count} PHP files."
+          if [ "$count" -lt 250 ]; then
+            echo "::error::Only ${count} files were linted; the file list looks wrong."
+            exit 1
+          fi
+          exit $status
+
+  php-lint-85:
+    name: PHP 8.5 syntax and deprecations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          # Production was observed running PHP 8.5 from 2026-10-23 (error-log
+          # deprecation notices). Lint on 8.5 as well, and fail on compile-time
+          # deprecations so they are caught before they reach the server log.
+          php-version: '8.5'
+          coverage: none
+
+      - name: Lint every first-party PHP file on 8.5
+        run: |
+          set -uo pipefail
+          status=0
+          count=0
+          while IFS= read -r file; do
+            count=$((count + 1))
+            if ! out=$(php -d error_reporting=-1 -d display_errors=1 -l "$file" 2>&1); then
+              echo "::error file=${file}::${out}"
+              status=1
+            elif printf '%s' "$out" | grep -q 'Deprecated: '; then
+              echo "::error file=${file}::${out}"
+              status=1
+            fi
+          done < <(git ls-files '*.php' \
+                     | grep -v '^vendor/' \
+                     | grep -v '/vendor/' \
+                     | grep -v 'id_cards/libs/')
+          echo "Linted ${count} PHP files on PHP $(php -r 'echo PHP_VERSION;')."
+          if [ "$count" -lt 250 ]; then
+            echo "::error::Only ${count} files were linted; the file list looks wrong."
+            exit 1
+          fi
+          exit $status
+
+  security-tests:
+    name: Security and regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # WHY A DATABASE SERVICE
+    # Without one, every database-backed test in tests/security calls
+    # unittest.SkipTest and the job still reports green. That is the exact
+    # false green that hid finding P for two audit cycles: 13 comm e2e tests
+    # self-skipped, the badge stayed green, and a production fatal shipped.
+    # A skipped test is an unverified claim, not a pass.
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: ssms_comm_e2e
+          MARIADB_USER: ssms
+          MARIADB_PASSWORD: ssms
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mysqli, pdo_mysql, pdo_sqlite, mbstring, gd, curl, xml, zip
+          coverage: none
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip pytest pytest-subtests openpyxl
+          sudo apt-get update -qq
+          sudo apt-get install -y mariadb-client
+          # Legacy guards use sudo mariadb with no host. Bridge that client
+          # to this job's disposable container, not a nonexistent local socket.
+          printf '[client]\nhost=127.0.0.1\nprotocol=tcp\nuser=root\npassword=root\n' | sudo tee /root/.my.cnf >/dev/null
+          sudo chmod 600 /root/.my.cnf
+
+      - name: Report the versions under test
+        run: |
+          php -v | head -1
+          python --version
+          node --version
+          mysql -h 127.0.0.1 -u ssms -pssms -e 'SELECT VERSION() AS mariadb;' || true
+
+      - name: Wait for MariaDB
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 45); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u ssms -pssms --silent 2>/dev/null; then
+              echo "MariaDB ready after ${i}s."
+              mysql -h 127.0.0.1 -u ssms -pssms -e 'SELECT VERSION();'
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::MariaDB never became ready."
+          exit 1
+
+      - name: Create test databases
+        run: |
+          set -euo pipefail
+          # The container provisions MARIADB_USER with rights on
+          # MARIADB_DATABASE only, so the service user cannot create the
+          # other two databases (run #1 failed here with errno 1044).
+          # Create them as root and grant explicitly.
+          # ssms_pre056_e2e holds a deliberately PRE-migration-056 schema,
+          # the shape production actually had. tests/security/
+          # test_schema_conformance.py drives the tracking endpoints against
+          # it so a query naming a column production lacks fails in CI
+          # instead of in production.
+          # ssms_idem_e2e is the disposable target for
+          # tests/e2e/idempotency_lifecycle.php, which DROPs and re-creates
+          # its own tables on every scenario. It must never be shared with
+          # another harness.
+          # ssms_calendar_e2e is the disposable target for
+          # tests/security/test_attendance_offline_calendar.py, which also
+          # DROPs and re-creates its own tables for every test.
+          for db in ssms_comm_e2e ssms_e2e ssms_smoke ssms_pre056_e2e ssms_idem_e2e ssms_calendar_e2e ssms_test; do
+            mysql -h 127.0.0.1 -u root -proot \
+              -e "CREATE DATABASE IF NOT EXISTS \`$db\` \
+                    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+                  GRANT ALL PRIVILEGES ON \`$db\`.* TO 'ssms'@'%';"
+          done
+          mysql -h 127.0.0.1 -u root -proot -e "FLUSH PRIVILEGES;"
+          mysql -h 127.0.0.1 -u ssms -pssms -e "SHOW DATABASES;"
+
+      - name: Provision a test-only .fkss_env.php
+        run: |
+          set -euo pipefail
+          # .fkss_env.php is gitignored and holds real credentials in a
+          # deployment. The harnesses require it, so CI generates a throwaway
+          # one pointing at the service container. These values are
+          # placeholders and are used nowhere else.
+          cat > .fkss_env.php <<'EOF'
+          <?php
+          define('DB_HOST', '127.0.0.1');
+          define('DB_NAME', getenv('SSMS_DB_NAME') ?: 'ssms_comm_e2e');
+          define('DB_USER', 'ssms');
+          define('DB_PASS', 'ssms');
+          define('JWT_SECRET', 'ci-only-not-a-real-secret');
+          define('BACKUP_KEY', 'ci-only-not-a-real-secret');
+          define('HEALTH_KEY', 'ci-only-not-a-real-secret');
+          define('MONITOR_SECRET_KEY', 'ci-only-not-a-real-secret');
+          // Enable only in this disposable integration world; deployment default stays off.
+          if (!defined('FEATURE_ATTENDANCE_V2')) define('FEATURE_ATTENDANCE_V2', DB_NAME === 'ssms_test');
+          EOF
+          php -l .fkss_env.php
+
+      - name: Provision and start the isolated live-guard world
+        env:
+          SSMS_AUDIT_TESTING: '1'
+          SSMS_DB_NAME: ssms_test
+          TZ: Africa/Addis_Ababa
+        run: |
+          set -euo pipefail
+          sudo mariadb -e "SET GLOBAL time_zone='+03:00';"
+          bash tests/e2e/provision_env.sh
+          php -d error_reporting=24575 tests/e2e/live_guard_seed.php
+          PHP_CLI_SERVER_WORKERS=8 php -d error_reporting=24575 \
+            -S 127.0.0.1:8080 -t . tests/e2e/live_guard_router.php \
+            > /tmp/ssms-live-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/admin/index.php >/dev/null; then
+              curl --fail --silent http://127.0.0.1:8080/api/v1/ping
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/ssms-live-server.log
+          exit 1
+
+      - name: Run tests/security
+        env:
+          SSMS_DB_NAME: ssms_comm_e2e
+          SSMS_AUDIT_TESTING: '1'
+          SSMS_LIVE_GUARDS: '1'
+          TZ: Africa/Addis_Ababa
+        run: |
+          set -uo pipefail
+          # -rs reports every skip with its reason so the gate below can count
+          # them and a human can see which test opted out.
+          python -m pytest tests/security -q -rs --durations=10 \
+            2>&1 | tee /tmp/pytest.out
+          rc="${PIPESTATUS[0]}"
+          echo "pytest exit=${rc}"
+          exit "$rc"
+
+      - name: Fail if any test skipped
+        if: always()
+        run: |
+          set -uo pipefail
+          if [ ! -f /tmp/pytest.out ]; then
+            echo "::error::pytest produced no output; treating as failure."
+            exit 1
+          fi
+          skipped=$(grep -oE '[0-9]+ skipped' /tmp/pytest.out | head -1 \
+                      | grep -oE '[0-9]+' || echo 0)
+          echo "Skipped tests: ${skipped}"
+          if [ "${skipped}" -gt 0 ]; then
+            echo "::error::${skipped} test(s) skipped. A skipped test is an unverified claim - 13 self-skipping e2e tests concealed a production fatal (finding P) for two audit cycles. Fix the environment so the test runs, or remove the test deliberately."
+            grep -E '^SKIPPED' /tmp/pytest.out || true
+            exit 1
+          fi
+          echo "No tests skipped."
+
+      - name: F-20 idempotency lifecycle (real MariaDB)
+        # The "Create test databases" step above provisions ssms_idem_e2e and
+        # its comment names this harness as the reason - but no step ever ran
+        # it. The database was being created for nobody, and F-20's 67 checks
+        # were only ever verified by hand on a developer machine. That is the
+        # same shape as finding P: infrastructure that looks like coverage
+        # while verifying nothing.
+        #
+        # This harness DROPs and re-creates its tables, which is why it
+        # refuses to start unless SSMS_AUDIT_TESTING is exactly 1, and why it
+        # is pointed at the disposable ssms_idem_e2e rather than the shared
+        # comm database.
+        env:
+          SSMS_AUDIT_TESTING: '1'
+          SSMS_DB_NAME: ssms_idem_e2e
+        run: |
+          set -uo pipefail
+          php tests/e2e/idempotency_lifecycle.php all 2>&1 | tee /tmp/idem.out
+          rc=${PIPESTATUS[0]}
+          verdict=$(grep -oE 'E2E-VERDICT: [A-Z]+ \([a-z]+: [0-9]+ checks\)' /tmp/idem.out | tail -1)
+          if [ -z "$verdict" ]; then
+            echo "::error::The F-20 harness produced no verdict line; treating as failure."
+            exit 1
+          fi
+          echo "$verdict"
+          case "$verdict" in
+            *PASS*) ;;
+            *) echo "::error::F-20 idempotency lifecycle failed."; exit 1 ;;
+          esac
+          [ "$rc" -eq 0 ] || { echo "::error::harness exited ${rc}"; exit 1; }
+
+  flutter-tests:
+    # S0.5. The mobile offline/sync/session state machine is the most
+    # concurrency-sensitive code in the product and had never been executed by
+    # CI: 35 test files / 478 test cases existed and none of them ran. The S0
+    # audit recorded that as finding F-05.
+    #
+    # Version choice: pubspec.yaml declares a floor of flutter >=3.27.0, but
+    # pubspec.lock was resolved against flutter >=3.44.0 / dart >=3.12.0.
+    # The lock wins — installing the pubspec floor cannot resolve these
+    # packages. 3.44.9 is the newest patch of the 3.44 series the lock was
+    # built from, so this pins the series without taking a minor upgrade.
+    #
+    # A.10 closes F-19 by committing the lockfile generated with Flutter
+    # 3.44.9 / Dart 3.12.2. Both mobile jobs use --enforce-lockfile and then
+    # assert that pubspec.yaml and pubspec.lock stayed byte-identical. A
+    # missing or stale lock entry therefore fails CI instead of being repaired
+    # ephemerally on the runner.
+    #
+    # No emulator, no Android SDK, no secrets, no network fixtures and no
+    # database: every test under test/ is pure Dart or a widget test.
+    name: Flutter unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: Mobile/wbws_flutter_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.9
+          channel: stable
+          cache: true
+
+      - name: Toolchain versions
+        run: flutter --version
+
+      - name: Resolve dependencies with the committed lockfile
+        run: flutter pub get --enforce-lockfile
+
+      - name: Verify the dependency files stayed unchanged
+        run: git diff --exit-code -- pubspec.yaml pubspec.lock
+
+      - name: Run the existing test suite
+        run: flutter test --reporter expanded
+
+  acm-contracts:
+    # S2. The ACM package (acm/src, SSMS\Acm) proves its PSR-4 mapping
+    # and its authorization-seam parity here. Non-DB only: the services
+    # use MySQL-isms (FOR UPDATE, ON DUPLICATE KEY), so behavior stays
+    # pinned by tests/security statics plus the dev E2E walkthrough.
+    name: ACM package contracts (PHPUnit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.json platform pin. Lint on 8.4/8.5 stays in the
+          # php-lint jobs, which pick up acm/**/*.php automatically.
+          php-version: '8.2'
+          # S4: DeviceCrypto round-trips real ECDSA in PHPUnit.
+          extensions: openssl
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: |
+          set -euo pipefail
+          # TEMPORARY (S2): composer.json gains the SSMS\Acm PSR-4 mapping
+          # and the phpunit dev dependency, but composer.lock + vendor/ are
+          # regenerated on a composer-equipped dev machine (tracked-vendor
+          # model) — the sandbox cannot do it. Until that commit lands, the
+          # runner updates ephemerally. Afterwards this MUST become
+          # `composer install --frozen-lockfile` plus a
+          # `git diff --exit-code -- composer.lock vendor/composer` check.
+          composer update --no-interaction --prefer-dist --no-progress
+
+      - name: PSR-4 smoke test
+        run: |
+          set -euo pipefail
+          php -r 'require "vendor/autoload.php";
+            foreach (["SSMS\\Acm\\Policy\\AcmPolicy", "SSMS\\Acm\\Identity\\AcmPersonService", "SSMS\\Acm\\Accounts\\AcmTicketService", "SSMS\\Acm\\Office\\AcmOfficeService", "SSMS\\Acm\\Policy\\PolicyAuthorizer"] as $c) {
+              if (!class_exists($c)) { fwrite(STDERR, "missing $c\n"); exit(1); }
+            }
+            foreach (["SSMS\\Acm\\Contracts\\Authorizer", "SSMS\\Acm\\Contracts\\ActivationService"] as $i) {
+              if (!interface_exists($i)) { fwrite(STDERR, "missing $i\n"); exit(1); }
+            }
+            echo "PSR-4 smoke OK\n";'
+
+      - name: Run ACM PHPUnit suite
+        run: ./vendor/bin/phpunit -c acm/phpunit.xml
+
+  migration-hygiene:
+    name: Migration numbering
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No new duplicate migration numbers
+        run: python3 scripts/check_migration_numbering.py
+
+      - name: Migrations are not silently destructive
+        run: |
+          set -uo pipefail
+          # A migration may legitimately drop things, but a bare DELETE or
+          # TRUNCATE against a user-data table is how duplicate-row cleanups
+          # get smuggled in. Audit finding H: those are deployment decisions,
+          # not migration steps.
+          hits=$(grep -rniE '^[[:space:]]*(TRUNCATE|DELETE[[:space:]]+FROM)' sql/*.sql || true)
+          if [ -n "$hits" ]; then
+            echo "::warning::Destructive statement(s) found in migrations:"
+            echo "$hits"
+          fi
+          echo "Scan complete."
+
+  android-build:
+    # S3 A.9. A.8 shipped a native Android background-sync producer whose
+    # Kotlin had never been compiled by anything: there is no Android SDK or
+    # Gradle in the dev sandbox, and this workflow's only mobile job was
+    # `flutter test`, which compiles Dart and nothing else. Every A.8 claim
+    # about Kotlin was therefore source-verified only, and the A.8 report had
+    # to say so in those words.
+    #
+    # This job is the authority that closes that gap. It compiles
+    # BackgroundSyncProducer.kt, BackgroundSyncReceiver.kt, the MainActivity
+    # channel registration, the AndroidManifest receiver declaration and the
+    # whole Dart tree into a real debug APK, so a Kotlin syntax error, a wrong
+    # Flutter embedding API, a bad MethodChannel signature, a manifest mistake
+    # or a Gradle misconfiguration fails here instead of on a phone.
+    #
+    # WHY NO GRADLE WRAPPER IS COMMITTED. `android/.gitignore` excludes
+    # gradlew, gradlew.bat and gradle-wrapper.jar — that is the stock
+    # `flutter create` template, not a defect. flutter_tools injects them from
+    # its own cache on every build: GradleUtils.getExecutable() calls
+    # injectGradleWrapperIfNeeded(), which copies the wrapper with
+    # `shouldCopyFile: !destinationFile.existsSync()` and then returns early if
+    # gradle-wrapper.properties already exists. Ours does exist and pins Gradle
+    # 8.14.3, so the pin is preserved and Flutter's own
+    # templateDefaultGradleVersion is NOT substituted. Committing a binary jar
+    # obtained out-of-band would be strictly worse supply-chain posture for no
+    # benefit. The first step below proves the checkout really is wrapper-less.
+    #
+    # Android runtime behaviour is still NOT verified by this job. It compiles
+    # and packages; it does not run. No emulator, no device, no alarm fires.
+    name: Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: Mobile/wbws_flutter_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prove this is a genuinely clean, wrapper-less checkout
+        run: |
+          set -euo pipefail
+          # If any of these ever start existing, the premise of this job has
+          # changed and the reasoning above must be revisited.
+          for absent in android/gradlew android/gradlew.bat \
+                        android/gradle/wrapper/gradle-wrapper.jar \
+                        android/local.properties; do
+            if [ -e "$absent" ]; then
+              echo "::error::$absent is present in the checkout; A.9 assumed it was not."
+              exit 1
+            fi
+          done
+          test -f android/gradle/wrapper/gradle-wrapper.properties
+          grep -q 'gradle-8.14.3-all.zip' android/gradle/wrapper/gradle-wrapper.properties
+          echo "Clean checkout confirmed: no wrapper, no local.properties, Gradle 8.14.3 pinned."
+
+      - name: Reclaim unrelated hosted-runner disk space
+        # Private runners exhausted disk while combining debug/release native
+        # transforms. Remove only unused preinstalled tool families, never the
+        # checkout, Android SDK/NDK, JDK, Flutter, Gradle or PowerShell.
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_ACTIONS:-}" != "true" || "${RUNNER_ENVIRONMENT:-}" != "github-hosted" || "${RUNNER_OS:-}" != "Linux" ]]; then
+            echo "::error::Disk cleanup is restricted to Linux GitHub-hosted runners."
+            exit 1
+          fi
+          df -h "$GITHUB_WORKSPACE"
+          sudo rm -rf -- /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+
+      - name: Set up JDK 17
+        # flutter_tools 3.44.9 sets errorJavaMinVersionAndroid = 17.0.0, and
+        # AGP 8.11.1 requires JDK 17+. Pinned rather than inherited so a runner
+        # image bump cannot silently change the toolchain.
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Identical to the flutter-tests job. Not an upgrade: pubspec.lock
+          # was resolved against flutter >=3.44.0 and 3.44.9 is the newest
+          # patch of that series, so this pins the series without taking a
+          # minor bump. A.9 does not change the project's Flutter requirement.
+          flutter-version: 3.44.9
+          channel: stable
+          cache: true
+
+      - name: Toolchain versions
+        run: |
+          flutter --version
+          java -version
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset}"
+
+      - name: Resolve dependencies with the committed lockfile
+        run: flutter pub get --enforce-lockfile
+
+      - name: Verify the dependency files stayed unchanged
+        run: git diff --exit-code -- pubspec.yaml pubspec.lock
+
+      - name: Install the exact SDK components this project pins
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          SDKMANAGER="$(command -v sdkmanager || echo "$SDK/cmdline-tools/latest/bin/sdkmanager")"
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          # ndk;26.1.10909125 is pinned in app/build.gradle with a documented
+          # rationale (P47 broke on 27.0.12077973). Installed explicitly so the
+          # build never depends on whatever NDK the runner image happens to
+          # ship. platform/build-tools 36 match flutter_tools 3.44.9's
+          # compileSdkVersion = 36 and targetSdkVersion = 36.
+          "$SDKMANAGER" --install \
+            "ndk;26.1.10909125" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Cache Gradle
+        # Only ~/.gradle, which lives OUTSIDE the repository. The in-repo
+        # android/.gradle and the injected wrapper are deliberately NOT cached:
+        # caching those would let a stale configuration mask exactly the errors
+        # this job exists to catch.
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('Mobile/wbws_flutter_app/android/**/*.gradle', 'Mobile/wbws_flutter_app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Generate android/local.properties
+        # Machine-specific and correctly gitignored, so it is written here
+        # rather than committed. No developer's local Windows path and no
+        # hard-coded SDK path ever enters source control.
+        run: |
+          set -euo pipefail
+          FLUTTER_SDK="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          printf 'sdk.dir=%s\nflutter.sdk=%s\n' "$SDK" "$FLUTTER_SDK" > android/local.properties
+          cat android/local.properties
+
+      - name: Build the debug APK
+        # Retain debug compilation and receiver checks below. The additional
+        # release-mode artifact gate separately exercises R8/native packaging;
+        # CI has no owner keystore and does not publish either APK.
+        run: flutter build apk --debug
+
+      - name: Confirm the wrapper was injected rather than committed
+        run: |
+          set -euo pipefail
+          test -f android/gradlew
+          test -f android/gradle/wrapper/gradle-wrapper.jar
+          grep -q 'gradle-8.14.3-all.zip' android/gradle/wrapper/gradle-wrapper.properties
+          # They must still be untracked: injection is a build-time act, and
+          # nothing here may quietly add a binary to the repository.
+          if ! git status --porcelain -- android | grep -q .; then
+            echo "Wrapper injected and correctly ignored by git."
+          else
+            git status --porcelain -- android
+            echo "::error::The build left tracked changes under android/."
+            exit 1
+          fi
+
+      - name: Prove the A.8 producer is inside the built APK
+        # The point of A.9 is not that *an* APK built, but that the A.8
+        # implementation is in it. The receiver is read back out of the
+        # packaged binary manifest.
+        run: |
+          set -euo pipefail
+          APK=build/app/outputs/flutter-apk/app-debug.apk
+          ls -l "$APK"
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          AAPT2="$(ls "$SDK"/build-tools/*/aapt2 | sort -V | tail -1)"
+          "$AAPT2" dump xmltree --file AndroidManifest.xml "$APK" > /tmp/manifest.txt
+          grep -q 'BackgroundSyncReceiver' /tmp/manifest.txt
+          grep -q 'com.arkeonethiopia.fkss.action.BACKGROUND_SYNC' /tmp/manifest.txt
+          echo "BackgroundSyncReceiver and its action are present in the packaged manifest."
+
+          # The receiver must stay private. A.8's threat model depends on it:
+          # an exported receiver would let any app on the device trigger a sync.
+          if grep -A6 'BackgroundSyncReceiver' /tmp/manifest.txt | grep -q 'exported.*0xffffffff'; then
+            echo "::error::BackgroundSyncReceiver is exported in the built APK."
+            exit 1
+          fi
+          echo "Receiver is not exported in the packaged manifest."
+
+          # The build succeeding already proves the Kotlin compiled, but read
+          # the classes back out of the dex so the artifact itself is the
+          # evidence rather than the build log.
+          mkdir -p /tmp/dex && unzip -o -q "$APK" 'classes*.dex' -d /tmp/dex
+          for cls in BackgroundSyncProducer BackgroundSyncReceiver MainActivity; do
+            if grep -aq "Lcom/arkeonethiopia/fkss/$cls;" /tmp/dex/classes*.dex; then
+              echo "  dex contains com.arkeonethiopia.fkss.$cls"
+            else
+              echo "::error::$cls is missing from the APK's dex."
+              exit 1
+            fi
+          done
+
+          # A.8 added exactly zero permissions. The merged manifest carries
+          # more than the app declares because plugin manifests merge in, so
+          # list them by name instead of asserting a bare count.
+          echo "--- uses-permission in the merged APK manifest ---"
+          "$AAPT2" dump permissions "$APK" | grep "uses-permission:" \
+            | sed "s/.*name='//;s/'.*//" | sort | tee /tmp/perms.txt
+          echo "total: $(wc -l < /tmp/perms.txt)   declared by the app: 9"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml
+          coverage: none
+
+      - name: Record selected native SDK versions
+        run: |
+          set -euo pipefail
+          ./android/gradlew -p android :app:dependencyInsight \
+            --configuration releaseRuntimeClasspath --dependency com.google.mlkit:barcode-scanning \
+            > build/barcode-native-dependency.txt
+          ./android/gradlew -p android :app:dependencyInsight \
+            --configuration releaseRuntimeClasspath --dependency androidx.camera \
+            > build/camera-native-dependencies.txt
+
+      - name: Exercise owner release script with universal and ARM splits (CI test signing only)
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -SplitPerAbi
+
+      - name: Verify actual release-set identity and PHP architecture publication guards
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          python ../../tests/e2e/android_release_artifacts.py "dist/$VERSION" \
+            --report build/android-release-set.json --summary "$GITHUB_STEP_SUMMARY"
+          git diff --exit-code -- pubspec.yaml pubspec.lock android
+
+      # Owner-approved storage policy: actual verification is mandatory above.
+      # Public dev archives CI builds; private prod retains full logs/summary,
+      # not duplicate APK archives. Unknown visibility fails closed.
+      - name: Preserve release artifact compatibility evidence (not a publishable release)
+        if: always() && github.event.repository.visibility == 'public'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-compatibility-evidence
+          path: |
+            Mobile/wbws_flutter_app/dist/**/*.compatibility.json
+            Mobile/wbws_flutter_app/dist/**/release-manifest.json
+            Mobile/wbws_flutter_app/build/android-release-set.json
+            Mobile/wbws_flutter_app/build/*native-dependenc*.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Preserve CI-test-signed release APKs for native inspection, never publication
+        if: always() && github.event.repository.visibility == 'public'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-ci-test-signed-apks-not-for-publication
+          path: |
+            Mobile/wbws_flutter_app/build/app/outputs/flutter-apk/app-release.apk
+            Mobile/wbws_flutter_app/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            Mobile/wbws_flutter_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload the debug APK
+        if: success() && github.event.repository.visibility == 'public'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: Mobile/wbws_flutter_app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
