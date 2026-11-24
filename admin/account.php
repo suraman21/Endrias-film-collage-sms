@@ -14,8 +14,6 @@ $supportedProfileRoles = [
     'school_admin',
     'info_dept',
     'edu_dept',
-    'finance_dept',
-    'material_dept',
     'hr_dept',
     'admissions_registrar_dept',
     'teacher',

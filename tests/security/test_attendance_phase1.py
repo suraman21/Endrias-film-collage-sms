@@ -38,7 +38,8 @@ USERS = {
     "hr_dept": "audit_hr",
     "info_dept": "audit_info",
     "edu_dept": "audit_edu",
-    "teacher": "audit_teach": "audit_mez",
+    "teacher": "audit_teach",
+    "mezmur_attendance_taker": "audit_mez",
 }
 
 

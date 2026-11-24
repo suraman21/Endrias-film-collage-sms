@@ -42,7 +42,7 @@ print(raw)')
 [ "$XS" = "0" ] && ok "edu_dept.php: no raw XSS payload (canary class)" || fail "$XS raw XSS payload occurrences"
 
 # --- 2. All roles can log in -----------------------------------------------
-for U in audit_super audit_teach audit_fin; do
+for U in audit_super audit_teach; do
   CODE=$(ssms_login "$U" | awk '{print $1}')
   [ "$CODE" = "302" ] && ok "login $U" || fail "login $U ($CODE)"
 done
@@ -664,13 +664,13 @@ P36CNT=$(sudo -n mariadb -N ssms -e "SELECT COUNT(*) FROM mezmur_zemarians WHERE
 [ "$P36CNT" = "1" ] && ok "idempotent create made no duplicate row" || fail "dup row created: $P36CNT"
 sudo -n mariadb --default-character-set=utf8mb4 ssms -e "DELETE hz FROM mezmur_hymn_zemarians hz JOIN mezmur_hymns h ON h.id=hz.hymn_id WHERE h.title LIKE 'P36 Matrix%'; DELETE FROM mezmur_hymn_words WHERE hymn_id IN (SELECT id FROM mezmur_hymns WHERE title LIKE 'P36 Matrix%'); DELETE FROM mezmur_hymns WHERE title LIKE 'P36 Matrix%'; DELETE FROM mezmur_zemarians WHERE name='P36 Matrix Singer'; DELETE FROM activity_logs WHERE details LIKE '%P36 Matrix%'" >/dev/null 2>&1
 
-# --- 4. Access control (finance must stay blocked from edu APIs) ------------
-ssms_login audit_fin > /dev/null 2>&1
+# --- 4. Access control (HR must stay blocked from edu APIs) ------------------
+ssms_login audit_hr > /dev/null 2>&1
 D=$(ssms_get "/admin/api_subjects.php?action=get_subjects")
 if echo "$D" | grep -q '"status":"success"\|"subjects"'; then
-  fail "finance reached api_subjects!"
+  fail "hr_dept reached api_subjects!"
 else
-  ok "finance blocked from api_subjects"
+  ok "hr_dept blocked from api_subjects"
 fi
 
 # --- 5. Public pages still up ----------------------------------------------

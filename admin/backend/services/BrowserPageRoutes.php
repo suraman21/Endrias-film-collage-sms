@@ -34,8 +34,6 @@ final class BrowserPageRoutes
         '/admin/dashboards/hr' => '/admin/dashboards/hr-dept.php',
         '/admin/dashboards/information' => '/admin/dashboards/info-dept.php',
         '/admin/dashboards/education' => '/admin/dashboards/edu_dept.php',
-        '/admin/dashboards/finance' => '/admin/dashboards/finance_department.php',
-        '/admin/dashboards/materials' => '/admin/dashboards/material_department.php',
         '/admin/dashboards/teacher' => '/admin/dashboards/teacher.php',
         '/admin/dashboards/attendance' => '/admin/dashboards/attendance_taker.php',
         '/admin/dashboards/content' => '/admin/dashboards/content_editor.php',
@@ -43,7 +41,6 @@ final class BrowserPageRoutes
         '/admin/dashboards/assistant' => '/admin/dashboards/ai_assistant.php',
         '/frontend/pages/login' => '/frontend/pages/login.php',
         '/frontend/pages/dashboard' => '/frontend/pages/dashboard.php',
-        '/frontend/pages/finance' => '/frontend/pages/finance_dept.php',
         '/frontend/pages/teachers' => '/frontend/pages/edu_teachers.php',
         '/frontend/pages/assignments' => '/frontend/pages/edu_assignments.php',
     ];

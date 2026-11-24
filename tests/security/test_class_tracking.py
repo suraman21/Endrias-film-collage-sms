@@ -68,7 +68,7 @@ ENV_FILE = ROOT / ".fkss_env.php"
 SYNC_DB = os.environ.get("SSMS_SYNC_DB", "ssms_e2e")
 
 EDU_ROLES = ("super_admin", "school_admin", "edu_dept")
-NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept", "finance_dept")
+NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept")
 
 # Fixture landmarks (tests/e2e/academic_intelligence.php :: seed +
 # scenario_student_tracking_fixture).
@@ -560,7 +560,7 @@ class ClassNullSemanticsTests(_ClassBase):
         self.sql(
             f"INSERT INTO users (id, username, full_name, role, is_active) "
             f"VALUES ({SCRATCH_USER}, 'ex_homeroom_p5', 'Ex Homeroom', "
-            f"'finance_dept', 1);"
+            f"'hr_dept', 1);"
             "INSERT INTO teacher_assignments "
             "(teacher_id, class_id, subject_id, academic_year_id, "
             " is_class_teacher, is_primary, is_active, assignment_role) "
@@ -711,8 +711,8 @@ class ClassTeacherRoleTests(_ClassBase):
         self.sql(
             f"INSERT INTO users (id, username, full_name, role, is_active) "
             f"VALUES ({SCRATCH_USER}, 'ex_teacher_p5', 'Ex Teacher', "
-            f"'finance_dept', 1) "
-            f"ON DUPLICATE KEY UPDATE role = 'finance_dept';"
+            f"'hr_dept', 1) "
+            f"ON DUPLICATE KEY UPDATE role = 'hr_dept';"
             "INSERT INTO teacher_assignments "
             "(teacher_id, class_id, subject_id, academic_year_id, "
             " is_class_teacher, is_primary, is_active, assignment_role) "
@@ -723,7 +723,7 @@ class ClassTeacherRoleTests(_ClassBase):
             self.assertEqual("1", self.scalar(
                 "SELECT COUNT(*) FROM teacher_assignments "
                 f"WHERE teacher_id = {SCRATCH_USER} AND is_active = 1"))
-            self.assertEqual("finance_dept", self.scalar(
+            self.assertEqual("hr_dept", self.scalar(
                 f"SELECT role FROM users WHERE id = {SCRATCH_USER}"))
 
             listed = self.ids_of(self.teachers(C1), "teachers", "teacher_id")
@@ -1007,7 +1007,7 @@ class ClassAuthorizationTests(_ClassBase):
         self.assertLess(block.index("invalid_class"), authz)
 
     def test_a_refused_class_leaks_nothing_about_it(self):
-        for role in ("teacher", "finance_dept"):
+        for role in ("teacher", "hr_dept"):
             with self.subTest(role=role):
                 refused = self.call("api_education.php", "tracking_class_detail",
                                     role, class_id=C1)

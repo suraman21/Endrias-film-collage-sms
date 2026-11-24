@@ -44,10 +44,7 @@ MIGRATED = [
     'admin/components/profile_tab_section.php',
     'admin/js/reports/reports_v2.js',
     'admin/js/attendance_analytics_hub.js',
-    # DC-4 Finance, Material, Groups, CMS, teachers/takers, shared
-    'admin/dashboards/finance_department.php',
-    'frontend/js/finance.js',
-    'admin/dashboards/material_department.php',
+    # DC-4 Groups, CMS, teachers/takers, shared
     'admin/groups.php',
     'admin/dashboards/groups.php',
     'admin/js/content_editor.js',
@@ -78,7 +75,6 @@ SERVER_ENFORCED = [
     ('admin/api_guardians.php', 'guardians.link_all'),
     ('admin/api_identity_migration.php', 'identity.renumber'),
     # DC-4
-    ('admin/api_finance.php', 'finance.delete_transaction'),
     ('admin/backend/groups_api.php', 'groups.delete_group'),
 ]
 

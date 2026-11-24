@@ -212,7 +212,7 @@ Each question can be answered without changing anything. Most need production ac
 | Q-3 | What are the hosting provider's backup frequency, retention and restore procedure? | Hosting control panel or provider documentation |
 | Q-4 | What are the production values of `ENABLE_TEST_DATA_TOOLS` and the `FEATURE_*` flags? | Read the secrets file (names and booleans only) |
 | Q-5 | Are Telegram alerts and an uptime cron job configured? | Check the settings and the hosting control panel |
-| Q-6 | Which staff roles are in active use (for example finance and material)? | Count users by role (no names) |
+| Q-6 | Which staff roles are in active use (for example the attendance takers)? | Count users by role (no names) |
 | Q-7 | Where are the Android signing keystore and the backup encryption key held, and by whom? | Written statement from the key holders |
 | Q-8 | How is the beta server updated? | Written description of the current procedure |
 | Q-9 | Does any caller outside `frontend/` use `backend/api/*`? | Web-server access logs, filtered by path |

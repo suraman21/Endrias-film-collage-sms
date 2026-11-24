@@ -49,7 +49,7 @@ class AccessMatrix(unittest.TestCase):
         self.assertIn(allowed, self.page)
         self.assertIn(allowed, self.api)
         # no other department sneaks in
-        for role in ("edu_dept", "teacher", "finance_dept", "material_dept"):
+        for role in ("edu_dept", "teacher", "info_dept"):
             self.assertNotIn("'%s'" % role, self.api)
 
     def test_links_now_resolve_for_their_audience(self):

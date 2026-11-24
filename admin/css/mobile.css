@@ -225,7 +225,7 @@
     .modal,
     [class*="modal-body"],
     /* .md is the dialog class used by the school_admin-style dashboards
-       (school_admin, finance, material). Without this rule those dialogs kept
+       (school_admin). Without this rule those dialogs kept
        their desktop card styling inside a bottom-aligned overlay on phones. */
     .mo > .md {
         width: 100% !important;

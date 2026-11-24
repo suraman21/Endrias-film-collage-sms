@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════════
    Loaded by frontend/layouts/base.php right after theme.css.
    Uses ONLY var(--school-*) tokens → dark/light/print come free.
-   Reusable by every department dashboard (finance, edu…).
+   Reusable by every department dashboard (edu, hr…).
    ═══════════════════════════════════════════════════════════════ */
 
 /* Shared mobile account destination. It is intentionally not a section

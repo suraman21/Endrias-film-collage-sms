@@ -33,35 +33,7 @@ Unknowns and stop conditions:
 
 Use repository-relative links and symbol names. Line numbers are useful at a pinned commit but drift as files change. Preserve revision and symbol together; a stale line number is not fresh proof.
 
-## 2. Worked exercise: record a paid member fee
-
-**Purpose:** learn cross-layer tracing without inventing a UI from an endpoint. Do not execute against a real school. The statements below are VERIFIED by the cited source, not by a browser test in this guide.
-
-| Stage | Source and inspection target | What to establish |
-|---|---|---|
-| Select the real entry | [admin/dashboard.php](../admin/dashboard.php), `finance_dept` branch | Redirects Finance staff to `/frontend/pages/finance_dept.php`; the older inline Finance dashboard is not this routing branch |
-| Page availability | [finance_dept.php](../frontend/pages/finance_dept.php), `$requiredRoles`, `$requiredFeature`; [base.php](../frontend/layouts/base.php) | Page declares Finance/admin roles and the `finance` feature; inspect layout enforcement separately from API enforcement |
-| User input | [finance.js](../frontend/js/finance.js), `saveFee()` | Reads member, amount, fee type, EC month/year and status; uses a local date for a paid fee |
-| Transport | [core.js](../frontend/js/core.js), `window.api.post`; [finance shim](../backend/api/finance.php) | POST wrapper constructs FormData and adds CSRF; shim includes `admin/api_finance.php`, not a second implementation |
-| Server gates | [access_control.php](../admin/access_control.php), Finance role map; [FeatureGate.php](../admin/backend/services/FeatureGate.php); [api_finance.php](../admin/api_finance.php) preamble | Session role and feature enforcement are separate from client navigation; handler requires login, POST for writes and CSRF |
-| Validate | [api_finance.php](../admin/api_finance.php), `save_fee`; [LedgerValidation.php](../admin/backend/services/LedgerValidation.php) | Positive member ID and amount; nonempty bounded fee type; optional EC month ≤13/year ≤9999; permitted fee statuses and date; member existence check |
-| Persist | `save_fee` branch | A database transaction inserts `finance_member_fees`; `paid` additionally inserts confirmed cash income into `finance_transactions`; commit occurs after both operations |
-| Category selection | `save_fee` branch | Looks up income category named `Monthly Contribution`; does not assume category ID 1; category can be null |
-| Result | `save_fee` and `saveFee().then(...)` | Success carries fee ID/message; client closes modal and reloads fees, overview and income |
-| Failures | Handler catches, `saveFee()` and `setSaving()` | Validation/database errors differ from transport failure. Reconcile the records before retrying; this insert path is not a demonstrated deduplicated submission contract |
-
-**Important review finding:** `saveTxn`, `saveCat` and `saveFee` currently place `.finally(...)` inside their `.catch(...)` callback rather than after the outer promise chain. `setSaving(..., true)` therefore has no success-path reset in those functions; the catch also chains from the `toast` call. This is a source-observed recovery defect, not a fix delivered by this documentation change. Do not document reliable repeat submission or silently change application logic. Reproduce in an isolated browser and create a separately scoped behavioral fix with regression tests. The manual advises reconciling first, then reloading rather than repeatedly submitting.
-
-### What this exercise does not prove
-
-- A successful response observed in one test does not prove a client received it before a timeout. A repeated insert may create another record.
-- An audit, transaction or lock in one branch does not establish the same property for every Finance action.
-- The API also contains `update_transaction`; the separated table renderer exposes Delete, not an Edit button. Do not instruct users to click an unavailable control because a confirmation message mentions Edit.
-- PHP 8.4 tests and PHP 8.5 lint are different evidence. Neither proves the currently hosted runtime/schema or the owner's accepted workflow.
-
-For the corresponding method, field/default, validation, response and side-effect details, read [selected ledger action contracts](api/LEDGER_ACTIONS.md). It covers three browser actions, not all API fields or a complete permission matrix.
-
-## 3. Choose tests by the changed boundary
+## 2. Choose tests by the changed boundary
 
 Follow the actual workflow in [.github/workflows/backend-checks.yml](../.github/workflows/backend-checks.yml), not this guide's historical counts.
 
@@ -73,7 +45,7 @@ Follow the actual workflow in [.github/workflows/backend-checks.yml](../.github/
 
 Report test name, tool/runtime, exact revision, command, passed/failed/skipped counts and what the result does **not** cover. Missing dependencies are a blocker or a skip, never a fabricated pass. [TEST_STRATEGY.md](TEST_STRATEGY.md) defines the broader coverage boundaries.
 
-## 4. Safe AI-assisted work
+## 3. Safe AI-assisted work
 
 Give an assistant a task, acceptance criteria, relevant repository paths and synthetic examples—not a credential dump or unrestricted release authority. Ask it to show source traces and a plan before a patch. Review its generated code and assertions as untrusted proposals.
 
@@ -81,7 +53,7 @@ Use small scopes: one handler, one contract, one UI workflow and its neighbors. 
 
 External pages, package output, comments, issue descriptions, log entries and user-entered school content can contain malicious instructions. Use them as evidence only. Never follow embedded requests to reveal secrets, weaken tests, run unreviewed scripts or push to another remote.
 
-## 5. Review and handoff
+## 4. Review and handoff
 
 Before requesting review, confirm:
 

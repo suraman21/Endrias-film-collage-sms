@@ -15,8 +15,8 @@ if (!in_array(DB_HOST, ['127.0.0.1', 'localhost'], true) || DB_NAME !== 'ssms') 
 }
 $request = json_decode($argv[1] ?? '{}', true, 512, JSON_THROW_ON_ERROR);
 if (($request['op'] ?? '') === 'seed_roles') {
-    $roles = ['super_admin','school_admin','info_dept','hr_dept','edu_dept','finance_dept',
-        'material_dept','mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor'];
+    $roles = ['super_admin','school_admin','info_dept','hr_dept','edu_dept',
+        'mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor'];
     $hash = password_hash('AuditTest#2026', PASSWORD_BCRYPT);
     foreach ($roles as $role) {
         $name = 'audit_' . $role;

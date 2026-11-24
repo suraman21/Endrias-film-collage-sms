@@ -85,8 +85,6 @@ define('TELEMETRY_HASH_SECRET', 'f46fd733732b82f33b5dee668ed22418ccff91c7f78031d
 // Omit these to keep every current module enabled. Use real booleans only.
 // define('FEATURE_AI_CHATBOT', false);
 // define('FEATURE_GROUPS', false);
-// define('FEATURE_FINANCE', false);
-// define('FEATURE_MATERIAL', false);
 // define('FEATURE_ID_CARDS', false);
 // define('FEATURE_ATTENDANCE', false);
 // define('FEATURE_GRADES', false);

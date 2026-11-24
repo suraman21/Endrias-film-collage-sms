@@ -34,7 +34,6 @@ Link to canonical procedures instead of copying them. Keep background explanatio
 | Sign in / sign out | Verbs; quote existing **Login** or **Logout** labels exactly |
 | User name / username | Use **username** for the account field and UI label; do not confuse it with the person's full name |
 | Information Department | Explain the existing **Info Department** label; keep `info_dept` unchanged |
-| Materials Department | Keep existing labels and `material_dept` identifiers unchanged unless separately reviewed |
 | Member / student / teacher | Use the actual entity and permission context, not interchangeable synonyms |
 | Mezmur | Preserve this domain name; explain it as the hymn ministry/catalog where useful |
 | Academic year / semester / class day | Use the [glossary](product/GLOSSARY.md) and source rules; never infer a writable day from the device clock alone |

@@ -15,7 +15,7 @@ Applies repository-wide. Read [the developer guide](docs/DEVELOPER_GUIDE.md), th
 - No real school data, production requests, production database access or deployment for routine investigation. Test provisioning can destroy tables. Follow [isolated setup](docs/DEVELOPMENT_AND_TESTING.md) only after reviewing its scripts and configuration precedence.
 - Never search credential stores or print, commit, paste into reports or embed credentials in remote URLs. Use authorized transient authentication. Do not invent access or pretend a push/merge succeeded.
 - Preserve business rules, role/class/year scopes, feature flags, API contracts, schema, dependencies and signing/build policy unless explicitly authorized. No opportunistic upgrades, permission workarounds, skipped assertions or hidden retries.
-- Do not move implementations into compatibility shims. Confirm the real handler. Finance and Mezmur have separated frontend shells; Materials has an inline dashboard. Mobile Finance/Materials are website notices, not CRUD clients.
+- Do not move implementations into compatibility shims. Confirm the real handler. Mezmur has a separated frontend shell; other departments have inline dashboards.
 - New documentation belongs in maintained topic files, not dated AI handover dumps. Preserve licenses, attribution and operational evidence. Retire source copies only after reviewing unique knowledge.
 
 ## Commands and evidence

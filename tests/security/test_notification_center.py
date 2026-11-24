@@ -37,12 +37,12 @@ class NotificationCenterTests(unittest.TestCase):
         cls.sectionSrc = cls.section.read_text(encoding="utf-8")
         cls.COMM_DASH_FILES = [
             "super-admin.php", "school_admin.php", "edu_dept.php",
-            "material_department.php", "attendance_taker.php", "teacher.php",
+            "attendance_taker.php", "teacher.php",
             "hr-dept.php", "info-dept.php", "dept_taker.php", "content_editor.php",
         ]
         cls.COMM_BOTTOM_NAV_FILES = [
             "super-admin.php", "school_admin.php", "edu_dept.php",
-            "material_department.php", "attendance_taker.php", "teacher.php",
+            "attendance_taker.php", "teacher.php",
         ]
 
     # ── 1. the single source of truth ─────────────────────────
@@ -74,8 +74,8 @@ class NotificationCenterTests(unittest.TestCase):
 
     def test_service_covers_every_live_role(self):
         roles = re.search(r"ROLE_LABELS = \[(.*?)\];", self.svc, re.S).group(1)
-        for role in ["super_admin", "school_admin", "info_dept", "edu_dept", "finance_dept",
-                     "material_dept", "hr_dept", "teacher", "attendance_taker",
+        for role in ["super_admin", "school_admin", "info_dept", "edu_dept",
+                     "hr_dept", "teacher", "attendance_taker",
                      "hr_attendance_taker", "content_editor"]:
             self.assertIn(f"'{role}'", roles, f"ROLE_LABELS missing {role} (stale-list bug)")
 
@@ -218,10 +218,9 @@ class NotificationCenterTests(unittest.TestCase):
         self.assertIn("function toast(", self.commJs)          # success/error feedback
 
     def test_phase1_bell_not_buried_in_sidebar_bottom(self):
-        """edu/material bells live in the always-visible brand row, not the
+        """the edu bell lives in the always-visible brand row, not the
         cramped sidebar-bottom slot (the 'cannot access it' complaint)."""
-        for rel in ("admin/dashboards/edu_dept.php",
-                    "admin/dashboards/material_department.php"):
+        for rel in ("admin/dashboards/edu_dept.php",):
             src = (ROOT / rel).read_text(encoding="utf-8")
             marker = '<div style="flex:1"></div><?php include __DIR__ . \'/../components/notification_center.php\'; ?>'
             self.assertIn(marker, src, f"{rel}: bell must sit in the brand row")
@@ -238,10 +237,8 @@ class NotificationCenterTests(unittest.TestCase):
     DASHBOARDS = [
         "admin/dashboards/super-admin.php", "admin/dashboards/school_admin.php",
         "admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php",
-        "admin/dashboards/edu_dept.php", "admin/dashboards/material_department.php",
         "admin/dashboards/teacher.php", "admin/dashboards/attendance_taker.php",
         "admin/dashboards/dept_taker.php", "admin/dashboards/content_editor.php",
-        "frontend/pages/finance_dept.php",
     ]
 
     def test_all_dashboards_include_the_center(self):
@@ -304,8 +301,7 @@ class NotificationCenterTests(unittest.TestCase):
     def test_every_flutter_home_has_the_bell(self):
         homes = ["teacher/teacher_home.dart", "att_taker/att_taker_home.dart",
                  "hr/hr_home.dart", "hr/hr_taker_home.dart", "admin/admin_home.dart",
-                 "edu_dept/edu_home.dart", "info_dept/info_home.dart",
-                 "finance/finance_home.dart", "material/material_home.dart"]
+                 "edu_dept/edu_home.dart", "info_dept/info_home.dart"]
         for h in homes:
             src = (MOBILE / "screens" / h).read_text(encoding="utf-8")
             self.assertIn("NotificationBellButton", h + ": " + src[:0] if False else src,
@@ -464,18 +460,6 @@ class NotificationCenterTests(unittest.TestCase):
         self.assertRegex(self.bell, r"function ncEsc\(")
         self.assertIn("function_exists('generateCsrfToken')", self.bell)
 
-    def test_frontend_shells_render_bell_before_base(self):
-        """Pin the architectural fact behind the incident: frontend shells
-        include the component inside the buffered body, BEFORE requiring
-        layouts/base.php — so the component MUST stay self-sufficient."""
-        for page in ("frontend/pages/finance_dept.php",):
-            src = (ROOT / page).read_text(encoding="utf-8")
-            self.assertLess(
-                src.index("notification_center.php"),
-                src.index("layouts/base.php"),
-                f"{page}: bell include runs before base.php — keep it working")
-            self.assertIn("renderNotificationCenter()", src)
-
     # ── 8. security posture of the new surfaces ───────────────
     def test_service_uses_prepared_statements_only(self):
         """Raw query() calls in the service must only ever carry ints."""
@@ -571,17 +555,6 @@ class CommPhase3Tests(unittest.TestCase):
         self.assertIn("@keyframes nc-msg-in", self.commCss)
         guard = self.commCss[self.commCss.find("prefers-reduced-motion"):]
         self.assertIn(".nc-msg", guard)
-
-    def test_phase3_frontend_departments_integrate_the_section(self):
-        """finance gets the same in-place Communication section:
-        one include + a data-comm-open opener, rendered into the page
-        buffer before the base layout."""
-        for page in ("frontend/pages/finance_dept.php",):
-            src = (ROOT / page).read_text(encoding="utf-8")
-            self.assertIn("comm_section.php", src, f"{page} includes the shared section")
-            self.assertIn('data-comm-open="inbox"', src, f"{page} exposes an opener")
-            self.assertEqual(src.count("comm_section.php"), 1,
-                             f"{page} renders the section exactly once")
 
     def test_phase3_runtime_gate_covers_phase3_behaviors(self):
         """The Node gate must not silently lose its Phase-3 checks: the
@@ -737,14 +710,13 @@ class NotificationIncludeOrderRegression(unittest.TestCase):
         self.assertEqual(
             offenders, [],
             "Notification bell order defects (fatal after login):\n" + "\n".join(offenders))
-        # 10 dashboards + notifications.php + messages.php + 2 frontend pages
+        # 8 dashboards + notifications.php + messages.php + 1 frontend page
         # + 2 legacy bell shims (admin + backend) that delegate to the center.
         # Update this pin DELIBERATELY when adding a new bell surface.
-        self.assertEqual(checked, 16, f"expected 16 render surfaces, found {checked}")
+        self.assertEqual(checked, 13, f"expected 13 render surfaces, found {checked}")
 
     def test_hotfix_pinned_files_are_safe(self):
-        for rel in ("admin/dashboards/edu_dept.php",
-                    "admin/dashboards/material_department.php"):
+        for rel in ("admin/dashboards/edu_dept.php",):
             src = (ROOT / rel).read_text(encoding="utf-8")
             self.assertLess(
                 src.find(self.COMPONENT), src.find("renderNotificationCenter()"),

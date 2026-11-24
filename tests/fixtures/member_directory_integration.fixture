@@ -119,13 +119,13 @@ for ($id = 1; $id <= 100025; $id++) {
 $pdo->commit();
 
 $service = new MemberDirectoryService($pdo);
-$first = $service->search(['limit' => 50], 'finance_dept', 'picker');
+$first = $service->search(['limit' => 50], 'hr_dept', 'picker');
 if (count($first['members']) !== 50 || $first['next_cursor'] === null) {
     throw new RuntimeException('First keyset page was not bounded.');
 }
 foreach (['guardian_name', 'phone_number', 'city', 'student_photo_path'] as $privateColumn) {
     if (array_key_exists($privateColumn, $first['members'][0])) {
-        throw new RuntimeException('Finance projection exposed ' . $privateColumn);
+        throw new RuntimeException('Picker projection exposed ' . $privateColumn);
     }
 }
 
@@ -134,7 +134,7 @@ $second = $service->search([
     'page' => 2,
     'cursor' => $first['next_cursor'],
     'include_total' => '0',
-], 'finance_dept', 'picker');
+], 'hr_dept', 'picker');
 if ($second['total'] !== null || count($second['members']) !== 50) {
     throw new RuntimeException('Deep keyset page repeated count or exceeded its bound.');
 }

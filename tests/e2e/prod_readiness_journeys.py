@@ -127,7 +127,7 @@ def cancel(page):
 
 
 # ═══════════════════════════ Part A: role sweep ═══════════════════════════
-ROLES = ['audit_super', 'audit_school', 'audit_edu', 'audit_teach', 'audit_fin', 'audit_hr', 'audit_info', 'audit_taker', 'audit_mez']
+ROLES = ['audit_super', 'audit_school', 'audit_edu', 'audit_teach', 'audit_hr', 'audit_info', 'audit_taker', 'audit_mez']
 NAV_JS = r"""()=>{
   const out=[], seen=new Set();
   const scope=document.querySelectorAll('aside, .sb, nav, .sidebar, #sidebar, .nav-link, [data-section], [data-sec]');

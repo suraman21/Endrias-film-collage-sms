@@ -98,7 +98,7 @@ with sync_playwright() as p:
     uid = sql(f"SELECT id FROM users WHERE username='dc3ui_{tag}'")
     page, errs = login(ctx, 'audit_super', f'/admin/users.php?edit_id={uid}')
     check(page.evaluate('!!window.DangerConfirm'), 'super: component loaded on users.php')
-    page.select_option('#dcUserSaveForm [name=role]', 'finance_dept')
+    page.select_option('#dcUserSaveForm [name=role]', 'hr_dept')
     page.locator('#dcUserSaveForm [type=submit]').first.click()
     d = dialog(page)
     check('Change the role' in d.inner_text() and 'I want to change this role' in d.inner_text(), 'super: role change opens MEDIUM "Change the role" dialog')

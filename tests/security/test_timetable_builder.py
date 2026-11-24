@@ -14,7 +14,7 @@ Live (skipped unless the local server + seed are present):
   * full Education round-trip: days → period (overlap 4xx) → lesson → teacher
     double-booking refused → clear → copy bell → makeup (past date refused,
     weekday clash refused) → delete; teacher my_schedule sees the lesson;
-    teacher write 403; CSRF-less write 403; finance 403; audit rows written.
+    teacher write 403; CSRF-less write 403; HR 403; audit rows written.
 """
 from __future__ import annotations
 
@@ -28,7 +28,6 @@ from pathlib import Path
 from test_attendance_phase1 import BASE, USERS, WebSession, db, _live_ready  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-USERS.setdefault("finance_dept", "audit_fin")
 
 
 def read(rel: str) -> str:
@@ -277,8 +276,8 @@ class TimetableLive(unittest.TestCase):
         # GET on a write action → 405
         st, d = self.edu.get_json(f"/admin/api_timetable.php?action=clear_entry&class_id={A}&period_id=1&day_of_week=6")
         self.assertEqual(st, 405)
-        # finance has no access at all
-        fin = WebSession("finance_dept")
+        # HR has no access at all
+        fin = WebSession("hr_dept")
         st, d = fin.get_json("/admin/api_timetable.php?action=classes")
         self.assertEqual(st, 403)
         # unknown action

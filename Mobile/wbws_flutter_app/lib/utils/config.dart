@@ -40,8 +40,6 @@ class UserRoles {
   static const String schoolAdmin = 'school_admin';
   static const String infoDept = 'info_dept';
   static const String eduDept = 'edu_dept';
-  static const String financeDept = 'finance_dept';
-  static const String materialDept = 'material_dept';
   static const String teacher = 'teacher';
   static const String attendanceTaker = 'attendance_taker';
   // Department-owned takers (2026-08-28): each department creates and
@@ -55,8 +53,6 @@ class UserRoles {
       case schoolAdmin: return 'School Admin';
       case infoDept: return 'Info Department';
       case eduDept: return 'Education Department';
-      case financeDept: return 'Finance Department';
-      case materialDept: return 'Material Department';
       case teacher: return 'Teacher';
       case attendanceTaker: return 'Attendance Taker';
       case hrTaker: return 'HR Attendance Taker';
@@ -71,8 +67,6 @@ class UserRoles {
       case schoolAdmin: return 'የትምህርት ቤት አስተዳዳሪ';
       case infoDept: return 'የመረጃ ክፍል';
       case eduDept: return 'የትምህርት ክፍል';
-      case financeDept: return 'የፋይናንስ ክፍል';
-      case materialDept: return 'የቁሳቁስ ክፍል';
       case teacher: return 'መምህር';
       case attendanceTaker: return 'ቅጥረት ያዥ';
       case hrTaker: return 'የኤችአር ቅጥረት ያዥ';
@@ -183,20 +177,6 @@ List<NavTab> _baseTabsForRole(String role) {
         NavTab(id: 'home', label: 'Home', icon: Icons.home_outlined, activeIcon: Icons.home_rounded),
         NavTab(id: 'members', label: 'Students', icon: Icons.people_outline, activeIcon: Icons.people_rounded),
         NavTab(id: 'attendance', label: 'Attend.', icon: Icons.fact_check_outlined, activeIcon: Icons.fact_check_rounded),
-        NavTab(id: 'profile', label: 'Profile', icon: Icons.person_outline, activeIcon: Icons.person_rounded),
-      ];
-
-    // ---- FINANCE DEPARTMENT ----
-    case UserRoles.financeDept:
-      return const [
-        NavTab(id: 'home', label: 'Home', icon: Icons.home_outlined, activeIcon: Icons.home_rounded),
-        NavTab(id: 'profile', label: 'Profile', icon: Icons.person_outline, activeIcon: Icons.person_rounded),
-      ];
-
-    // ---- MATERIAL DEPARTMENT ----
-    case UserRoles.materialDept:
-      return const [
-        NavTab(id: 'home', label: 'Home', icon: Icons.home_outlined, activeIcon: Icons.home_rounded),
         NavTab(id: 'profile', label: 'Profile', icon: Icons.person_outline, activeIcon: Icons.person_rounded),
       ];
 

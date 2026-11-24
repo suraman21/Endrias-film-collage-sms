@@ -140,7 +140,7 @@ function resetSchema(array $migrations): void {
         [1, 'e2e1', 'Super Admin', 'super_admin'],
         [2, 'e2e2', 'Test Teacher', 'teacher'],
         [3, 'e2e3', 'Edu Officer', 'edu_dept'],
-        [4, 'e2e4', 'Finance Officer', 'finance_dept'],
+        [4, 'e2e4', 'HR Officer', 'hr_dept'],
     ] as $u) {
         $stmt = $c->prepare("INSERT INTO users (id, username, full_name, role) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('isss', $u[0], $u[1], $u[2], $u[3]);
@@ -267,10 +267,10 @@ switch ($SCENARIO) {
         [$r6, , $c6] = request(3, 'edu_dept', 'POST', 'notifications/thread-read', [], ['id' => $tid]);
         check($c6 === 404, 'parity: thread-read on a non-participant thread → 404');
 
-        // permission matrix is server-side: teacher cannot start a thread with finance_dept
+        // permission matrix is server-side: teacher cannot start a thread with hr_dept
         [$r7, , $c7] = request(2, 'teacher', 'POST', 'notifications/thread-start', [], ['to' => [4], 'subject' => 'x', 'body' => 'y']);
         check($c7 === 400 && strpos((string)($r7['message'] ?? ''), 'cannot message') !== false,
-            'parity: teacher→finance_dept thread-start denied (role matrix)');
+            'parity: teacher→hr_dept thread-start denied (role matrix)');
         verdict();
     }
 

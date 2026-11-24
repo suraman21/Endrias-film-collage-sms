@@ -8,7 +8,7 @@ Domain, local and technical terms used in the FKSS code and documentation. Code 
 |---|---|
 | **EFC** | Endrias Film College: the organisation, and the product name used in production |
 | **`wbws` / `ssms` in identifiers** | Prefixes used in some folder, file, table, CSS-class, test and environment-variable names (for example `wbws_flutter_app`, `wbws_groups`, `.wbws_env.php`, `SSMS_AUDIT_TESTING`). They belong to FKSS; they are **not** separate systems |
-| **Department** | An organisational unit with its own role and dashboard: HR, Information, Education, Mezmur, Finance, Material |
+| **Department** | An organisational unit with its own role and dashboard: HR, Information, Education, Mezmur |
 | **Maintainers** | The people who approve changes, apply database migrations and deploy to production |
 
 ## Calendar and locale

@@ -1,5 +1,5 @@
-/* Focused browser regressions for shared calendar, escaping, finance saving
- * and impersonation. Run only with the synthetic local database. */
+/* Focused browser regressions for shared calendar, escaping and
+ * impersonation. Run only with the synthetic local database. */
 const { chromium } = require('playwright');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -48,28 +48,9 @@ const calendar=fs.readFileSync(path.join(root,'admin/js/wbws-calendar.js'),'utf8
   await page.goto(base+d.redirect,{waitUntil:'domcontentloaded'});await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
   return {page,context};
  }
- await check('Finance double-click sends one write; Gregorian date remains exact',async()=>{
-  const {page,context}=await login('finance_dept');
-  const marker='Audit browser single-flight '+Date.now();let writes=0;
-  await page.route('**/backend/api/finance.php',async route=>{
-   if(route.request().method()==='POST'&&(route.request().postData()||'').includes('add_transaction')){writes++;await new Promise(r=>setTimeout(r,150));}
-   await route.continue();
-  });
-  await page.evaluate(marker=>{
-   Finance.openAddTxn('income');
-   document.getElementById('txnAmt').value='12.34';document.getElementById('txnDesc').value=marker;
-   document.getElementById('txnDate').value='2026-08-23';
-  },marker);
-  const response=page.waitForResponse(r=>r.url().endsWith('/backend/api/finance.php')&&r.request().method()==='POST');
-  await page.evaluate(()=>{Finance.saveTxn();Finance.saveTxn();});
-  const d=await(await response).json();assert.equal(d.status,'success');assert.equal(writes,1);
-  const rows=fixture({op:'sql',sql:'SELECT id,transaction_date,amount FROM finance_transactions WHERE description=?',params:[marker]}).rows;
-  assert.equal(rows.length,1);assert.equal(rows[0].transaction_date,'2026-08-23');assert.equal(rows[0].amount,'12.34');
-  fixture({op:'sql',sql:'DELETE FROM finance_transactions WHERE id=?',params:[rows[0].id]});
-  await context.close();
- });
  await check('Shared esc() is safe for quoted HTML attributes as well as text',async()=>{
-  const {page,context}=await login('finance_dept');
+  const {page,context}=await login('super_admin');
+  await page.goto(base+'/admin/dashboards/content_editor.php',{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(()=>{
    const p='" autofocus onfocus="window.__auditXss=1';const host=document.createElement('div');
    host.innerHTML='<input value="'+esc(p)+'">';document.body.appendChild(host);

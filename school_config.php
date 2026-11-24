@@ -167,10 +167,6 @@ define('DEPT_INFO_NAME', 'ማብራሪያ ክፍል');
 define('DEPT_INFO_NAME_EN', 'Information Department');
 define('DEPT_EDU_NAME', 'ትምህርት ክፍል');
 define('DEPT_EDU_NAME_EN', 'Education Department');
-define('DEPT_FINANCE_NAME', 'ገንዘብ ክፍል');
-define('DEPT_FINANCE_NAME_EN', 'Finance Department');
-define('DEPT_MATERIAL_NAME', 'ቁሳቁስ ክፍል');
-define('DEPT_MATERIAL_NAME_EN', 'Material Department');
 define('DEPT_GROUPS_NAME', 'የማህበራት አስተዳደር');
 define('DEPT_GROUPS_NAME_EN', 'Groups Management');
 
@@ -201,8 +197,6 @@ define('THEME_SIDEBAR_BOTTOM', '#702000'); //   warm maroon-brown
 
 if (!defined('FEATURE_AI_CHATBOT')) define('FEATURE_AI_CHATBOT', true);
 if (!defined('FEATURE_GROUPS')) define('FEATURE_GROUPS', true);
-if (!defined('FEATURE_FINANCE')) define('FEATURE_FINANCE', true);
-if (!defined('FEATURE_MATERIAL')) define('FEATURE_MATERIAL', true);
 if (!defined('FEATURE_ID_CARDS')) define('FEATURE_ID_CARDS', true);
 if (!defined('FEATURE_ATTENDANCE')) define('FEATURE_ATTENDANCE', true);
 if (!defined('FEATURE_GRADES')) define('FEATURE_GRADES', true);

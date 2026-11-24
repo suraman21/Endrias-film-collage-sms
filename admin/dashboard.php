@@ -103,15 +103,6 @@ switch ($role) {
         require __DIR__ . '/dashboards/edu_dept.php';
         break;
 
-    case 'finance_dept':
-        // ── MIGRATED → New separated frontend ──
-        header('Location: /frontend/pages/finance_dept.php');
-        exit;
-
-    case 'material_dept':
-        require __DIR__ . '/dashboards/material_department.php';
-        break;
-
     case 'teacher':
         require __DIR__ . '/dashboards/teacher.php';
         break;

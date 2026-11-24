@@ -12,9 +12,9 @@
  * Before this file, every admin script checked access on its own —
  * and several checked NOTHING. For example print_member.php and
  * info_manage_member.php could be opened by anyone on the internet,
- * exposing every student's full record. Other endpoints (finance,
- * education) only checked "is the person logged in?" — so a teacher
- * could read the finance ledger or delete a class.
+ * exposing every student's full record. Other endpoints (education)
+ * only checked "is the person logged in?" — so a teacher
+ * could delete a class.
  *
  * HOW IT DECIDES (in order)
  * -------------------------
@@ -91,15 +91,9 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
         }
 
         // 5. Which roles may use each page.
-        //    Keys include BOTH the real name (api_finance.php) and the
-        //    /backend/ shim name (finance.php) so neither path is a hole.
+        //    Keys include BOTH the real name (api_education.php) and the
+        //    /backend/ shim name (education.php) so neither path is a hole.
         $ROLE_MAP = [
-            // ---- Finance: finance staff + admins ONLY ----
-            'api_finance.php'   => ['super_admin', 'school_admin', 'finance_dept'],
-            'finance.php'       => ['super_admin', 'school_admin', 'finance_dept'],
-            'finance_department.php' => ['super_admin', 'school_admin', 'finance_dept'],
-            'finance_dept.php'  => ['super_admin', 'school_admin', 'finance_dept'],
-
             // ---- Education / academics ----
             // Teachers & attendance-takers legitimately READ these and record
             // grades/attendance, so they are allowed IN. The destructive
@@ -156,12 +150,10 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'export_filtered_students.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher'],
 
             // ---- Member management (Information department) ----
-            // finance_dept included: the finance dashboard fetches the student
-            // roster to assign fees (frontend/js/finance.js → members.php).
             'hr_register_member.php'  => ['super_admin', 'hr_dept', 'admissions_registrar_dept'],
-            'api_list_members.php'    => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
-            'api_search.php'            => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
-            'members.php'             => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
+            'api_list_members.php'    => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept'],
+            'api_search.php'            => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept'],
+            'members.php'             => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept'],
             'api_check_duplicate.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
             'members_check.php'       => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
             'info_manage_member.php'        => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
@@ -183,17 +175,12 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'hr-dept.php'       => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
             'admissions_registrar_dept.php' => ['super_admin', 'school_admin', 'admissions_registrar_dept'],
 
-            // ---- Material department ----
-            'api_material.php'      => ['super_admin', 'school_admin', 'material_dept'],
-            'material.php'          => ['super_admin', 'school_admin', 'material_dept'],
-            'material_department.php' => ['super_admin', 'school_admin', 'material_dept'],
-
             // ---- Groups / associations ----
             'groups.php'     => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- P72 Communication Center: every staff role ----
-            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
-            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
             'groups_api.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- Reports & exports (contain all-member data) ----

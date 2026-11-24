@@ -15,7 +15,7 @@ if (getenv('SSMS_AUDIT_TESTING') !== '1') {
  *
  * Idempotent: safe to run twice. Creates the exact world the audit
  * findings live in:
- *   - 4 staff logins (super, edu, teacher, finance)  [finance = authz probe]
+ *   - 3 staff logins (super, edu, teacher)
  *   - academic year + current term
  *   - 3 classes; class 3 deliberately has NO class_subjects links
  *     (reproduces the "empty subject dropdown" symptom)
@@ -49,7 +49,6 @@ function seed_user(mysqli $conn, string $username, string $role, string $fullNam
 seed_user($conn, 'audit_super', 'super_admin', 'Audit Super', $TEST_PASS_HASH);
 seed_user($conn, 'audit_edu',   'edu_dept',    'Audit Education', $TEST_PASS_HASH);
 seed_user($conn, 'audit_teach', 'teacher',     'Audit Teacher', $TEST_PASS_HASH);
-seed_user($conn, 'audit_fin',   'finance_dept','Audit Finance', $TEST_PASS_HASH);
 
 // --- academic year + term ------------------------------------------------
 // NB: status is the resolver's PRIMARY key (ay_active_year prefers

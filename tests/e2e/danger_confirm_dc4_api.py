@@ -1,11 +1,10 @@
-"""Live API test for danger-confirmation DC-4 (Finance + Groups).
+"""Live API test for danger-confirmation DC-4 (Groups).
 Runs against a LOCAL test server only (default http://127.0.0.1:8080).
 Never point this at production.
 
 usage: SSMS_AUDIT_TESTING=1 python3 tests/e2e/danger_confirm_dc4_api.py [base_url]
 
 Covers the server-side typed-phrase checks added in DC-4:
-  finance.delete_transaction (DELETE TRANSACTION) — hard delete of a money record
   groups.delete_group (DELETE GROUP) — group + all its leaders and members,
   now in one transaction, plus the read-only impact_delete_group preview.
 """
@@ -60,23 +59,6 @@ def refused(code, d):
 
 
 tag = str(int(time.time()))[-6:]
-
-# ── finance.delete_transaction ──
-fin = login('audit_fin', '/admin/dashboards/finance_department.php')
-ck('finance login + csrf', bool(fin.csrf))
-sql(f"INSERT INTO finance_transactions (type, amount, description, transaction_date, receipt_number) VALUES ('income', 123.45, 'DC4 test {tag}', CURDATE(), 'DC4-{tag}')")
-tid = sql(f"SELECT id FROM finance_transactions WHERE receipt_number='DC4-{tag}'")
-ck('throwaway transaction created', tid.isdigit(), tid)
-code, d = post(fin, '/admin/api_finance.php', action='delete_transaction', id=tid)
-ck('delete transaction without phrase -> 409', refused(code, d), (code, d))
-code, d = post(fin, '/admin/api_finance.php', action='delete_transaction', id=tid, confirm_phrase='DELETE')
-ck('delete transaction with wrong phrase -> 409', refused(code, d), (code, d))
-ck('transaction still there after refusals', sql(f"SELECT COUNT(*) FROM finance_transactions WHERE id={tid}") == '1')
-code, d = post(fin, '/admin/api_finance.php', action='delete_transaction', id=tid, confirm_phrase='delete transaction')
-ck('delete transaction with phrase (case-insensitive) -> deleted',
-   code == 200 and d.get('status') == 'success' and sql(f"SELECT COUNT(*) FROM finance_transactions WHERE id={tid}") == '0', (code, d))
-code, d = post(fin, '/admin/api_finance.php', action='delete_transaction', id=tid, confirm_phrase='DELETE TRANSACTION', csrf_token='bad')
-ck('bad CSRF is still refused before anything else', code in (400, 403, 419), (code, d))
 
 # ── groups.delete_group ──
 g = login('audit_hr', '/admin/groups.php')

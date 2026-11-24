@@ -42,7 +42,7 @@ Add a new admin role **`photo_importer`** (or fold into existing `hr_dept` with 
 - ✅ Can upload a ZIP, preview matched photos, confirm/override mismatches, commit the batch
 - ✅ Can view member names + codes + existing thumbnails for the purpose of matching
 - ❌ Cannot edit member fields beyond the photo
-- ❌ Cannot access finance, attendance reports, HR records, Telegram bot, Telegram registrations, etc.
+- ❌ Cannot access attendance reports, HR records, Telegram bot, Telegram registrations, etc.
 - ❌ Cannot delete members
 - ❌ Cannot see phone numbers / guardian details (can be configured — for pure importer volunteers, hide PII beyond name/code)
 

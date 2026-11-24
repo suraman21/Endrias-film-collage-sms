@@ -169,13 +169,11 @@ $csrfToken = generateCsrfToken();
             <button class="insight-btn" onclick="quickInsight('members')"><i class="fa-solid fa-users ic-blue"></i> Student Analysis</button>
             <button class="insight-btn" onclick="quickInsight('attendance')"><i class="fa-solid fa-calendar-check ic-purple"></i> Attendance Patterns</button>
             <button class="insight-btn" onclick="quickInsight('education')"><i class="fa-solid fa-graduation-cap ic-amber"></i> Education Status</button>
-            <button class="insight-btn" onclick="quickInsight('finance')"><i class="fa-solid fa-coins ic-green"></i> Finance Summary</button>
         </div>
         <div class="sidebar-section">
             <div class="sidebar-section-title"><i class="fa-solid fa-file-lines"></i> Generate Reports</div>
             <button class="report-btn" onclick="generateReport('monthly')"><i class="fa-solid fa-calendar-days"></i> Monthly Report</button>
             <button class="report-btn" onclick="generateReport('attendance')"><i class="fa-solid fa-clipboard-list"></i> Attendance Report</button>
-            <button class="report-btn" onclick="generateReport('financial')"><i class="fa-solid fa-receipt"></i> Financial Report</button>
             <button class="report-btn" onclick="generateReport('demographic')"><i class="fa-solid fa-chart-pie"></i> Demographics Report</button>
         </div>
         <?php if ($isSuperAdmin): ?>
@@ -212,11 +210,10 @@ $csrfToken = generateCsrfToken();
             <div class="welcome" id="welcomeState">
                 <div class="welcome-icon"><i class="fa-solid fa-robot"></i></div>
                 <h2><?= SCHOOL_NAME_SHORT ?> AI Assistant</h2>
-                <p>Ask me anything about your school data — students, attendance, finances, classes. I analyze trends, generate reports, and give actionable insights.</p>
+                <p>Ask me anything about your school data — students, attendance, classes. I analyze trends, generate reports, and give actionable insights.</p>
                 <div class="welcome-suggestions">
                     <button class="suggest-btn" onclick="sendSuggestion('How many active students and what is the gender breakdown?')">👥 Student Stats</button>
                     <button class="suggest-btn" onclick="sendSuggestion('What is our attendance rate and which days are lowest?')">📊 Attendance</button>
-                    <button class="suggest-btn" onclick="sendSuggestion('Give me a summary of our financial health')">💰 Finance</button>
                     <button class="suggest-btn" onclick="sendSuggestion('Which classes need more students?')">🏫 Classes</button>
                     <button class="suggest-btn" onclick="sendSuggestion('What are the top data quality issues to fix?')">🔍 Data Issues</button>
                     <button class="suggest-btn" onclick="sendSuggestion('Complete school status report for this month')">📋 Full Report</button>
@@ -460,7 +457,7 @@ async function sendMessage() {
 async function quickInsight(type) {
     if (isProcessing) return;
     if (!hasApiKey) { sendMessage(); return; }
-    const labels = {overview:'School Overview',members:'Student Analysis',attendance:'Attendance Patterns',education:'Education Status',finance:'Financial Health'};
+    const labels = {overview:'School Overview',members:'Student Analysis',attendance:'Attendance Patterns',education:'Education Status'};
     document.getElementById('welcomeState').style.display = 'none';
     appendMessage('user', '📊 ' + (labels[type] || type), false);
     showTyping(); isProcessing = true;
@@ -482,7 +479,7 @@ async function quickInsight(type) {
 async function generateReport(type) {
     if (isProcessing) return;
     if (!hasApiKey) { sendMessage(); return; }
-    const labels = {monthly:'Monthly Status Report',attendance:'Attendance Report',financial:'Financial Report',demographic:'Demographics Report'};
+    const labels = {monthly:'Monthly Status Report',attendance:'Attendance Report',demographic:'Demographics Report'};
     document.getElementById('welcomeState').style.display = 'none';
     appendMessage('user', '📋 Generate: ' + (labels[type] || type), false);
     showTyping(); isProcessing = true;

@@ -19,7 +19,6 @@ void main() {
       expect(DepartmentOfflinePolicy.isOfflineEnabled(d), isFalse);
     }
     expect(DepartmentOfflinePolicy.onlineOnly, contains(OfflineDepartment.members));
-    expect(DepartmentOfflinePolicy.onlineOnly, contains(OfflineDepartment.finance));
   });
 
   test('no department is both offline-enabled and online-only', () {

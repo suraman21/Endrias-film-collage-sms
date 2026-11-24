@@ -57,8 +57,6 @@ The organisation is modelled as departments. Each staff account has exactly one 
 | Information Department (`info_dept`) | Records and statistics office | View and correct member records, archive and restore, reports and analytics. Does **not** register or promote members | Yes | Yes |
 | Education Department (`edu_dept`) | Academic office | Classes, subjects, teachers, assessments, grade review, timetable, school calendar, report cards | Yes | Yes |
 | Mezmur Department (`mezmur_dept`) | Hymn ministry | Hymn library and media, Mezmur attendance and takers | Yes | Yes |
-| Finance Department (`finance_dept`) | Treasury | Transactions, categories, member fees, reports | Yes | Website-only notice/navigation, not equivalent native ledger controls |
-| Material Department (`material_dept`) | Storekeeping | Items, categories, requests, transactions | Yes | Website-only notice/navigation, not equivalent native inventory controls |
 | Teacher (`teacher`) | Class teacher | Attendance and marks for **assigned** classes only; timetable | Yes | Yes |
 | Attendance Taker (`attendance_taker`) | Volunteer | Class attendance only | Yes | Yes |
 | Mezmur Attendance Taker (`mezmur_attendance_taker`) | Department volunteer | Mezmur attendance under the department's scope | Yes | Yes |
@@ -72,11 +70,11 @@ Other stakeholders: the parents and guardians of students (data subjects; no sys
 ```
                      ┌────────────── Members register (HR owns writes) ───────────────┐
  Public website ───► │ registration · tiers · codes · Family Link · imports · ID cards │
- (CMS, form)         └─────┬──────────────┬──────────────┬──────────────┬────────────┘
-                           ▼              ▼              ▼              ▼
-                      Education      Attendance       Mezmur      Finance / Material
-                 (classes, marks,  (class-day rules, (hymns, media, (ledgers, items,
-                  report cards,     warnings,         attendance)    requests)
+ (CMS, form)         └─────┬──────────────┬──────────────┬──────┘
+                           ▼              ▼              ▼
+                      Education      Attendance       Mezmur
+                 (classes, marks,  (class-day rules, (hymns, media,
+                  report cards,     warnings,         attendance)
                   timetable)        monthly reports)
                            └──────────────┴──────┬───────┴──────────────┘
                                                  ▼
@@ -141,18 +139,16 @@ Other stakeholders: the parents and guardians of students (data subjects; no sys
 | FR-MEZ-02 | Audio and cover art in object storage, uploaded through presigned URLs; synced (karaoke) lyrics; offline downloads on Android | Implemented | `MezmurMediaService.php`; [ADR-0015](../adr/0015-mezmur-media-object-storage.md) |
 | FR-MEZ-03 | Date-based Mezmur attendance by section, with department-owned takers and the same submit/review workflow as Education | Implemented | `MezmurAttendanceService.php`; `api_dept_takers.php` |
 
-### 5.5 Finance, Material and Groups
+### 5.5 Groups
 | ID | Requirement | Status | Source |
 |---|---|---|---|
-| FR-FIN-01 | Finance: transactions, categories, member fees and reports, with an audit trail of ledger changes | Implemented | `admin/api_finance.php`; commit `201557f` |
-| FR-MAT-01 | Material: categories, items, requests and transactions | Implemented | `admin/api_material.php` |
 | FR-GRP-01 | Groups with leaders and members | Implemented | `admin/backend/groups_api.php` |
 
 ### 5.6 Information, reporting and analytics
 | ID | Requirement and business rules | Status | Source |
 |---|---|---|---|
 | FR-REP-01 | Reporting Centre: governed member dataset with per-field view and export permissions, saved views (private, department, shared), audited CSV and Excel export | Implemented | `admin/backend/reporting/ReportRegistry.php`; `api_reports_v2.php`; `sql/070_report_definitions.sql` |
-| FR-REP-02 | **Boundary:** future sensitive or cross-department datasets (finance, material, detailed education, telemetry) go to the Information Department only | Implemented as a rule for additions; department datasets are **On hold** | [ADR-0012](../adr/0012-reporting-centre-and-data-boundary.md) |
+| FR-REP-02 | **Boundary:** future sensitive or cross-department datasets (detailed education, telemetry) go to the Information Department only | Implemented as a rule for additions; department datasets are **On hold** | [ADR-0012](../adr/0012-reporting-centre-and-data-boundary.md) |
 | FR-REP-03 | Attendance analytics hub for Information (Education and Mezmur sources), PDF report templates, member exports | Implemented | `api_info_analytics.php`; `admin/backend/pdf/` |
 | FR-REP-04 | Past-year view: any user can view a closed academic year read-only; writes are blocked while viewing the past | Implemented | `admin/api_year_context.php` |
 
@@ -179,7 +175,7 @@ Other stakeholders: the parents and guardians of students (data subjects; no sys
 ## 6. Android app requirements
 | ID | Requirement | Status | Source |
 |---|---|---|---|
-| FR-MOB-01 | Role-based entry/navigation; no Content Editor client; Finance/Material present website-only guidance and HR attendance is retired | Source present; not proof of native parity with every web department | `Mobile/wbws_flutter_app/lib/screens/`; `lib/utils/config.dart` |
+| FR-MOB-01 | Role-based entry/navigation; no Content Editor client; HR attendance is retired | Source present; not proof of native parity with every web department | `Mobile/wbws_flutter_app/lib/screens/`; `lib/utils/config.dart` |
 | FR-MOB-02 | Local-first eligible reads and durable attendance, marks, Mezmur and message queues; stable idempotency keys support replay/deduplication | Implemented mechanisms; not every request is offline-capable and delivery is not guaranteed by connectivity alone | `local_db.dart`; `api/v1/core/middleware.php`; [ADR-0003](../adr/0003-offline-first-mobile.md) |
 | FR-MOB-03 | Preserving logout retains owner-bound private work for same-account recovery; explicit discard/uninstall has different consequences; authorization changes can require attention rather than send automatically | Implemented bounded recovery; [current instructions](../user_manual/SYNC_AND_RECOVERY.md) | `lib/services/local_db.dart`; `lib/services/sync_recovery_models.dart`; `lib/screens/auth/session_recovery_screen.dart` |
 | FR-MOB-04 | Separate 4–8 digit local PIN, optional device biometrics and secure token storage | Source present; not application-level SQLite encryption | `app_lock_service.dart`; `local_auth`; `flutter_secure_storage` |

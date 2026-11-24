@@ -13,7 +13,7 @@
 
 | Document | Status and scope |
 |---|---|
-| [User manual](user_manual/README.md) | **Partial:** mobile account/device settings, updates/recovery and source-reviewed core Finance/Materials web workflows; not yet all departments or controls |
+| [User manual](user_manual/README.md) | **Partial:** mobile account/device settings, updates/recovery; not yet all departments or controls |
 | [Developer guide](DEVELOPER_GUIDE.md) | Human/AI-assisted investigation, worked fee trace, known source discrepancies and handoff |
 | [Agent contributor instructions](../AGENTS.md) | Compact repository-wide safety, evidence, testing and delivery contract |
 | [Change-impact map](CHANGE_IMPACT.md) | Entry points, shared boundaries, regression questions and stop conditions |
@@ -55,10 +55,6 @@
 | Document | Status |
 |---|---|
 | [API.md](API.md) | Canonical |
-| [Selected ledger action contracts](api/LEDGER_ACTIONS.md) | Earlier three-action worked reference; not full API conformance |
-| [Finance action reference](api/FINANCE_CONTRACT.md) | Source-reviewed inputs/defaults, responses, failures and side effects for each Finance handler action |
-| [Materials action reference](api/MATERIALS_CONTRACT.md) | Source-reviewed inputs/defaults, responses, failures and side effects for each Materials handler action |
-| [Ledger permission/gate matrix](api/LEDGER_PERMISSIONS.md) | Real/shim paths, gate ordering, roles/features, methods/CSRF, confirmation and record checks; source evidence, not hosted acceptance |
 | [api/openapi.yaml](api/openapi.yaml): OpenAPI 3.1 reference for `/api/v1` | Source-dated summarized reference; route/service code governs field behavior |
 | [ROLES_AND_PERMISSIONS.md](ROLES_AND_PERMISSIONS.md) | Canonical |
 
@@ -68,7 +64,6 @@
 |---|---|
 | [DATABASE.md](DATABASE.md): engine, migration rules, migration inventory | Canonical |
 | [DATA_DICTIONARY.md](DATA_DICTIONARY.md): dated source table/foreign-key inventory and core diagrams | Historical generated reference; not current column-level or target-schema certification |
-| [Ledger column reference](database/LEDGER_COLUMNS.md) | Eight manually reviewed CREATE definitions, later source constraints/indexes and runtime differences; not an applied-schema export |
 | [incidents/INCIDENT_2026-10-03_TRACKING_SCHEMA.md](incidents/INCIDENT_2026-10-03_TRACKING_SCHEMA.md) | Historical (incident record) |
 
 ## 5. Security

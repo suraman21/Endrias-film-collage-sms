@@ -52,7 +52,7 @@ def test_actual_token_helpers_emit_two_part_hmac_and_check_current_key(kind):
     assert signature == hmac.new(key.encode(), payload.encode(), hashlib.sha256).hexdigest()
     assert json.loads(base64.b64decode(payload, validate=True))["typ"] == kind
     assert run("different-synthetic-key-not-for-deployment", "verify", result["token"]) == {"state": "invalid"}
-    for path in ("docs/CHANGE_IMPACT.md", "docs/api/LEDGER_ACTIONS.md", "docs/architecture/SECURITY_MODEL.md"):
+    for path in ("docs/CHANGE_IMPACT.md", "docs/architecture/SECURITY_MODEL.md"):
         assert "not JWT" in text(path), path
 
 

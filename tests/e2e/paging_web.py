@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Phase 3 paging — live API + browser checks (local test server only).
 
-Seeds enough rows to page through (members, review packets, fees, teachers,
-material requests), checks every paged endpoint keeps its OLD answer when no
+Seeds enough rows to page through (members, review packets, teachers), checks every paged endpoint keeps its OLD answer when no
 `page` is sent, then drives each pager screen in Chromium. All seed rows carry
 a PG marker and are removed at the end.
 
@@ -52,9 +51,7 @@ def jget(s, url):
 
 
 def cleanup():
-    sql("DELETE FROM finance_member_fees WHERE fee_type='PG monthly'")
     sql("DELETE FROM grade_submissions WHERE review_notes='PGSEED'")
-    sql("DELETE FROM material_requests WHERE requested_by='PGSEED'")
     sql("DELETE FROM users WHERE username LIKE 'pgteach\\_%'")
     sql("DELETE FROM members WHERE member_code LIKE 'PG-%'")
 
@@ -65,23 +62,17 @@ sql("DELETE FROM security_rate_limits")
 subprocess.run('rm -f /tmp/ssms_ratelimit/* /home/user/SSMS/admin/uploads/cache/rate_*.json', shell=True)
 vals = ','.join(f"('PG ሙከራ {i}','PGtest{i:03d}','Seed','PG-{i:04d}','active')" for i in range(1, 131))
 sql(f"INSERT INTO members (full_name_am, student_name, father_name, member_code, status) VALUES {vals}")
-vals = ','.join(f"(900000,'PG monthly',10,{(i % 13) + 1},2019,'{'paid' if i % 3 else 'unpaid'}')" for i in range(120))
-sql(f"INSERT INTO finance_member_fees (member_id, fee_type, amount, ec_month, ec_year, status) VALUES {vals}")
 vals = ','.join(f"(3,1,'attendance',DATE_SUB('2000-12-31', INTERVAL {i} DAY),'submitted','PGSEED')" for i in range(70))
 sql(f"INSERT INTO grade_submissions (teacher_id, class_id, submission_type, attendance_date, status, review_notes) VALUES {vals}")
 ph = sql("SELECT password_hash FROM users WHERE username='audit_super'")
 vals = ','.join(f"('pgteach_{i:02d}','pgteach_{i:02d}@pg.local','{ph}','PG Teacher {i:02d}','teacher',{0 if i < 10 else 1})" for i in range(60))
 sql(f"INSERT INTO users (username, email, password_hash, full_name, role, is_active) VALUES {vals}")
-vals = ','.join(f"('PG item {i:02d}',1,'PGSEED','pending')" for i in range(70))
-sql(f"INSERT INTO material_requests (item_name, quantity, requested_by, status) VALUES {vals}")
 
 N_MEM = int(sql("SELECT COUNT(*) FROM members WHERE status='active'"))
-N_FEES = int(sql("SELECT COUNT(*) FROM finance_member_fees"))
 N_SUB = int(sql("SELECT COUNT(*) FROM grade_submissions"))
-N_REQ = int(sql("SELECT COUNT(*) FROM material_requests"))
 N_TEACH_ACTIVE = int(sql("SELECT COUNT(*) FROM users WHERE role='teacher' AND is_active=1"))
 N_TEACH_INACT = int(sql("SELECT COUNT(*) FROM users WHERE role='teacher' AND is_active=0"))
-print(f'seeded: members={N_MEM} fees={N_FEES} subs={N_SUB} reqs={N_REQ} teachers={N_TEACH_ACTIVE}+{N_TEACH_INACT}')
+print(f'seeded: members={N_MEM} subs={N_SUB} teachers={N_TEACH_ACTIVE}+{N_TEACH_INACT}')
 
 try:
     # ── API: paged answers + unchanged old defaults ───────────────────
@@ -111,15 +102,7 @@ try:
     d = requests.get(BASE + '/api/v1/enrollment/search?q=PGtest&limit=20&offset=120&with_total=1', headers=H).json().get('data', {})
     ck('A24 v1 enrollment search last page: 10 rows', len(d.get('members', [])) == 10, len(d.get('members', [])))
 
-    fin = session('audit_fin')
-    st, d = jget(fin, '/admin/api_finance.php?action=member_fees')
-    ck('A08 member_fees without page: old shape', st == 200 and 'fees' in d and 'total' not in d and len(d['fees']) == min(500, N_FEES), (st, len(d.get('fees', []))))
-    st, d = jget(fin, '/admin/api_finance.php?action=member_fees&page=3&per_page=50')
-    ck('A09 member_fees page 3', d.get('total') == N_FEES and d.get('page') == 3 and len(d.get('fees', [])) == max(0, min(50, N_FEES - 100)), {k: d.get(k) for k in ('total', 'page')})
-    n_unpaid = int(sql("SELECT COUNT(*) FROM finance_member_fees WHERE status='unpaid'"))
-    st, d = jget(fin, '/admin/api_finance.php?action=member_fees&page=1&per_page=25&status=unpaid')
-    ck('A10 member_fees status filter total', d.get('total') == n_unpaid, (d.get('total'), n_unpaid))
-    st, d = jget(fin, '/admin/api_list_members.php?view=picker&limit=50&page=2')
+    st, d = jget(edu, '/admin/api_list_members.php?view=picker&limit=50&page=2')
     ck('A11 picker page 2 + total', st == 200 and d.get('total') == N_MEM and len(d.get('members', [])) == min(50, N_MEM - 50), (d.get('total'), N_MEM, len(d.get('members', []))))
 
     st, d = jget(edu, '/admin/api_teachers.php?action=get_teachers')
@@ -134,13 +117,6 @@ try:
     ck('A16 get_teachers search', d.get('total') == 1, d.get('total'))
     st, d = jget(edu, '/admin/api_teachers.php?action=get_teachers&page=1&per_page=25&sort=classes')
     ck('A17 get_teachers sort=classes ok', st == 200 and d.get('status') == 'success', d)
-
-    sup = session('audit_super')
-    st, d = jget(sup, '/admin/api_material.php?action=requests')
-    ck('A18 material requests without page: old (newest 100, no total)', st == 200 and 'requests' in d and 'total' not in d and len(d['requests']) == min(100, N_REQ), (st, len(d.get('requests', []))))
-    st, d = jget(sup, '/admin/api_material.php?action=requests&page=2&per_page=25&status=pending')
-    n_pend = int(sql("SELECT COUNT(*) FROM material_requests WHERE status='pending'"))
-    ck('A19 material requests paged + status', d.get('total') == n_pend and len(d.get('requests', [])) == min(25, n_pend - 25), {k: d.get(k) for k in ('total', 'page')})
 
     hr = session('audit_hr')
     st, d = jget(hr, '/admin/api_guardians.php?action=list_suggestions')
@@ -256,48 +232,6 @@ try:
         ck('B26 Edu teachers: search goes to server (1 result)', wait_txt(page, trng, r'of 1\b'), txt(page, trng))
         page.screenshot(path=SHOTS + '/edu_teachers.png')
         ck('B27 Edu: no JS errors', not errs, errs)
-        ctx.close()
-
-        # B4 Finance: picker reaches the last member + fees pager
-        ctx, page, errs = open_as('audit_fin', '/admin/dashboards/finance_department.php')
-        page.evaluate("()=>{localStorage.removeItem('fkss_pp_fin_fees');nav('fees');return 1}")
-        frng = '#feesPager [data-fk-pager-range]'
-        ck('B28 Finance fees: range 1–50 of N', wait_txt(page, frng, f'1[–-]50 of {N_FEES}'), txt(page, frng))
-        page.click('#feesPager [data-fk-pager-next]')
-        ck('B29 Finance fees: Next -> 51–100', wait_txt(page, frng, f'51[–-]100 of {N_FEES}'), txt(page, frng))
-        page.click('#feesPager [data-fk-pager-more]')
-        ck('B30 Finance fees: Load more -> 51–N', wait_txt(page, frng, f'51[–-]{min(150, N_FEES)} of {N_FEES}'), txt(page, frng))
-        page.select_option('#feeStatus', 'unpaid')
-        ck('B31 Finance fees: filter resets to page 1 with new total', wait_txt(page, frng, f'of {n_unpaid}'), txt(page, frng))
-        page.screenshot(path=SHOTS + '/finance_fees.png')
-        sel = '#feeMember'
-        page.wait_for_function("(s)=>document.querySelectorAll(s+' option').length>2", arg=sel, timeout=8000)
-        n0 = page.evaluate("(s)=>document.querySelectorAll(s+' option:not([value=\"\"]):not([value=\"__more__\"])').length", sel)
-        has_more = page.evaluate("(s)=>!!document.querySelector(s+' option[value=\"__more__\"]')", sel)
-        ck('B32 Finance picker: first 50 + "Show more" option', n0 == 50 and has_more, (n0, has_more))
-        rounds = 0
-        while page.evaluate("(s)=>!!document.querySelector(s+' option[value=\"__more__\"]')", sel) and rounds < 20:
-            page.evaluate("(s)=>{const e=document.querySelector(s);e.value='__more__';e.dispatchEvent(new Event('change',{bubbles:true}));return 1}", sel)
-            page.wait_for_timeout(700); rounds += 1
-        n1 = page.evaluate("(s)=>document.querySelectorAll(s+' option:not([value=\"\"]):not([value=\"__more__\"])').length", sel)
-        ck('B33 Finance picker: Show more reaches every member', n1 == N_MEM, (n1, N_MEM, rounds))
-        page.evaluate("()=>{const e=document.getElementById('feeMemberSearch');e.value='PGtest130';e.dispatchEvent(new Event('input',{bubbles:true}));return 1}"); page.wait_for_timeout(1500)
-        found = page.evaluate("(s)=>[...document.querySelectorAll(s+' option')].some(o=>/PGtest130/.test(o.textContent))", sel)
-        ck('B34 Finance picker: search finds the last seeded member', found, found)
-        ck('B35 Finance: no JS errors', not errs, errs)
-        ctx.close()
-
-        # B5 Material requests
-        ctx, page, errs = open_as('audit_super', '/admin/dashboards/material_department.php')
-        page.evaluate("()=>{localStorage.removeItem('fkss_pp_material_requests');nav('requests');return 1}")
-        mrng = '#reqPager [data-fk-pager-range]'
-        ok = wait_txt(page, mrng, f'of {N_REQ}')
-        ck('B36 Material requests: paged range of all requests', ok, txt(page, mrng) or page.url)
-        if ok:
-            page.click('#reqPager [data-fk-pager-next]')
-            ck('B37 Material requests: Next -> page 2', wait_txt(page, '#reqPager [data-fk-pager-pos]', r'Page 2 of'), txt(page, '#reqPager'))
-        page.screenshot(path=SHOTS + '/material_requests.png')
-        ck('B38 Material: no JS errors', not errs, errs)
         ctx.close()
 
         # B6 Attendance monthly + warnings screens load with the new controls
