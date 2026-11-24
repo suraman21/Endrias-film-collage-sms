@@ -135,7 +135,7 @@ class MemberDirectoryScalingTests(unittest.TestCase):
         self.assertNotIn("$members[]", compatibility)
         self.assertIn("view: 'archive'", self.archive_js)
         self.assertIn("PaginatedList", self.archive_js)
-        self.assertIn("archive_type", self.archive_js)
+        self.assertIn("archive_reason", self.archive_js)
         self.assertIn("textContent", self.archive_js)
         self.assertNotIn("innerHTML", self.archive_js)
         for relative in [

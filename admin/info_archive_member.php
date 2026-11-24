@@ -28,7 +28,7 @@ if (empty($csrfToken) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSIO
 $id = isset($input['id']) ? (int)$input['id'] : 0;
 $reason = isset($input['reason']) ? trim((string)$input['reason']) : '';
 $notes = isset($input['notes']) ? trim((string)$input['notes']) : '';
-$allowedReasons = ['left_school','graduated','transferred','inactive_long','failed_observation','deceased','other'];
+$allowedReasons = ['left_school','graduated','transferred','inactive_long','deceased','other'];
 if (!in_array($reason, $allowedReasons, true) || mb_strlen($notes) > 2000) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid archive reason or notes.']);
     exit;
@@ -58,7 +58,8 @@ if ($member['status'] === 'archived') {
 }
 
 // Archive metadata columns are deployment-managed by migration 013.
-$archiveType = ($reason === 'failed_observation') ? 'failed_observation' : 'permanent_archive';
+// archive_type (legacy Permanent/Failed-Observation split) is no longer set;
+// every archived student simply joins the single old-students archive.
 $archivedBy = (string)$_SESSION['admin_username'];
 
 // Archive the student and preserve a reviewable reason trail.
@@ -67,11 +68,11 @@ $archivedBy = (string)$_SESSION['admin_username'];
 $priorStatus = (string)($member['status'] ?? '');
 $sql = "UPDATE members
         SET status='archived', status_before_archive=?, archived_at=NOW(), archived_by=?, archive_reason=?,
-            archive_notes=?, archive_type=?
+            archive_notes=?, archive_type=NULL
         WHERE id=?";
 $stmt = $conn->prepare($sql);
 if ($stmt) {
-    $stmt->bind_param('sssssi', $priorStatus, $archivedBy, $reason, $notes, $archiveType, $id);
+    $stmt->bind_param('ssssi', $priorStatus, $archivedBy, $reason, $notes, $id);
     if ($stmt->execute()) {
         $memberName = $member['student_name'] . ' ' . $member['father_name'];
         
@@ -91,7 +92,7 @@ if ($stmt) {
             $auditOk = \App\Services\SecurityAuditService::record(
                 $conn,
                 'Student Archived',
-                ['archive_reason' => $reason, 'archive_type' => $archiveType],
+                ['archive_reason' => $reason],
                 'member',
                 $id
             );

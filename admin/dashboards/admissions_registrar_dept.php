@@ -93,7 +93,6 @@ if (isset($conn)) {
             registration_type,
             member_type,
             membership_tier,
-            archive_type,
             status,
             age_group,
             current_section,
@@ -2127,16 +2126,21 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                    class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
                         </div>
                     </div>
-                    <!-- Archive Tabs -->
-                    <div class="flex gap-2 mb-4 border-b border-slate-200 pb-2">
-                        <button onclick="switchArchiveTab('permanent_archive')" id="tab_permanent_archive" class="px-4 py-2 text-sm font-semibold text-amber-700 border-b-2 border-amber-500">
-                            Permanent Archive
-                        </button>
-                        <button onclick="switchArchiveTab('failed_observation')" id="tab_failed_observation" class="px-4 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-amber-700">
-                            Failed Observation
-                        </button>
+                    <!-- Archive reason filter -->
+                    <div class="mb-4 flex items-center gap-2">
+                        <label for="archiveReasonFilter" class="text-xs font-semibold text-slate-500 flex-shrink-0">Reason</label>
+                        <select id="archiveReasonFilter" onchange="filterArchivedMembers()"
+                                class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                            <option value="">All reasons</option>
+                            <option value="graduated">ተመርቋል/ች (Graduated)</option>
+                            <option value="left_school">ከትምህርት ቤት ወጥቷል/ች (Left School)</option>
+                            <option value="transferred">ወደ ሌላ ቦታ ተዛውሯል/ች (Transferred)</option>
+                            <option value="inactive_long">ረጅም ጊዜ አልተገኘም/ች (Long Inactive)</option>
+                            <option value="deceased">አርፏል/ች (Deceased)</option>
+                            <option value="other">ሌላ (Other)</option>
+                        </select>
                     </div>
-                    
+
                     <!-- Archived Students List -->
                     <div id="archivedMembersList" class="space-y-3">
                         <div class="text-center py-8 text-slate-400">
@@ -3737,7 +3741,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <option value="graduated">ተመርቋል/ች (Graduated)</option>
                     <option value="transferred">ወደ ሌላ ቦታ ተዛውሯል/ች (Transferred)</option>
                     <option value="inactive_long">ረጅም ጊዜ አልተገኘም/ች (Long Inactive)</option>
-                    <option value="failed_observation">የሙከራ ጊዜውን አላጠናቀቀም/ች (Failed Observation)</option>
                     <option value="deceased">አርፏል/ች (Deceased)</option>
                     <option value="other">ሌላ (Other)</option>
                 </select>
