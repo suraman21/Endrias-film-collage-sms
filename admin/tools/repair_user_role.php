@@ -13,9 +13,9 @@
  * Usage (CLI ONLY, from the deployment root):
  *   php admin/tools/repair_user_role.php                       # audit table
  *   php admin/tools/repair_user_role.php --username=abebe \
- *       --role=finance_dept                                    # dry run
+ *       --role=info_dept                                       # dry run
  *   php admin/tools/repair_user_role.php --username=abebe \
- *       --role=finance_dept --apply                            # execute
+ *       --role=info_dept --apply                               # execute
  *
  * Safety: CLI-only (HTTP 404 on the web), dry run by default, prepared
  * statements, canonical role whitelist identical to user-save.php.
@@ -36,8 +36,6 @@ $CANONICAL_ROLES = [
     'hr_dept',
     'admissions_registrar_dept',
     'edu_dept',
-    'finance_dept',
-    'material_dept',
     'teacher',
     'attendance_taker',
 ];

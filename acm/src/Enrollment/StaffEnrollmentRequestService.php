@@ -296,7 +296,7 @@ final class StaffEnrollmentRequestService
         }
         if (!in_array((string)$row['role'], [
             'super_admin', 'school_admin', 'info_dept',
-            'edu_dept', 'finance_dept', 'material_dept',
+            'edu_dept',
         ], true)) {
             throw new InvalidArgumentException('User is not a staff account.');
         }

@@ -68,7 +68,7 @@
 
         /**
          * POST request to backend API
-         * @param {string} endpoint - e.g. 'finance.php'
+         * @param {string} endpoint - e.g. 'education.php'
          * @param {Object|FormData} data - key/value pairs or FormData
          * @returns {Promise<Object>} parsed JSON response
          */
@@ -126,8 +126,8 @@
 
     /**
      * Resolve endpoint to full URL
-     * Handles: 'finance.php' → '/backend/api/finance.php'
-     *          'api_finance.php' → '/admin/api_finance.php' (legacy)
+     * Handles: 'education.php' → '/backend/api/education.php'
+     *          'api_education.php' → '/admin/api_education.php' (legacy)
      *          '/admin/...' → as-is (absolute)
      *          '/backend/...' → as-is (absolute)
      */
@@ -382,8 +382,6 @@
             'school_admin':   'School Admin',
             'info_dept':      (APP.school && APP.school.depts && APP.school.depts.info) ? APP.school.depts.info.en : 'Information Dept',
             'edu_dept':       (APP.school && APP.school.depts && APP.school.depts.edu) ? APP.school.depts.edu.en : 'Education Dept',
-            'finance_dept':   (APP.school && APP.school.depts && APP.school.depts.finance) ? APP.school.depts.finance.en : 'Finance Dept',
-            'material_dept':  (APP.school && APP.school.depts && APP.school.depts.material) ? APP.school.depts.material.en : 'Material Dept',
             'teacher':        'Teacher',
             'attendance_taker': 'Attendance'
         };

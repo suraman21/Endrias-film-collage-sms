@@ -14,10 +14,6 @@ $auth = apiRequireAuth();
 $id = $ROUTE['id'];
 $sub = $ROUTE['sub'];
 
-if (apiRoleIs($auth, ['finance_dept', 'material_dept'])) {
-    err('Classes are not available for this role. Use the website.', 403);
-}
-
 // ============================================================
 // GET /classes — List classes (role-filtered)
 // ============================================================

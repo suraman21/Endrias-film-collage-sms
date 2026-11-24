@@ -20,8 +20,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = os.environ.get('SSMS_AUDIT_BASE', 'http://127.0.0.1:8081').rstrip('/')
-ROLES = ['super_admin','school_admin','info_dept','hr_dept','edu_dept','finance_dept',
-         'material_dept','mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor']
+ROLES = ['super_admin','school_admin','info_dept','hr_dept','edu_dept',
+         'mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor']
 
 
 def ensure_local():
@@ -123,9 +123,6 @@ class AuditHttpTests(unittest.TestCase):
             cls.clients[role] = client
         cls.class_one = int(sql("SELECT id FROM classes WHERE class_code='grade_1' AND is_active=1")['rows'][0]['id'])
         cls.class_two = int(sql("SELECT id FROM classes WHERE class_code='grade_2' AND is_active=1")['rows'][0]['id'])
-        cls.income = int(sql("SELECT id FROM finance_categories WHERE type='income' ORDER BY id LIMIT 1")['rows'][0]['id'])
-        cls.expense = int(sql("SELECT id FROM finance_categories WHERE type='expense' ORDER BY id LIMIT 1")['rows'][0]['id'])
-        cls.material_category = int(sql('SELECT id FROM material_categories ORDER BY id LIMIT 1')['rows'][0]['id'])
 
     def good(self, response):
         self.assertEqual(response['status'], 200, response['body'][:500])
@@ -141,8 +138,7 @@ class AuditHttpTests(unittest.TestCase):
 
     def test_02_anonymous_routes_fail_closed(self):
         client = Client()
-        for path in ['/admin/api_finance.php?action=dashboard','/backend/api/finance.php?action=dashboard',
-                     '/admin/api_material.php?action=items','/backend/api/mezmur.php?action=stats',
+        for path in ['/backend/api/mezmur.php?action=stats',
                      '/admin/api_identity.php?action=list_positions','/admin/api_notifications.php?action=changes']:
             with self.subTest(path=path):
                 response = client.request(path)
@@ -151,9 +147,6 @@ class AuditHttpTests(unittest.TestCase):
 
     def test_03_cross_department_matrix(self):
         endpoints = {
-            '/admin/api_finance.php?action=dashboard': {'finance_dept','super_admin','school_admin'},
-            '/backend/api/finance.php?action=dashboard': {'finance_dept','super_admin','school_admin'},
-            '/admin/api_material.php?action=items': {'material_dept','super_admin','school_admin'},
             '/backend/api/mezmur.php?action=stats': {'mezmur_dept','super_admin','school_admin'},
             '/admin/api_identity.php?action=list_positions': {'super_admin'},
             # Shared Attendance Analytics Hub: Info + HR analyse Education + Mezmur (2026-10-18).
@@ -170,8 +163,6 @@ class AuditHttpTests(unittest.TestCase):
 
     def test_04_write_actions_reject_get(self):
         endpoints = {
-            '/admin/api_finance.php': ['add_transaction','update_transaction','delete_transaction','save_category','save_fee'],
-            '/admin/api_material.php': ['save_item','delete_item','add_transaction','save_category','save_request','update_request'],
             '/admin/api_notifications.php': ['mark_read','mark_all_read','task_update','sync_change'],
             '/admin/api_year_context.php': ['set','clear'],
             '/admin/api_education.php': ['sync_member_types','save_class','delete_class','set_current_year'],
@@ -186,7 +177,7 @@ class AuditHttpTests(unittest.TestCase):
                     self.assertEqual(response['headers'].get('Allow'), 'POST')
 
     def test_05_csrf_missing_and_array_are_denied_not_fatal(self):
-        for path in ['/admin/api_finance.php','/admin/api_material.php','/admin/api_notifications.php','/admin/api_year_context.php']:
+        for path in ['/admin/api_notifications.php','/admin/api_year_context.php']:
             for data in ({'action':'save_category'}, {'action':'save_category','csrf_token[]':'bad'}):
                 if path.endswith('api_year_context.php'):
                     data['action'] = 'clear'
@@ -194,112 +185,6 @@ class AuditHttpTests(unittest.TestCase):
                     response = self.clients['super_admin'].post(path,data,csrf=False)
                     self.assertEqual(response['status'],403,response['body'][:300])
                     self.assertIsInstance(response['json'],dict)
-
-    def test_06_finance_date_and_money_roundtrip(self):
-        client = self.clients['finance_dept']
-        response = client.post('/backend/api/finance.php', {'action':'add_transaction','type':'income',
-            'category_id':self.income,'amount':'123.45','description':'audit-date-roundtrip',
-            'transaction_date':'2026-08-22','payment_method':'cash','ec_month':12,'ec_year':2018})
-        result = self.good(response)
-        row = sql('SELECT amount,transaction_date,ec_month,ec_year FROM finance_transactions WHERE id=?',[result['id']])['rows'][0]
-        self.assertEqual(str(row['amount']),'123.45')
-        self.assertEqual(row['transaction_date'],'2026-08-22')
-        self.assertEqual(int(row['ec_month']),12)
-        self.good(client.post('/admin/api_finance.php', {'action':'delete_transaction','id':result['id']}))
-
-    def test_07_finance_invalid_values_and_reference(self):
-        base = {'action':'add_transaction','type':'income','category_id':self.income,'amount':'10.00','transaction_date':'2026-08-22'}
-        for change in [{'amount':'-1'}, {'amount':'NaN'}, {'amount':'1.234'}, {'amount':'1e99'},
-                       {'transaction_date':'2026-02-30'}, {'category_id':self.expense}, {'member_id':2147483647}]:
-            with self.subTest(change=change):
-                response = self.clients['finance_dept'].post('/admin/api_finance.php',dict(base,**change))
-                self.assertEqual(response['status'],422,response['body'][:300])
-
-    def test_08_fee_posts_matching_historical_income(self):
-        before = sql('SELECT COALESCE(MAX(id),0) id FROM finance_transactions')['rows'][0]['id']
-        result = self.good(self.clients['finance_dept'].post('/admin/api_finance.php',
-            {'action':'save_fee','member_id':900000,'amount':'25.75','ec_month':12,'ec_year':2018,
-             'paid_date':'2026-08-18','status':'paid','fee_type':'monthly'}))
-        rows = sql('SELECT amount,transaction_date,member_id,type FROM finance_transactions WHERE id>?',[before])['rows']
-        self.assertEqual(len(rows),1)
-        self.assertEqual(rows[0]['transaction_date'],'2026-08-18')
-        self.assertEqual(str(rows[0]['amount']),'25.75')
-        fee = sql('SELECT ec_year,ec_month,paid_date FROM finance_member_fees WHERE id=?',[result['id']])['rows'][0]
-        self.assertEqual(int(fee['ec_year']),2018)
-        self.assertEqual(fee['paid_date'],'2026-08-18')
-
-    def test_09_fee_rolls_back_when_income_write_fails(self):
-        before = sql('SELECT COUNT(*) n FROM finance_member_fees')['rows'][0]['n']
-        sql("CREATE TRIGGER audit_fail_finance BEFORE INSERT ON finance_transactions FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='AUDIT injected ledger failure'")
-        try:
-            response = self.clients['finance_dept'].post('/admin/api_finance.php',
-                {'action':'save_fee','member_id':900000,'amount':'31.00','ec_month':12,'ec_year':2018,'status':'paid'})
-            self.assertEqual(response['status'],500,response['body'][:300])
-            self.assertNotIn('AUDIT injected',response['body'])
-            self.assertEqual(sql('SELECT COUNT(*) n FROM finance_member_fees')['rows'][0]['n'],before)
-        finally:
-            sql('DROP TRIGGER IF EXISTS audit_fail_finance')
-
-    def material_item(self, quantity=5):
-        result = self.good(self.clients['material_dept'].post('/admin/api_material.php',
-            {'action':'save_item','name':'Audit inventory ' + str(time.time_ns()),'category_id':self.material_category,
-             'quantity':quantity,'min_quantity':2,'unit':'piece','condition_status':'good','purchase_date':'2026-08-22','purchase_price':'10.50'}))
-        return int(result['id'])
-
-    def test_10_material_unit_and_edit_roundtrip(self):
-        item = self.material_item()
-        row = sql('SELECT unit,quantity,min_quantity,purchase_date,purchase_price FROM material_items WHERE id=?',[item])['rows'][0]
-        self.assertEqual(row['unit'],'piece')
-        self.assertEqual(int(row['quantity']),5)
-        self.assertEqual(row['purchase_date'],'2026-08-22')
-        self.good(self.clients['material_dept'].post('/admin/api_material.php',
-            {'action':'save_item','id':item,'name':'Audit edited','quantity':6,'min_quantity':2,'unit':'box','condition_status':'fair'}))
-        self.assertEqual(sql('SELECT unit FROM material_items WHERE id=?',[item])['rows'][0]['unit'],'box')
-        self.good(self.clients['material_dept'].post('/admin/api_material.php',{'action':'delete_item','id':item}))
-
-    def test_11_outgoing_never_overdraws_or_writes_phantom_history(self):
-        item = self.material_item()
-        client = self.clients['material_dept']
-        response = client.post('/admin/api_material.php',{'action':'add_transaction','item_id':item,'type':'outgoing','quantity':6})
-        self.assertEqual(response['status'],409,response['body'][:300])
-        self.assertEqual(int(sql('SELECT quantity FROM material_items WHERE id=?',[item])['rows'][0]['quantity']),5)
-        self.assertEqual(int(sql('SELECT COUNT(*) n FROM material_transactions WHERE item_id=?',[item])['rows'][0]['n']),0)
-        self.good(client.post('/admin/api_material.php',{'action':'add_transaction','item_id':item,'type':'outgoing','quantity':3}))
-        row=sql('SELECT quantity,status FROM material_items WHERE id=?',[item])['rows'][0]
-        self.assertEqual(int(row['quantity']),2)
-        self.assertEqual(row['status'],'low_stock')
-        response=client.post('/admin/api_material.php',{'action':'delete_item','id':item})
-        self.assertEqual(response['status'],409)
-
-    def test_12_material_concurrent_spending_serializes(self):
-        item = self.material_item()
-        def spend(role):
-            return self.clients[role].post('/admin/api_material.php',
-                {'action':'add_transaction','item_id':item,'type':'outgoing','quantity':4})['status']
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-            statuses = sorted(pool.map(spend,['material_dept','school_admin']))
-        self.assertEqual(statuses,[200,409])
-        self.assertEqual(int(sql('SELECT quantity FROM material_items WHERE id=?',[item])['rows'][0]['quantity']),1)
-        self.assertEqual(int(sql('SELECT COUNT(*) n FROM material_transactions WHERE item_id=?',[item])['rows'][0]['n']),1)
-
-    def test_13_adjustment_sets_zero_balance(self):
-        item = self.material_item()
-        self.good(self.clients['material_dept'].post('/admin/api_material.php',
-            {'action':'add_transaction','item_id':item,'type':'adjustment','quantity':0,'reason':'Audit counted stock'}))
-        row = sql('SELECT quantity,status FROM material_items WHERE id=?',[item])['rows'][0]
-        self.assertEqual(int(row['quantity']),0)
-        self.assertEqual(row['status'],'out_of_stock')
-
-    def test_14_stock_rollback_on_log_failure(self):
-        item = self.material_item()
-        sql("CREATE TRIGGER audit_fail_stock BEFORE INSERT ON material_transactions FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='AUDIT injected movement failure'")
-        try:
-            response = self.clients['material_dept'].post('/admin/api_material.php',
-                {'action':'add_transaction','item_id':item,'type':'incoming','quantity':9})
-            self.assertEqual(response['status'],500,response['body'][:300])
-            self.assertEqual(int(sql('SELECT quantity FROM material_items WHERE id=?',[item])['rows'][0]['quantity']),5)
-        finally:
-            sql('DROP TRIGGER IF EXISTS audit_fail_stock')
 
     def test_15_identity_position_create_and_edit_preserve_flag(self):
         role_code='ZQ'
@@ -319,47 +204,47 @@ class AuditHttpTests(unittest.TestCase):
         sql('DELETE FROM staff_positions WHERE id=?',[row['id']])
 
     def test_16_notification_and_task_updates_are_recipient_scoped(self):
-        note = sql("INSERT INTO notifications (type,title,message,target_roles) VALUES ('general','Audit private alert','Synthetic only','finance_dept')")['id']
+        note = sql("INSERT INTO notifications (type,title,message,target_roles) VALUES ('general','Audit private alert','Synthetic only','hr_dept')")['id']
         response = self.clients['teacher'].post('/admin/api_notifications.php',{'action':'mark_read','id':note})
         self.assertNotEqual((response['json'] or {}).get('status'),'success')
         self.assertEqual(int(sql('SELECT is_read FROM notifications WHERE id=?',[note])['rows'][0]['is_read']),0)
-        self.good(self.clients['finance_dept'].post('/admin/api_notifications.php',{'action':'mark_read','id':note}))
-        task = sql("INSERT INTO department_tasks (task_type,title,to_dept,from_dept) VALUES ('general','Audit private task','finance_dept','school_admin')")['id']
+        self.good(self.clients['hr_dept'].post('/admin/api_notifications.php',{'action':'mark_read','id':note}))
+        task = sql("INSERT INTO department_tasks (task_type,title,to_dept,from_dept) VALUES ('general','Audit private task','hr_dept','school_admin')")['id']
         response = self.clients['teacher'].post('/admin/api_notifications.php',{'action':'task_update','task_id':task,'task_status':'completed'})
         self.assertNotEqual((response['json'] or {}).get('status'),'success')
         self.assertEqual(sql('SELECT status FROM department_tasks WHERE id=?',[task])['rows'][0]['status'],'pending')
-        self.good(self.clients['finance_dept'].post('/admin/api_notifications.php',{'action':'task_update','task_id':task,'task_status':'completed'}))
+        self.good(self.clients['hr_dept'].post('/admin/api_notifications.php',{'action':'task_update','task_id':task,'task_status':'completed'}))
 
     def test_17_member_change_pii_is_not_a_teacher_alert(self):
-        for role in ['teacher','attendance_taker','finance_dept','material_dept','mezmur_dept','content_editor']:
+        for role in ['teacher','attendance_taker','mezmur_dept','content_editor']:
             with self.subTest(role=role):
                 response=self.clients[role].request('/admin/api_notifications.php?action=changes')
                 self.assertEqual(response['status'],403,response['body'][:300])
 
     def test_18_frontend_bootstrap_survives_script_delimiter(self):
-        client=self.clients['finance_dept']
+        client=self.clients['hr_dept']
         evil="O'Neil\n</script><script>window.__auditXss=1</script>"
         fixture({'op':'session','id':client.session_id(),'values':{'admin_full_name':evil}})
         try:
-            response=client.request('/frontend/pages/finance_dept.php',headers={'Accept':'text/html'})
+            response=client.request('/frontend/pages/dashboard.php',headers={'Accept':'text/html'})
             self.assertEqual(response['status'],200)
             self.assertNotIn('</script><script>window.__auditXss',response['body'])
             match=re.search(r'window.APP\s*=\s*(\{.*?\});\s*</script>',response['body'],re.S)
             self.assertIsNotNone(match)
             self.assertEqual(json.loads(match[1])['user']['name'],evil)
         finally:
-            fixture({'op':'session','id':client.session_id(),'values':{'admin_full_name':'Audit finance_dept'}})
+            fixture({'op':'session','id':client.session_id(),'values':{'admin_full_name':'Audit hr_dept'}})
 
     def test_19_database_revalidation_covers_backend_shim(self):
-        client=self.clients['finance_dept']
+        client=self.clients['hr_dept']
         fixture({'op':'session','id':client.session_id(),'values':{'AUTH_REVALIDATED_AT':0}})
-        sql("UPDATE users SET is_active=0 WHERE username='audit_finance_dept'")
+        sql("UPDATE users SET is_active=0 WHERE username='audit_hr_dept'")
         try:
-            response=client.request('/backend/api/finance.php?action=dashboard')
+            response=client.request('/backend/api/notifications.php?action=changes')
             self.assertEqual(response['status'],401,response['body'][:300])
             self.assertIsInstance(response['json'],dict)
         finally:
-            sql("UPDATE users SET is_active=1 WHERE username='audit_finance_dept'")
+            sql("UPDATE users SET is_active=1 WHERE username='audit_hr_dept'")
 
     def test_20_idle_frontend_timeout_returns_quick_same_origin_redirect(self):
         client=self.clients['mezmur_dept']
@@ -374,7 +259,7 @@ class AuditHttpTests(unittest.TestCase):
         self.assertRegex(page['body'],r'name="csrf_token"\s+value="[a-f0-9]+"')
 
     def test_21_both_logout_paths_clear_session_and_resolve(self):
-        for role,path in [('teacher','/admin/logout.php'),('material_dept','/backend/auth/logout.php')]:
+        for role,path in [('teacher','/admin/logout.php'),('info_dept','/backend/auth/logout.php')]:
             with self.subTest(path=path):
                 client=self.clients[role]
                 response=client.request(path,headers={'Accept':'text/html'})
@@ -395,7 +280,7 @@ class AuditHttpTests(unittest.TestCase):
     def test_23_impersonation_restores_from_every_supported_department(self):
         client=self.clients['super_admin']
         try:
-            for role in ['school_admin','hr_dept','info_dept','edu_dept','finance_dept','material_dept','mezmur_dept','teacher','attendance_taker']:
+            for role in ['school_admin','hr_dept','info_dept','edu_dept','mezmur_dept','teacher','attendance_taker']:
                 with self.subTest(role=role):
                     self.good(client.post('/admin/api_impersonate.php',{'action':'switch','role':role}))
                     status=self.good(client.request('/admin/api_impersonate.php?action=status'))
@@ -503,7 +388,7 @@ class AuditHttpTests(unittest.TestCase):
 
     def test_30_rest_api_role_boundaries_and_malformed_route(self):
         sql('DELETE FROM security_rate_limits')
-        for role in ['super_admin','school_admin','info_dept','edu_dept','finance_dept','material_dept','mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor','hr_dept']:
+        for role in ['super_admin','school_admin','info_dept','edu_dept','mezmur_dept','teacher','attendance_taker','mezmur_attendance_taker','hr_attendance_taker','content_editor','hr_dept']:
             with self.subTest(role=role):
                 # This matrix tests permissions, not the ten-logins/minute throttle.
                 sql("DELETE FROM security_rate_limits WHERE action_name='api:auth_login'")
@@ -556,7 +441,7 @@ class AuditHttpTests(unittest.TestCase):
         name='audit_delete_'+str(time.time_ns())
         target=int(sql("INSERT INTO users (username,full_name,role,password_hash,is_active) VALUES (?,?,'teacher','not-a-login-hash',1)",[name,'Audit deletion target'])['id'])
         private=int(sql("INSERT INTO notifications (type,title,message,target_user_id,target_roles) VALUES ('general','Audit private deletion','PRIVATE AUDIT',?,NULL)",[target])['id'])
-        shared=int(sql("INSERT INTO notifications (type,title,message,target_user_id,target_roles) VALUES ('general','Audit shared deletion','SHARED AUDIT',?,'finance_dept')",[target])['id'])
+        shared=int(sql("INSERT INTO notifications (type,title,message,target_user_id,target_roles) VALUES ('general','Audit shared deletion','SHARED AUDIT',?,'hr_dept')",[target])['id'])
         try:
             response=self.clients['super_admin'].post('/admin/backend/user-delete.php',
                 {'delete_user_id':target,'superadmin_password':'AuditTest#2026','confirm_phrase':'DELETE USER'})
@@ -565,7 +450,7 @@ class AuditHttpTests(unittest.TestCase):
             self.assertEqual(sql('SELECT id FROM users WHERE id=?',[target])['rows'],[])
             self.assertEqual(sql('SELECT id FROM notifications WHERE id=?',[private])['rows'],[])
             row=sql('SELECT target_roles,target_user_id FROM notifications WHERE id=?',[shared])['rows'][0]
-            self.assertEqual(row['target_roles'],'finance_dept')
+            self.assertEqual(row['target_roles'],'hr_dept')
             self.assertIsNone(row['target_user_id'])
         finally:
             sql('DELETE FROM notifications WHERE id IN (?,?)',[private,shared])
@@ -597,7 +482,6 @@ class AuditHttpTests(unittest.TestCase):
             content=restored.read_text()
             self.assertIn('-- SSMS database backup',content)
             self.assertIn('CREATE TABLE `members`',content)
-            self.assertIn('CREATE TABLE `finance_transactions`',content)
         finally:
             restored.unlink(missing_ok=True)
             for file in files:Path(file['path']).unlink(missing_ok=True)

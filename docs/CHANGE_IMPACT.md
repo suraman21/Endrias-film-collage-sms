@@ -4,9 +4,9 @@
 
 ## 1. Map the change before the patch
 
-| Impact | Required record | Example: change a ledger validation rule |
+| Impact | Required record | Example: change a validation rule |
 |---|---|---|
-| Direct | Files/functions that must change for the request | `LedgerValidation` method and the intended Finance/Materials handler |
+| Direct | Files/functions that must change for the request | The validation method and the intended handler |
 | Indirect | Callers/consumers of changed behavior | Other actions using that shared validator; form validation and displayed messages |
 | Potential | Related surface not yet verified | Older reachable dashboard, exports, installed clients and hosted data assumptions |
 | Unrelated | Explicitly preserve | Authentication, role/feature policy, schema, dependencies and release configuration unless separately authorized |
@@ -19,8 +19,6 @@ Search is discovery, not proof. After finding callers, read the relevant branche
 |---|---|---|
 | Browser bootstrap/session | [config.php](../config.php), [access_control.php](../admin/access_control.php) | Real route and shim names, public exceptions, CLI exceptions, role map, session/CSRF and feature enforcement. Do not confuse login-only fallback with an explicit role restriction |
 | Feature capabilities | [FeatureGate.php](../admin/backend/services/FeatureGate.php) | Whole-module and mixed-action gates; actual boolean configuration; frontend/mobile visibility is not server authorization |
-| Finance | [frontend page](../frontend/pages/finance_dept.php), [finance.js](../frontend/js/finance.js), [core.js](../frontend/js/core.js), [API](../admin/api_finance.php) | Compatibility shim, role/feature gates, shared validator, fee/ledger atomicity, reports, destructive confirmation and historical inline dashboard reachability |
-| Materials | [dashboard](../admin/dashboards/material_department.php), [API](../admin/api_material.php) | Inventory filter state and dropdown source, locked stock movement, request status versus stock, deletion-history restrictions and shared profile/communications components |
 | Self-service profile | [users route](../api/v1/routes/users.php), [ProfileService.php](../admin/backend/services/ProfileService.php) | Trusted authentication identity, own-profile versus administrator entry points, version conflicts, image ownership/storage, credential changes, browser adapter and mobile callers |
 | API v1 | [api/v1](../api/v1/), [API.md](API.md) | Route matching, authentication, method, input parsing, error envelope, scope and every installed-client consumer. OpenAPI is summarized, not full conformance proof |
 | Mobile | [app source](../Mobile/wbws_flutter_app/lib/), [tests](../Mobile/wbws_flutter_app/test/) | Actual role/navigation path, injected service, serialization, local persistence and ownership, network failure/queue recovery, server acceptance and version compatibility |

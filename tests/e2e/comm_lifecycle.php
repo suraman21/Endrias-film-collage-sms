@@ -155,7 +155,7 @@ function resetSchema(array $migrations): void {
         [1, 'e2e1', 'Super Admin', 'super_admin'],
         [2, 'e2e2', 'Test Teacher', 'teacher'],
         [3, 'e2e3', 'Edu Officer', 'edu_dept'],
-        [4, 'e2e4', 'Finance Officer', 'finance_dept'],
+        [4, 'e2e4', 'HR Officer', 'hr_dept'],
     ] as $u) {
         $stmt = $c->prepare("INSERT INTO users (id, username, full_name, role) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('isss', $u[0], $u[1], $u[2], $u[3]);
@@ -212,7 +212,7 @@ function api(string $userId, string $role, string $method, array $get, array $po
     return [$decoded, $raw, http_response_code()];
 }
 
-$ROLE_ID = ['super_admin' => 1, 'teacher' => 2, 'edu_dept' => 3, 'finance_dept' => 4];
+$ROLE_ID = ['super_admin' => 1, 'teacher' => 2, 'edu_dept' => 3, 'hr_dept' => 4];
 
 switch ($SCENARIO) {
 
@@ -325,22 +325,22 @@ switch ($SCENARIO) {
         [$r] = api(1, 'super_admin', 'POST', [], ['action' => 'message_edit', 'message_id' => $delId, 'body' => 'zombie edit']);
         ok(($r['status'] ?? '') === 'error', 'full: editing a deleted message is denied');
 
-        // role permission: teacher cannot start a thread with finance_dept
+        // role permission: teacher cannot start a thread with hr_dept
         [$r] = api(2, 'teacher', 'POST', [], ['action' => 'thread_start', 'to' => '4', 'subject' => 'nope', 'body' => 'nope']);
-        ok(($r['status'] ?? '') === 'error' && strpos($r['message'] ?? '', 'cannot message') !== false, 'full: teacher→finance_dept start denied (permission matrix)');
+        ok(($r['status'] ?? '') === 'error' && strpos($r['message'] ?? '', 'cannot message') !== false, 'full: teacher→hr_dept start denied (permission matrix)');
 
         // partner matrix: teacher sees only allowed roles (never finance)
         [$p] = api(2, 'teacher', 'POST', [], ['action' => 'partners']);
         $roles = [];
         foreach (($p['partners'] ?? []) as $partner) { $roles[$partner['role']] = 1; }
-        ok(!isset($roles['finance_dept']) && isset($roles['edu_dept']) && isset($roles['super_admin']), 'full: partner list follows the role matrix');
+        ok(!isset($roles['hr_dept']) && isset($roles['edu_dept']) && isset($roles['super_admin']), 'full: partner list follows the role matrix');
 
         // unread flow end-to-end
         [$s] = api(2, 'teacher', 'POST', [], ['action' => 'summary']);
         ok((int)($s['summary']['messages'] ?? -1) === 0, 'full: unread clear after reads');
 
         // non-participant cannot open the thread
-        [$t] = api(4, 'finance_dept', 'POST', ['action' => 'thread', 'id' => $tid], []);
+        [$t] = api(4, 'hr_dept', 'POST', ['action' => 'thread', 'id' => $tid], []);
         ok(($t['status'] ?? '') === 'error', 'full: non-participant denied ("Not your conversation.")');
         verdict();
     }

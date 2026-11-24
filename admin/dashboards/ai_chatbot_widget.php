@@ -143,12 +143,10 @@ $_aiCsrf = generateCsrfToken();
   const LS='fkssAiWin';
 
   const roleSug={
-    super_admin:['❓ What can this system do?','📊 School overview','👥 Student stats','💰 Finance health'],
+    super_admin:['❓ What can this system do?','📊 School overview','👥 Student stats','📋 Monthly report'],
     school_admin:['❓ What can this system do?','📊 School overview','👥 Student stats','📋 Monthly report'],
     info_dept:['❓ What is the Old Students Archive?','👥 Student demographics','📞 Data quality check','🆕 Registration trends'],
     edu_dept:['❓ How does the academic year work?','🏫 Class enrollment','📖 Teacher ratios','📊 Education status'],
-    finance_dept:['❓ What can I do here?','💰 Income vs expenses','📊 Budget summary','⏳ Pending payments'],
-    material_dept:['❓ What can I do here?','📦 Material overview','📊 Department stats'],
     teacher:['❓ What can I do here?','📊 My class overview','📖 Student performance tips'],
     attendance_taker:['❓ How do I record attendance?','📊 Attendance overview','📅 Today\'s summary'],
     content_editor:['❓ What can I do here?','📰 Content overview']

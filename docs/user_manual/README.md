@@ -13,8 +13,6 @@ FKSS supports staff administration, member records, education, attendance, Mezmu
 | Edit your own profile, change your password, protect the phone app and inspect diagnostics | [Account and device settings](ACCOUNT_AND_DEVICE.md) |
 | Check, download and install an Android app update | [App updates](APP_UPDATES.md) |
 | Understand saved work, resolve queue problems and sign out safely | [Sync and recovery](SYNC_AND_RECOVERY.md) |
-| Record income/expenses/member fees, understand reports and avoid unsafe retries | [Finance website workflows](FINANCE.md) |
-| Manage inventory, record receipts/issues and distinguish request approval from stock movement | [Materials website workflows](MATERIALS.md) |
 | Check which areas are documented and which still require review | [Coverage and verification](COVERAGE.md) |
 | Understand technical role identifiers and page/API boundaries | [Roles and permissions reference](../ROLES_AND_PERMISSIONS.md) |
 | Understand Ethiopian dates, classes, semesters and domain terms | [Glossary](../product/GLOSSARY.md) |

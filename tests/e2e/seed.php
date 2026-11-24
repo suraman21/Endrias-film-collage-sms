@@ -49,7 +49,6 @@ function seed_user(mysqli $conn, string $username, string $role, string $fullNam
 seed_user($conn, 'audit_super', 'super_admin', 'Audit Super', $TEST_PASS_HASH);
 seed_user($conn, 'audit_edu',   'edu_dept',    'Audit Education', $TEST_PASS_HASH);
 seed_user($conn, 'audit_teach', 'teacher',     'Audit Teacher', $TEST_PASS_HASH);
-seed_user($conn, 'audit_fin',   'finance_dept','Audit Finance', $TEST_PASS_HASH);
 
 // --- academic year + term ------------------------------------------------
 // NB: status is the resolver's PRIMARY key (ay_active_year prefers

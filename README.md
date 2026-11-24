@@ -58,7 +58,7 @@ The web server's document root is the repository root (production: `public_html`
 | `admin/` | Staff web application: pages, department dashboards (`dashboards/`), `api_*.php` endpoints, business services (`backend/services/`), ID cards (`id_cards/`), JS/CSS, maintenance tools (`tools/`: backups, health check, data repair) |
 | `api/v1/` | REST API used by the mobile app (`routes/`, `core/`) |
 | `backend/` | Compatibility shims that delegate to `admin/` (`api/`, `auth/`, `core/`, `id_cards/`, `users/`), plus `api/init.php` (dashboard bootstrap) |
-| `frontend/` | Newer router-style pages (`pages/`, `layouts/`, `js/`): dashboard, finance, education assignments and teachers |
+| `frontend/` | Newer router-style pages (`pages/`, `layouts/`, `js/`): dashboard, education assignments and teachers |
 | `app/` | Legacy installable web app (PWA) |
 | `monitor/` | Error and uptime monitor |
 | `themes/` | Shared design system and per-school themes (`fkss/`, `wbss/`) |

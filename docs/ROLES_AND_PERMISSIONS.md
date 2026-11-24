@@ -2,10 +2,6 @@
 
 **Status:** maintained role reference. The page-level matrix was recorded against `46fbaa7` (2026-10-22); HR retirement/navigation was additionally traced at `7209278` (2026-10-28). Sources: `admin/access_control.php`, `api/v1/core/acl.php`, `admin/backend/user-save.php`. This is not a fresh complete per-action permission audit. Anything not evidenced in code is marked **Unresolved**.
 
-## Source-reviewed ledger action permissions
-
-The [Finance/Materials gate and action matrix](api/LEDGER_PERMISSIONS.md), baseline `591e23d` (2026-10-28), follows the actual HTTP handler/shim role and feature checks, bootstrap ordering, methods, CSRF, confirmation and per-action record conditions. Read its source exceptions and limits before extrapolating this older page-level matrix into action-level guarantees. This supplement does not re-audit every other module or verify hosted permission effectiveness.
-
 ## 1. Roles defined in code
 
 `admin/backend/user-save.php` (`$validRoles`) accepts 15 roles (13 + 2 ACM seats since P0, 2026-11-13):
@@ -18,8 +14,6 @@ The [Finance/Materials gate and action matrix](api/LEDGER_PERMISSIONS.md), basel
 | `info_dept` | INFO | Member information: view and update records, reports, analytics |
 | `edu_dept` | EDU | Education: classes, subjects, assignments, timetable, calendar, assessments, report cards |
 | `mezmur_dept` | MEZ | Mezmur ministry: hymn catalogue, media, department attendance takers |
-| `finance_dept` | FIN | Finance department pages |
-| `material_dept` | MAT | Material department pages |
 | `teacher` | TCH | Class-scoped: attendance and grades for assigned classes |
 | `attendance_taker` | AT | Class-scoped attendance |
 | `content_editor` | CE | Public website content (CMS) |
@@ -53,10 +47,8 @@ The [Finance/Materials gate and action matrix](api/LEDGER_PERMISSIONS.md), basel
 | SA AD AT | `attendance_taker.php` |
 | SA AD CE | `content_editor.php` |
 | SA AD EDU | `edu_dept.php`, `education_department.php`, `api_assignments.php`, `assignments.php`, `edu_assignments.php`, `edu_teachers.php`, `export_executive_report_excel.php`, `export_executive_report_pdf.php` |
-| SA AD FIN | `api_finance.php`, `finance.php`, `finance_department.php`, `finance_dept.php` |
 | SA AD HR | `hr_register_member.php`, `api_check_duplicate.php`, `members_check.php`, `hr-dept.php`, `groups.php`, `groups_api.php`, `api_import_members.php`, `api_hr_attendance.php`, `api_hr_reports.php`, `view_id_card.php`, `generate_id_card.php` |
 | SA AD INFO | `info-dept.php` |
-| SA AD MAT | `api_material.php`, `material.php`, `material_department.php` |
 | SA AD MEZ | `mezmur.php`, `api_mezmur.php`, `mezmur_dept.php`, `api_dept_takers.php` |
 | SA AD TCH | `teacher.php` |
 | SA AD EDU TCH | `api_subjects.php`, `subjects.php`, `api_teachers.php`, `teachers.php`, `api_timetable.php`, `timetable.php`, `api_communication.php`, `communication.php`, `export_class_report.php`, `export_filtered_students.php` |
@@ -112,5 +104,4 @@ These are standing product decisions. The table shows where they are visible in 
 ## 5. Unresolved
 
 1. There is no complete per-action permission matrix for `admin/api_*.php` or `api/v1` routes. Producing one needs a file-by-file read; it is a candidate for the independent review stage.
-2. Whether `finance_dept` and `material_dept` are in active use in production. Unverified; needs a read-only check of user accounts (Q-6 in [OPERATIONS.md §7.2](OPERATIONS.md#72-open-questions)).
 3. There are no automated tests that assert the full `ROLE_MAP`. Some security tests cover individual endpoints (`tests/security/`).

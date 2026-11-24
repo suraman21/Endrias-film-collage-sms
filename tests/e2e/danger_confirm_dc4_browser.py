@@ -1,5 +1,5 @@
-"""Browser test for danger-confirmation DC-4 on the real Finance, Groups,
-Material, Mezmur, Content editor and Teacher screens (LOCAL test server only).
+"""Browser test for danger-confirmation DC-4 on the real Groups,
+Mezmur, Content editor and Teacher screens (LOCAL test server only).
 
 usage: SSMS_AUDIT_TESTING=1 python3 tests/e2e/danger_confirm_dc4_browser.py [base] [--shots DIR]
 """
@@ -74,29 +74,6 @@ tag = str(int(time.time()))[-6:]
 with sync_playwright() as p:
     br = p.chromium.launch()
 
-    # ───────── Finance: delete transaction (HIGH) ─────────
-    sql(f"INSERT INTO finance_transactions (type, amount, description, transaction_date, receipt_number) VALUES ('income', 250, 'DC4 UI {tag}', CURDATE(), 'UI-{tag}')")
-    tid = sql(f"SELECT id FROM finance_transactions WHERE receipt_number='UI-{tag}'")
-    page, errs = login(br, 'audit_fin', '/admin/dashboards/finance_department.php')
-    check(page.evaluate('!!window.DangerConfirm'), 'finance: component loaded')
-    page.evaluate("()=>{window.__p=loadTxns('income');return 1}")
-    page.wait_for_timeout(800)
-    page.evaluate(f"()=>{{window.__p=deleteTxn({tid},'income');return 1}}")
-    d = dialog(page)
-    txt = d.inner_text()
-    check('Delete this income record' in txt and 'UI-' + tag in txt, 'finance: HIGH dialog names the amount/receipt')
-    page.click('text=I want to delete this transaction')
-    check('no undo' in dialog(page).inner_text(), 'finance: step 2 says there is no undo')
-    page.click('text=I have read and understand these effects')
-    check(page.locator('[data-dcx-act=final]').is_disabled(), 'finance: final disabled before typing')
-    page.fill('.dcx-in', 'DELETE TRANSACTION')
-    shot(page, 'finance_delete_step3')
-    page.click('[data-dcx-act=final]')
-    page.wait_for_timeout(1500)
-    check(sql(f"SELECT COUNT(*) FROM finance_transactions WHERE id={tid}") == '0', 'finance: transaction deleted after the 3 steps')
-    check(not native(errs), 'finance: no native popups ' + str(native(errs)))
-    page.close()
-
     # ───────── Groups: delete group (HIGH, live counts) + remove leader (MEDIUM) ─────────
     sql(f"INSERT INTO wbws_groups (group_name) VALUES ('DC4 UI Group {tag}')")
     gid = sql(f"SELECT id FROM wbws_groups WHERE group_name='DC4 UI Group {tag}'")
@@ -122,23 +99,6 @@ with sync_playwright() as p:
     check(sql(f"SELECT COUNT(*) FROM wbws_groups WHERE id={gid}") == '0' and sql(f"SELECT COUNT(*) FROM wbws_group_members WHERE group_id={gid}") == '0',
           'groups: group and its members deleted after the 3 steps')
     check(not native(errs), 'groups: no native popups ' + str(native(errs)))
-    page.close()
-
-    # ───────── Material: delete item (MEDIUM) + approve request (LOW) ─────────
-    page, errs = login(br, 'audit_super', '/admin/dashboards/material_department.php')
-    if page.evaluate("typeof delItem === 'function'"):
-        check(page.evaluate('!!window.DangerConfirm'), 'material: component loaded')
-        page.evaluate("()=>{window.__p=delItem(999999);return 1}")
-        d = dialog(page)
-        check('I want to delete this item' in d.inner_text(), 'material: delete item opens MEDIUM dialog')
-        cancel(page)
-        page.evaluate("()=>{window.__p=updateReq(999999,'approved');return 1}")
-        d = dialog(page)
-        check(page.locator('.dcx-in').count() == 0 and 'Approve' in d.inner_text(), 'material: approve request is a simple LOW dialog')
-        cancel(page)
-        check(not native(errs), 'material: no native popups ' + str(native(errs)))
-    else:
-        check(False, 'material: page opened for super admin')
     page.close()
 
     # ───────── Content editor: delete photo (MEDIUM) ─────────

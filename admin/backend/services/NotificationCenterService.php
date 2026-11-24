@@ -38,8 +38,6 @@ final class NotificationCenterService
         'school_admin'            => 'School Admin',
         'info_dept'               => 'Information Dept',
         'edu_dept'                => 'Education Dept',
-        'finance_dept'            => 'Finance Dept',
-        'material_dept'           => 'Material Dept',
         'hr_dept'                 => 'HR Dept',
         'admissions_registrar_dept' => 'Admission & Registrar',
         'teacher'                 => 'Teacher',
@@ -77,8 +75,6 @@ final class NotificationCenterService
         'admissions_registrar_dept' => ['admissions_registrar_dept', 'school_admin', 'super_admin'],
         'hr_attendance_taker'     => ['hr_dept', 'school_admin', 'super_admin'],
         'info_dept'               => ['info_dept', 'school_admin', 'super_admin'],
-        'finance_dept'            => ['finance_dept', 'school_admin', 'super_admin'],
-        'material_dept'           => ['material_dept', 'school_admin', 'super_admin'],
         'content_editor'          => ['school_admin', 'super_admin'],
     ];
 

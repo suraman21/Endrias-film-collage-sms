@@ -46,9 +46,7 @@ The organisation is modelled as departments, each with its own role and dashboar
 - `hr_dept`: registration and promotion;
 - `info_dept`: member information;
 - `edu_dept`: education;
-- `mezmur_dept`;
-- `finance_dept`;
-- `material_dept`.
+- `mezmur_dept`.
 
 The `teacher` and `attendance_taker` roles are class-scoped, while `school_admin` and `super_admin` are cross-cutting. The role-to-page mapping is in [ROLES_AND_PERMISSIONS.md](ROLES_AND_PERMISSIONS.md).
 

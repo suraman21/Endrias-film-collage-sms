@@ -32,7 +32,6 @@ if (!function_exists('dc_phrases')) {
             'app_release.force_update'  => 'FORCE UPDATE',
             'members.import'            => 'IMPORT MEMBERS',
             'guardians.link_all'        => 'LINK ALL',
-            'finance.delete_transaction'=> 'DELETE TRANSACTION',
             'groups.delete_group'       => 'DELETE GROUP',
             'identity.renumber'         => 'RENUMBER CODES',
         ];

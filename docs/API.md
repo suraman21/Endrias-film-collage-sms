@@ -2,10 +2,6 @@
 
 **Status:** maintained API overview. Original route review: `46fbaa7` (2026-10-22/23); router, token constants and specification inventory rechecked at `7e28157` (2026-10-28). This maps entry points, authentication and conventions, not every field or action-level permission. [OpenAPI 3.1](api/openapi.yaml) exists: 118 listed operations with deliberately summarized bodies. Read the named route/service for field-level behavior; specification presence does not establish complete contract conformance or live deployment.
 
-## Source-reviewed browser ledger references
-
-At baseline `591e23d` (2026-10-28), the [Finance action reference](api/FINANCE_CONTRACT.md) and [Materials action reference](api/MATERIALS_CONTRACT.md) document each switch action in those two handlers individually. The matching [permission/gate reference](api/LEDGER_PERMISSIONS.md) separates bootstrap/session, role, feature, method, CSRF, confirmation and record checks. The [ledger column reference](database/LEDGER_COLUMNS.md) preserves defining DDL and later source constraints without claiming applied-schema parity. This is a bounded browser-API review, not full-system or `/api/v1` conformance.
-
 ## 1. Entry points
 
 | Layer | Base path | Router | Used by |
@@ -94,7 +90,7 @@ The 46 files, grouped by domain:
 | Attendance | `api_attendance`, `api_attendance_info`, `api_attendance_monthly`, `api_attendance_policy`, `api_attendance_warnings`, `api_department_status`, `api_dept_takers` |
 | Reporting | `api_reports`, `api_reports_v2`, `api_report_views`, `api_info_reports`, `api_info_analytics` |
 | Communication | `api_notifications`, `api_communication` |
-| Departments | `api_mezmur`, `api_finance`, `api_material` |
+| Departments | `api_mezmur` |
 | Platform and admin | `api_settings`, `api_branding`, `api_cms`, `api_impersonate`, `api_app_release`, `api_mobile`, `api_telemetry`, `api_failure_intelligence`, `api_ai`, `api_test_seed` |
 
 `api_test_seed.php` is restricted to `super_admin` and refuses to run unless `ENABLE_TEST_DATA_TOOLS` is `true`. That flag must stay off in production.

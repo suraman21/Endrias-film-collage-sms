@@ -114,7 +114,6 @@ These files include legacy implementations, shims and shared widgets. Each needs
 | [frontend/pages/dashboard.php](../../frontend/pages/dashboard.php) | Pending route/control/handler trace |
 | [frontend/pages/edu_assignments.php](../../frontend/pages/edu_assignments.php) | Pending route/control/handler trace |
 | [frontend/pages/edu_teachers.php](../../frontend/pages/edu_teachers.php) | Pending route/control/handler trace |
-| [frontend/pages/finance_dept.php](../../frontend/pages/finance_dept.php) | [Core source/handler trace](FINANCE.md); shared controls and browser acceptance pending |
 | [frontend/pages/login.php](../../frontend/pages/login.php) | Pending route/control/handler trace |
 | [frontend/pages/mezmur_dept.php](../../frontend/pages/mezmur_dept.php) | Pending route/control/handler trace |
 

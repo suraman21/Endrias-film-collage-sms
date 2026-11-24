@@ -59,7 +59,7 @@ ENV_FILE = ROOT / ".fkss_env.php"
 SYNC_DB = os.environ.get("SSMS_SYNC_DB", "ssms_e2e")
 
 EDU_ROLES = ("super_admin", "school_admin", "edu_dept")
-NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept", "finance_dept")
+NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept")
 
 # Fixture landmarks (tests/e2e/academic_intelligence.php :: seed +
 # scenario_student_tracking_fixture).
@@ -572,7 +572,7 @@ class SubjectTeacherTests(_SubjectBase):
             "DELETE FROM users WHERE id = %d;" % SCRATCH_USER
             + "INSERT INTO users (id, username, full_name, email, role, is_active) "
               "VALUES (%d, 'notateacher4', 'Not A Teacher', 'n4@example.org', "
-              "'finance_dept', 1);" % SCRATCH_USER
+              "'hr_dept', 1);" % SCRATCH_USER
             + "INSERT INTO teacher_assignments "
               "(teacher_id, class_id, subject_id, academic_year_id, is_active) "
               "VALUES (%d, %d, %d, %d, 1);" % (SCRATCH_USER, C2, S_HIST, Y1)
@@ -941,7 +941,7 @@ class SubjectTrackingAuthorizationTests(_SubjectBase):
                     self.assertEqual("error", got["status"])
 
     def test_the_refusal_names_the_education_department(self):
-        self.assertIn("Education", self.detail(S_GEEZ, role="finance_dept")["message"])
+        self.assertIn("Education", self.detail(S_GEEZ, role="hr_dept")["message"])
 
     def test_all_three_actions_are_inside_the_existing_tier(self):
         src = API_EDU.read_text(encoding="utf-8")

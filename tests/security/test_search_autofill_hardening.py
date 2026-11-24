@@ -16,10 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 DASHBOARDS = [
     "admin/dashboards/edu_dept.php",
-    "admin/dashboards/finance_department.php",
     "admin/dashboards/hr-dept.php",
     "admin/dashboards/info-dept.php",
-    "admin/dashboards/material_department.php",
     "admin/dashboards/school_admin.php",
     "admin/dashboards/super-admin.php",
     "admin/dashboards/teacher.php",

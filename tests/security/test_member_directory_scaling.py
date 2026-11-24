@@ -74,9 +74,7 @@ class MemberDirectoryScalingTests(unittest.TestCase):
         self.assertIn("LIMIT ? OFFSET ?", self.service)  # legacy page adapter remains bounded
         self.assertNotIn("SELECT *", self.service)
 
-    def test_role_aware_projection_minimizes_finance_data(self):
-        finance_branch = self.service.split("if ($role === 'finance_dept')", 1)[1]
-        self.assertIn("return self::PICKER_COLUMNS", finance_branch)
+    def test_picker_projection_minimizes_sensitive_data(self):
         picker_block = self.service.split("private const PICKER_COLUMNS", 1)[1].split("];", 1)[0]
         for sensitive in ["guardian_name", "phone_number", "city", "student_photo_path"]:
             self.assertNotIn(sensitive, picker_block)
@@ -148,7 +146,7 @@ class MemberDirectoryScalingTests(unittest.TestCase):
             self.assertNotIn("function loadArchivedMembers()", source)
             self.assertNotIn("info_get_archived_members.php", source)
 
-    def test_finance_picker_searches_instead_of_loading_full_roster(self):
+    def test_member_picker_searches_instead_of_loading_full_roster(self):
         self.assertIn("view: 'picker'", self.picker_js)
         # Phase 3: still 50 per request; "Show more" asks for the next page.
         self.assertIn("var PAGE = 50", self.picker_js)
@@ -156,8 +154,8 @@ class MemberDirectoryScalingTests(unittest.TestCase):
         self.assertIn("__more__", self.picker_js)
         self.assertIn("AbortController", self.picker_js)
         for relative in [
-            "frontend/pages/finance_dept.php",
-            "admin/dashboards/finance_department.php",
+            "admin/dashboards/info-dept.php",
+            "frontend/js/member-picker.js",
         ]:
             source = (ROOT / relative).read_text()
             self.assertIn("data-member-picker-target=", source)

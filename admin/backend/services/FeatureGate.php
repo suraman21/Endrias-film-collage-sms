@@ -12,8 +12,6 @@ final class FeatureGate
     private const CONSTANTS = [
         'ai' => 'FEATURE_AI_CHATBOT',
         'groups' => 'FEATURE_GROUPS',
-        'finance' => 'FEATURE_FINANCE',
-        'material' => 'FEATURE_MATERIAL',
         'id_cards' => 'FEATURE_ID_CARDS',
         'attendance' => 'FEATURE_ATTENDANCE',
         'grades' => 'FEATURE_GRADES',
@@ -60,7 +58,7 @@ final class FeatureGate
     public static function mobileCapabilities(): array
     {
         $result = [];
-        foreach (['attendance', 'grades', 'finance', 'material', 'groups', 'id_cards', 'reports', 'attendance_v2'] as $feature) {
+        foreach (['attendance', 'grades', 'groups', 'id_cards', 'reports', 'attendance_v2'] as $feature) {
             $result[$feature] = self::isEnabled($feature);
         }
         return $result;
@@ -83,13 +81,6 @@ final class FeatureGate
             'ai_chatbot_widget.php' => 'ai',
             'groups.php' => 'groups',
             'groups_api.php' => 'groups',
-            'api_finance.php' => 'finance',
-            'finance.php' => 'finance',
-            'finance_dept.php' => 'finance',
-            'finance_department.php' => 'finance',
-            'api_material.php' => 'material',
-            'material.php' => 'material',
-            'material_department.php' => 'material',
             'api_attendance.php' => 'attendance',
             'attendance.php' => 'attendance',
             'api_attendance_info.php' => 'attendance',
@@ -129,8 +120,6 @@ final class FeatureGate
     public static function forRoleDashboard(string $role): ?string
     {
         return match ($role) {
-            'finance_dept' => 'finance',
-            'material_dept' => 'material',
             'attendance_taker' => 'attendance',
             default => null,
         };
@@ -148,8 +137,6 @@ final class FeatureGate
         $tileFeatures = [
             'attendance' => 'attendance',
             'grades' => 'grades',
-            'finance' => 'finance',
-            'material' => 'material',
             'groups' => 'groups',
             'id_cards' => 'id_cards',
             'reports' => 'reports',

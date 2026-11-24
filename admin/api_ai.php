@@ -202,11 +202,8 @@ function collectDataSnapshot($conn, $scope = 'overview') {
     
     // Role-based scope restrictions
     $blockedScopes = [
-        'teacher' => ['finance'],
-        'attendance_taker' => ['finance', 'education', 'groups'],
-        'info_dept' => ['finance'],
-        'edu_dept' => ['finance'],
-        'material_dept' => ['finance', 'education'],
+        'teacher' => [],
+        'attendance_taker' => ['education', 'groups'],
     ];
     
     $blocked = $blockedScopes[$role] ?? [];
@@ -293,20 +290,6 @@ function collectDataSnapshot($conn, $scope = 'overview') {
         } catch (Exception $e) {}
     }
     
-    // ── Finance data (only for finance/admin roles) ──
-    $financeRoles = ['super_admin', 'school_admin', 'finance_dept'];
-    if (in_array($scope, ['overview', 'finance']) && in_array($role, $financeRoles)) {
-        try {
-            $r = $conn->query("SELECT 
-                COALESCE(SUM(CASE WHEN type='income' AND status='confirmed' THEN amount END), 0) as total_income,
-                COALESCE(SUM(CASE WHEN type='expense' AND status='confirmed' THEN amount END), 0) as total_expense,
-                COALESCE(SUM(CASE WHEN status='pending' THEN amount END), 0) as pending_amount,
-                COUNT(CASE WHEN status='pending' THEN 1 END) as pending_count
-            FROM finance_transactions");
-            if ($r) $data['finance_summary'] = $r->fetch_assoc();
-        } catch (Exception $e) { $data['finance_summary'] = null; }
-    }
-    
     // ── Groups data ──
     if (in_array($scope, ['overview', 'groups'])) {
         try {
@@ -354,14 +337,12 @@ function getSystemPrompt($conn = null) {
     
     // Role-based data access rules
     $roleRules = [
-        'super_admin' => 'You have full access to all school data including students, attendance, finance, education, and system health.',
-        'school_admin' => 'You have access to all school data including students, attendance, finance, and education.',
+        'super_admin' => 'You have full access to all school data including students, attendance, education, and system health.',
+        'school_admin' => 'You have access to all school data including students, attendance, and education.',
         'info_dept' => 'You have access to student data, registrations, and demographics. You do NOT have access to financial data.',
         'edu_dept' => 'You have access to education data: classes, enrollments, teachers, subjects, and grades. You do NOT have access to financial data.',
-        'finance_dept' => 'You have access to financial data: income, expenses, and budgets. You do NOT have access to individual student details.',
-        'material_dept' => 'You have access to material/resource inventory data. You have limited access to other data.',
-        'teacher' => 'You have access to your class data, student attendance, and grades. You do NOT have access to finance or system settings. Do NOT reveal other teachers\' data or admin information.',
-        'attendance_taker' => 'You have access to attendance records only. You do NOT have access to finance, grades, or system settings.',
+        'teacher' => 'You have access to your class data, student attendance, and grades. You do NOT have access to system settings. Do NOT reveal other teachers\' data or admin information.',
+        'attendance_taker' => 'You have access to attendance records only. You do NOT have access to grades or system settings.',
     ];
     
     $accessRule = $roleRules[$role] ?? 'You have limited access. Do NOT reveal sensitive system data.';
@@ -379,13 +360,11 @@ This is a school management system with role-based dashboards. Main areas:
 - Attendance & Status: record/review attendance per class/section per day (present, absent, late, excused) and spot students becoming irregular.
 - Attendance Takers: staff assigned only to record attendance.
 - Classes & Education: classes/sections, enrolments, teacher assignments, subjects, and grades (academic records).
-- Finance: income, expenses and budgets in Ethiopian Birr (ETB). Only Finance, School Admin and Super Admin see money.
-- Materials: inventory of physical resources/equipment.
 - Exports & Reports: export students and reports to PDF / Excel / Word.
 - Academic Year: the school runs on academic years with a lifecycle — Upcoming, Active (the single live year) and Closed (past years). Exactly one year is Active. "Year Rollover" starts the next year and carries students forward. Anyone can open a past year READ-ONLY ("time-travel") to view old data without changing anything.
 - Settings, Staff & Users, System Health, Backups: administration (School Admin / Super Admin).
 - Calendar: dates display in the Ethiopian calendar (ዓ.ም.) but are stored in Gregorian internally. The current Ethiopian date and academic year show in the sidebar.
-- Roles: Super Admin (full technical control), School Admin (runs the school), Information Dept (students/registration), Education Dept (classes/grades), Finance Dept (money), Material Dept (inventory), Teacher (own classes), Attendance Taker (attendance only), Content Editor (public website).
+- Roles: Super Admin (full technical control), School Admin (runs the school), Information Dept (students/registration), Education Dept (classes/grades), Teacher (own classes), Attendance Taker (attendance only), Content Editor (public website).
 Only describe features the current user's role can access.
 SYS;
 
@@ -614,7 +593,6 @@ switch ($action) {
         $scope = 'overview';
         $msgLower = mb_strtolower($userMessage);
         if (preg_match('/attend|ያልመጡ|ቅዳሜ|present|absent/', $msgLower)) $scope = 'attendance';
-        elseif (preg_match('/financ|money|birr|ገንዘብ|income|expense|budget/', $msgLower)) $scope = 'finance';
         elseif (preg_match('/class|grade|enroll|teacher|subject|ትምህርት/', $msgLower)) $scope = 'education';
         elseif (preg_match('/group|department|ክፍል/', $msgLower)) $scope = 'groups';
         elseif (preg_match('/member|student|ተማሪ|registr|demograph|phone|photo/', $msgLower)) $scope = 'members';
@@ -697,7 +675,6 @@ switch ($action) {
             'overview' => "Analyze this school's overall health. Give me: 1) Key statistics summary 2) Top 3 strengths 3) Top 3 concerns 4) Immediate action items. Be specific with numbers.",
             'attendance' => "Analyze attendance patterns. Show: 1) Overall attendance rate 2) Best/worst days 3) Trends over time 4) Students at risk of dropping out. Include percentages.",
             'members' => "Analyze student demographics and data quality. Show: 1) Gender/age distribution 2) Registration trends 3) Data completeness issues 4) Growth rate and projections.",
-            'finance' => "Analyze the financial situation. Show: 1) Income vs expenses overview 2) Balance health 3) Pending amounts concern level 4) Budget recommendations in ETB.",
             'education' => "Analyze the education system. Show: 1) Class enrollment distribution 2) Teacher-to-student ratios 3) Under/over-enrolled classes 4) Improvement suggestions.",
         ];
         

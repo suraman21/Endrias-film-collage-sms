@@ -2,7 +2,7 @@
 namespace App\Services;
 require_once __DIR__ . '/LedgerInputException.php';
 
-/** Strict, side-effect-free validation shared by Finance and Materials. */
+/** Strict, side-effect-free input validation for public forms and admin APIs. */
 final class LedgerValidation
 {
     public static function text($value, string $label, int $max, bool $required = false): string

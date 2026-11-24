@@ -32,7 +32,7 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
     page = text(ACCOUNT_PAGE)
     expected_roles = {
         "super_admin", "school_admin", "info_dept", "edu_dept",
-        "finance_dept", "material_dept", "hr_dept",
+        "hr_dept",
         "teacher", "attendance_taker",
         "hr_attendance_taker", "content_editor",
     }
@@ -51,7 +51,6 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
         "super_admin": "admin/dashboards/super-admin.php",
         "school_admin": "admin/dashboards/school_admin.php",
         "edu_dept": "admin/dashboards/edu_dept.php",
-        "material_dept": "admin/dashboards/material_department.php",
         "teacher": "admin/dashboards/teacher.php",
         "attendance_taker": "admin/dashboards/attendance_taker.php",
         "hr_attendance_taker": "admin/dashboards/dept_taker.php",
@@ -73,14 +72,6 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
         assert "components/account_link.php" not in source, role
         assert "settings" in source.lower(), role
 
-    for role, shell in {
-        "finance_dept": "frontend/pages/finance_dept.php",
-    }.items():
-        shell_source = text(ROOT / shell)
-        assert shell_source.count("ssms_app_url('admin/account.php')") == 2, role
-        assert "components/account_link.php" not in shell_source, role
-        assert "school-nav-link" in shell_source
-        assert "school-bottom-account-link" in shell_source
     components_css = text(ROOT / "themes" / "components.css")
     assert ".school-bottom-account-link" in components_css
     assert "ssms_app_url('admin/account.php')" in launcher

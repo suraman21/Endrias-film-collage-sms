@@ -26,8 +26,6 @@ enum OfflineDepartment {
   education,
   members,
   hr,
-  finance,
-  materials,
 }
 
 /// Single source of truth for which departments are offline-capable today.
@@ -43,7 +41,7 @@ class DepartmentOfflinePolicy {
     OfflineDepartment.grades,
   };
 
-  /// Next departments after Grades (members/HR/Finance/Materials); none
+  /// Next departments after Grades (members/HR); none
   /// currently planned as offline until inventory lands.
   static const Set<OfflineDepartment> plannedNext = {};
 
@@ -51,8 +49,6 @@ class DepartmentOfflinePolicy {
     OfflineDepartment.education,
     OfflineDepartment.members,
     OfflineDepartment.hr,
-    OfflineDepartment.finance,
-    OfflineDepartment.materials,
   };
 
   static bool isOfflineEnabled(OfflineDepartment d) => offlineEnabledToday.contains(d);

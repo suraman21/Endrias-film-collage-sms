@@ -24,8 +24,6 @@ $dashboardMap = [
     'school_admin'     => 'school_admin.php',
     'info_dept'        => 'info_dept.php',
     'edu_dept'         => 'edu_dept.php',
-    'finance_dept'     => 'finance_dept.php',
-    'material_dept'    => 'material_dept.php',
     'teacher'          => 'teacher.php',
     'attendance_taker' => 'attendance_taker.php',
 ];

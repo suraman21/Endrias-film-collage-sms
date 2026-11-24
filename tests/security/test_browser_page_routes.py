@@ -96,8 +96,7 @@ class BrowserPageRouteTests(unittest.TestCase):
         teacher = WebSession('teacher')
         for clean, old in [('/admin/dashboards/education', '/admin/dashboards/edu_dept.php'),
                            ('/admin/member?id=900001', '/admin/info_manage_member.php?id=900001'),
-                           ('/admin/users', '/admin/users.php'),
-                           ('/frontend/pages/finance', '/frontend/pages/finance_dept.php')]:
+                           ('/admin/users', '/admin/users.php')]:
             headers = {'Accept': 'application/json'}
             legacy_status, _ = teacher._open(BASE + old, headers=headers)
             alias_status, body = teacher._open(BASE + clean, headers=headers)

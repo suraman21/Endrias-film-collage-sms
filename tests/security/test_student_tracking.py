@@ -60,7 +60,7 @@ SYNC_DB = os.environ.get("SSMS_SYNC_DB", "ssms_e2e")
 
 EDU_ROLES = ("super_admin", "school_admin", "edu_dept")
 # Roles that may reach api_education.php but must not reach tier 3.
-NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept", "finance_dept")
+NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept")
 
 # Fixture landmarks (tests/e2e/academic_intelligence.php :: seed +
 # scenario_student_tracking_fixture).
@@ -665,7 +665,7 @@ class StudentTrackingAuthorizationTests(_TrackingBase):
     def test_report_card_reuse_keeps_its_own_authorization(self):
         d = self.report_card(S_FULL)
         self.assertEqual("success", d["status"])
-        for role in ("hr_dept", "finance_dept"):
+        for role in ("hr_dept",):
             with self.subTest(role=role):
                 r = self.report_card(S_FULL, role=role)
                 self.assertNotEqual("success", r.get("status"))

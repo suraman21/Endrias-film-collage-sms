@@ -40,7 +40,7 @@ $NOTIFICATION_MATRIX = [
     'member_eligible_permanent' => ['hr_dept', 'admissions_registrar_dept', 'super_admin', 'school_admin'],
     'member_promoted' => ['hr_dept', 'admissions_registrar_dept', 'super_admin', 'school_admin'],
     'member_updated' => ['super_admin', 'school_admin'],
-    'member_archived' => ['super_admin', 'school_admin', 'edu_dept', 'finance_dept'],
+    'member_archived' => ['super_admin', 'school_admin', 'edu_dept'],
     'member_restored' => ['super_admin', 'school_admin', 'edu_dept'],
     'role_changed' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept'],
     'teacher_assigned' => ['super_admin', 'school_admin', 'info_dept'],
@@ -51,7 +51,7 @@ $NOTIFICATION_MATRIX = [
     // AttendanceWarningService (direct insert, same table); listed here so the
     // matrix stays the single reference of who may receive which type.
     'attendance_warning' => ['edu_dept', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
-    'document_shared' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept'],
+    'document_shared' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept'],
     'task_assigned' => [], // Specific to target
 ];
 

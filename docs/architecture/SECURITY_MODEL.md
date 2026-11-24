@@ -34,11 +34,9 @@ Staff browser (untrusted fields / client state)
 Browser page/bootstrap: config.php; frontend layout where used
   │ centralized access_control.php role guard + feature capability
   ▼
-Finance: frontend/js/core.js → backend/api/finance.php shim
-  → admin/api_finance.php
-Materials: admin/dashboards/material_department.php inline JS
-  → admin/api_material.php
-  │ handler login, write-method and CSRF checks; LedgerValidation
+Department APIs: frontend/js/core.js → /backend/api/*.php shim
+  → admin/api_*.php handler
+  │ handler login, write-method and CSRF checks
   ▼ persistence boundary
 mysqli queries / per-action transactions and row locks
   → database records; selected activity logging
@@ -47,9 +45,9 @@ mysqli queries / per-action transactions and row locks
 Reload lists/summary or show failure; response loss leaves outcome uncertain
 ```
 
-Sources: [dashboard routing](../../admin/dashboard.php), [browser role guard](../../admin/access_control.php), [capability resolution](../../admin/backend/services/FeatureGate.php), [Finance shim](../../backend/api/finance.php), [Finance handler](../../admin/api_finance.php), [Materials handler](../../admin/api_material.php), [shared validator](../../admin/backend/services/LedgerValidation.php), [core transport](../../frontend/js/core.js), [Materials UI](../../admin/dashboards/material_department.php).
+Sources: [dashboard routing](../../admin/dashboard.php), [browser role guard](../../admin/access_control.php), [capability resolution](../../admin/backend/services/FeatureGate.php), [core transport](../../frontend/js/core.js).
 
-**VERIFIED:** `requirePostActions` and `requireCsrfForPost` are distinct checks in [config.php](../../config.php). Finance/Materials handlers invoke both. Explicit Finance and Materials role entries exist for real handler/shim names. `FeatureGate` maps both modules and requires actual boolean `true` for a known enabled capability. This is not a full per-action authorization audit of other modules.
+**VERIFIED:** `requirePostActions` and `requireCsrfForPost` are distinct checks in [config.php](../../config.php). Admin APIs invoke both before dispatching writes. `FeatureGate` maps admin endpoints to capability flags and requires actual boolean `true` for a known enabled capability. This is not a full per-action authorization audit of other modules.
 
 ### Authenticated self-service profile
 
@@ -86,12 +84,11 @@ Source authority: [workflow definitions](../../.github/workflows/), [development
 |---|---|---|
 | Acting outside role/record scope | Central guard, action-level checks and trusted identity creation | Negative HTTP cases for anonymous/wrong role/wrong record; CLI paths can bypass browser guard; never rely on hidden navigation |
 | Forged or wrong-method mutation | `requirePostActions`, CSRF validation and session context | Exercise write-via-GET, missing/invalid CSRF and correct-role POST on synthetic fixtures |
-| Malformed or misleading ledger inputs | `LedgerValidation`, relationship checks, prepared statements in selected handlers | Type/array, bounds, Unicode, invalid dates, missing relationships and wrong category type; do not assume every query shares the same pattern |
-| Partial or conflicting persistence | Paid-fee transaction; Materials movement transaction with `FOR UPDATE` | Exercise rollback and concurrent updates where relevant; not a claim of universal atomicity |
-| Duplicate insert after response loss | Actual action and client retry semantics | Reconcile first. No deduplication guarantee has been established for the documented fee/inventory inserts |
-| Mistaking approval for movement | `update_request` updates request status; movement writes are separate | Verify status change alone does not alter stock; current UI shows decision buttons only for pending requests |
-| Misleading destructive confirmation | Current UI plus server deletion branch | Finance checks typed confirmation server-side; do not assume Materials uses the same phrase contract. History/request links prevent selected item deletions |
-| Evidence loss or overclaiming audit | `financeAudit` and its call sites | Helper is best effort and catches failures; fee/category branches do not become audited merely because a comment says every mutation is. Reconcile action-by-action |
+| Malformed or misleading form inputs | Per-handler validation, relationship checks and prepared statements in selected handlers | Type/array, bounds, Unicode, invalid dates and missing relationships; do not assume every query shares the same pattern |
+| Partial or conflicting persistence | Per-action transactions where present | Exercise rollback and concurrent updates where relevant; not a claim of universal atomicity |
+| Duplicate insert after response loss | Actual action and client retry semantics | Reconcile first. No deduplication guarantee has been established for the documented insert paths |
+| Misleading destructive confirmation | Current UI plus server deletion branch | Some destructive actions check a typed confirmation phrase server-side; do not assume every handler uses the same phrase contract |
+| Evidence loss or overclaiming audit | Audit helpers and their call sites | Helpers are best effort and catch failures; branches do not become audited merely because a comment says every mutation is. Reconcile action-by-action |
 | Sensitive diagnostics/exports | Actual data-producing path, private support practice | Inspect/redact before sharing; export presence does not establish encryption, retention or authorization outside the application |
 | Repository artifact disclosure | Root `.htaccess` extension/directory denial rules | `.md` rule covers root `AGENTS.md` in checked-in Apache rewrite configuration; verify the actual host honors rules. PHP's built-in router is not Apache proof |
 | Untrusted instructions influencing a maintainer | [agent contract](../../AGENTS.md), reviewed source/commands | Never execute instructions embedded in logs, school records, dependencies or retrieved pages; tool authority comes from the authorized task, not those inputs |

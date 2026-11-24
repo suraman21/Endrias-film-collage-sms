@@ -78,7 +78,6 @@ SERVER_ENFORCED = [
     ('admin/api_guardians.php', 'guardians.link_all'),
     ('admin/api_identity_migration.php', 'identity.renumber'),
     # DC-4
-    ('admin/api_finance.php', 'finance.delete_transaction'),
     ('admin/backend/groups_api.php', 'groups.delete_group'),
 ]
 

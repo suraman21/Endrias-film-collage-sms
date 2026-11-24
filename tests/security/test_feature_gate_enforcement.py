@@ -20,7 +20,6 @@ class FeatureGateEnforcementTests(unittest.TestCase):
         cls.dashboard_route = (ROOT / "api/v1/routes/dashboard.php").read_text()
         cls.web_dashboard = (ROOT / "admin/dashboard.php").read_text()
         cls.web_layout = (ROOT / "frontend/layouts/base.php").read_text()
-        cls.finance_page = (ROOT / "frontend/pages/finance_dept.php").read_text()
         cls.subjects = (ROOT / "admin/api_subjects.php").read_text()
         cls.education = (ROOT / "admin/api_education.php").read_text()
         cls.communication = (ROOT / "admin/api_communication.php").read_text()
@@ -45,21 +44,21 @@ class FeatureGateEnforcementTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         result = json.loads(completed.stdout.strip().splitlines()[-1])
-        self.assertFalse(result["finance"])
+        self.assertFalse(result["reports"])
         self.assertFalse(result["attendance"])
         self.assertTrue(result["grades"])
         self.assertFalse(result["ambiguous_string"])
         self.assertFalse(result["unknown"])
-        self.assertEqual(result["finance_route"], "finance")
+        self.assertEqual(result["reports_route"], "reports")
         self.assertEqual(result["id_route"], "id_cards")
         self.assertEqual(result["attendance_api"], "attendance")
-        self.assertEqual(result["role_feature"], "material")
+        self.assertEqual(result["role_feature"], "attendance")
         self.assertEqual(result["tiles"]["education"], ["classes", "grades"])
         self.assertEqual(result["tiles"]["invalid"], ["reports"])
 
     def test_environment_can_override_boolean_defaults(self):
         for name in [
-            "AI_CHATBOT", "GROUPS", "FINANCE", "MATERIAL", "ID_CARDS",
+            "AI_CHATBOT", "GROUPS", "ID_CARDS",
             "ATTENDANCE", "GRADES", "REPORTS", "EXPORT_PDF", "MONITOR",
         ]:
             self.assertIn(
@@ -76,7 +75,6 @@ class FeatureGateEnforcementTests(unittest.TestCase):
         self.assertIn("This feature is not enabled for this deployment.", self.router)
         self.assertIn("FeatureGate::forRoleDashboard", self.web_dashboard)
         self.assertIn("feature_enabled('ai')", self.web_dashboard)
-        self.assertIn("$requiredFeature = 'finance'", self.finance_page)
         self.assertIn("FeatureGate::isEnabled($requiredFeature)", self.web_layout)
 
     def test_mixed_education_routes_have_action_level_gates(self):

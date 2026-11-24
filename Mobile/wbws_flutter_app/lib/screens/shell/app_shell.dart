@@ -20,8 +20,6 @@ import '../reviews/review_inbox_screen.dart';
 import '../admin/admin_home.dart';
 import '../edu_dept/edu_home.dart';
 import '../info_dept/info_home.dart';
-import '../finance/finance_home.dart';
-import '../material/material_home.dart';
 // Shared screens
 import '../attendance/attendance_screen.dart';
 import '../members/member_list_screen.dart';
@@ -47,8 +45,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   final _adminHomeKey = GlobalKey<AdminHomeScreenState>();
   final _eduHomeKey = GlobalKey<EduHomeScreenState>();
   final _infoHomeKey = GlobalKey<InfoHomeScreenState>();
-  final _financeHomeKey = GlobalKey<FinanceHomeScreenState>();
-  final _materialHomeKey = GlobalKey<MaterialHomeScreenState>();
   final _attendanceKey = GlobalKey<AttendanceScreenState>();
   final _gradesKey = GlobalKey<TeacherGradesScreenState>();
   final Map<String, Widget> _openedTabs = {};
@@ -212,12 +208,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       case UserRoles.infoDept:
         _infoHomeKey.currentState?.refresh();
         break;
-      case UserRoles.financeDept:
-        _financeHomeKey.currentState?.refresh();
-        break;
-      case UserRoles.materialDept:
-        _materialHomeKey.currentState?.refresh();
-        break;
       case UserRoles.hrTaker:
         break; // HR attendance was retired (2026-10-07); the taker home is a static notice.
     }
@@ -265,8 +255,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   Widget _buildHomeForRole() {
     final roleFeature = <String, String>{
       UserRoles.attendanceTaker: 'attendance',
-      UserRoles.financeDept: 'finance',
-      UserRoles.materialDept: 'material',
     }[_api.userRole];
     if (roleFeature != null
         && !AppUpdateService().featureEnabled(roleFeature)) {
@@ -284,10 +272,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return EduHomeScreen(key: _eduHomeKey);
       case UserRoles.infoDept:
         return InfoHomeScreen(key: _infoHomeKey);
-      case UserRoles.financeDept:
-        return FinanceHomeScreen(key: _financeHomeKey);
-      case UserRoles.materialDept:
-        return MaterialHomeScreen(key: _materialHomeKey);
       case UserRoles.hrTaker:
         return const HrTakerHomeScreen();
       case UserRoles.hrDept:

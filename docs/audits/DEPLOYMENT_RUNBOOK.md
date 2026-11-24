@@ -403,8 +403,6 @@ Log in as each role and check the pages that role uses ([ROLES_AND_PERMISSIONS.m
 ```
 [ ] 7.1  Create one test user per role (Users page, as super admin).
 [ ] 7.2  Log in as EACH role and run its checklist. Pay special attention to:
-           - finance_dept: log in → finance dashboard loads → can add a
-             transaction → can see the student roster for fees.
            - teacher: can take attendance and it SAVES (re-open shows the marks);
              but CANNOT delete a class (should get a "permission" message).
 [ ] 7.3  Confirm each role is BLOCKED from other departments' pages (the "CANNOT"
@@ -545,11 +543,12 @@ currently distinguishes:
 
 Two consequences, both measured:
 
-1. **Seven core tables are altered by migrations but never created by any of
-   them** — `users`, `members`, `subjects`, `finance_transactions`,
-   `finance_member_fees`, `material_items`, `material_transactions`. Their
+1. **Three core tables are altered by migrations but never created by any of
+   them** — `users`, `members`, `subjects`. Their
    real DDL originates outside this directory (legacy runtime DDL, plus the
-   stale `database_schema.sql`). A fresh run has nothing to alter.
+   stale `database_schema.sql`). A fresh run has nothing to alter. The former
+   Finance/Materials tables of this list were dropped by
+   [098_drop_finance_material_tables.sql](../../sql/098_drop_finance_material_tables.sql).
 
 2. **Four tables are altered by a lower-numbered migration than the one that
    creates them** — `003` adds foreign keys to `teacher_assignments`, which

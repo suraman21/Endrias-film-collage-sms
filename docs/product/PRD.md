@@ -57,8 +57,6 @@ The organisation is modelled as departments. Each staff account has exactly one 
 | Information Department (`info_dept`) | Records and statistics office | View and correct member records, archive and restore, reports and analytics. Does **not** register or promote members | Yes | Yes |
 | Education Department (`edu_dept`) | Academic office | Classes, subjects, teachers, assessments, grade review, timetable, school calendar, report cards | Yes | Yes |
 | Mezmur Department (`mezmur_dept`) | Hymn ministry | Hymn library and media, Mezmur attendance and takers | Yes | Yes |
-| Finance Department (`finance_dept`) | Treasury | Transactions, categories, member fees, reports | Yes | Website-only notice/navigation, not equivalent native ledger controls |
-| Material Department (`material_dept`) | Storekeeping | Items, categories, requests, transactions | Yes | Website-only notice/navigation, not equivalent native inventory controls |
 | Teacher (`teacher`) | Class teacher | Attendance and marks for **assigned** classes only; timetable | Yes | Yes |
 | Attendance Taker (`attendance_taker`) | Volunteer | Class attendance only | Yes | Yes |
 | Mezmur Attendance Taker (`mezmur_attendance_taker`) | Department volunteer | Mezmur attendance under the department's scope | Yes | Yes |
@@ -141,11 +139,9 @@ Other stakeholders: the parents and guardians of students (data subjects; no sys
 | FR-MEZ-02 | Audio and cover art in object storage, uploaded through presigned URLs; synced (karaoke) lyrics; offline downloads on Android | Implemented | `MezmurMediaService.php`; [ADR-0015](../adr/0015-mezmur-media-object-storage.md) |
 | FR-MEZ-03 | Date-based Mezmur attendance by section, with department-owned takers and the same submit/review workflow as Education | Implemented | `MezmurAttendanceService.php`; `api_dept_takers.php` |
 
-### 5.5 Finance, Material and Groups
+### 5.5 Groups
 | ID | Requirement | Status | Source |
 |---|---|---|---|
-| FR-FIN-01 | Finance: transactions, categories, member fees and reports, with an audit trail of ledger changes | Implemented | `admin/api_finance.php`; commit `201557f` |
-| FR-MAT-01 | Material: categories, items, requests and transactions | Implemented | `admin/api_material.php` |
 | FR-GRP-01 | Groups with leaders and members | Implemented | `admin/backend/groups_api.php` |
 
 ### 5.6 Information, reporting and analytics

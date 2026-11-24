@@ -16,7 +16,6 @@ Static pins (always run):
   * A11 api_settings.php dept_save/system_info/clear_cache are role-gated;
   * A12 PUT /api/v1/members/{id} keeps the stored name parts in full_name_am;
   * A13 api_impersonate.php writes an audit row for switch and restore;
-  * A14 api_finance.php add/update/delete transaction write activity_logs rows;
   * A15 edu_dept.php transfer dialog re-escapes the student name (onclick string
         arguments are entity-decoded by the browser before they reach JS).
 Live (skipped unless the local server + seed are present):
@@ -190,22 +189,6 @@ class Pass2StaticGuards(unittest.TestCase):
         self.assertIn("$impersonationAudit('Role Switched'", src)
         self.assertIn("$impersonationAudit('Role Restored'", src)
         self.assertLess(src.index("$impersonationAudit('Role Switched'"), src.index("case 'restore':"))
-
-    # A14 ----------------------------------------------------------------
-    def test_a14_finance_ledger_mutations_are_audited(self):
-        src = read("admin/api_finance.php")
-        self.assertIn("function financeAudit(string $action, string $details, ?int $entityId = null): void", src)
-        self.assertIn("INSERT INTO activity_logs", src)
-        for case, label in (
-            ("case 'add_transaction':", "'Finance Transaction Added'"),
-            ("case 'update_transaction':", "'Finance Transaction Updated'"),
-            ("case 'delete_transaction':", "'Finance Transaction Deleted'"),
-        ):
-            body = block(src, case, "\ncase '")
-            self.assertIn("financeAudit(" + label, body, case)
-        # the deleted row is captured BEFORE the DELETE statement
-        body = block(src, "case 'delete_transaction':", "\ncase '")
-        self.assertLess(body.index("SELECT type, amount, description"), body.index("DELETE FROM finance_transactions"))
 
     # A15 ----------------------------------------------------------------
     def test_a15_transfer_dialog_escapes_student_name(self):

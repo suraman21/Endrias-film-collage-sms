@@ -58,7 +58,7 @@ SYNC_DB = os.environ.get("SSMS_SYNC_DB", "ssms_e2e")
 
 EDU_ROLES = ("super_admin", "school_admin", "edu_dept")
 # Roles that may reach api_education.php but must not reach tier 3.
-NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept", "finance_dept")
+NON_EDU_ROLES = ("teacher", "attendance_taker", "hr_dept")
 
 # Fixture landmarks (tests/e2e/academic_intelligence.php :: seed +
 # scenario_student_tracking_fixture).
@@ -308,7 +308,7 @@ class TeacherScopeValidationTests(_TeacherBase):
             "DELETE FROM users WHERE id = %d;" % other
             + "INSERT INTO users (id, username, full_name, email, role, is_active) "
               "VALUES (%d, 'notateacher', 'Not A Teacher', 'n@example.org', "
-              "'finance_dept', 1);" % other
+              "'hr_dept', 1);" % other
         )
         try:
             # It is also given an assignment, so that a lookup which keyed
@@ -385,7 +385,7 @@ class TeacherTrackingAuthorizationTests(_TeacherBase):
         self.assertEqual("error", got["status"])
 
     def test_the_refusal_names_the_education_department(self):
-        got = self.detail(T_BEKELE, role="finance_dept")
+        got = self.detail(T_BEKELE, role="hr_dept")
         self.assertIn("Education", got["message"])
 
     def test_both_actions_are_inside_the_existing_tier(self):

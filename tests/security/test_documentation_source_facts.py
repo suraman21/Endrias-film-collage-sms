@@ -82,9 +82,6 @@ def test_release_guidance_preserves_signer_device_and_private_diagnostics_gates(
 
 def test_product_mobile_role_and_recovery_boundaries_are_explicit():
     prd = text("docs/product/PRD.md")
-    for role in ("finance_dept", "material_dept"):
-        row = next(line for line in prd.splitlines() if line.startswith("|") and f"(`{role}`)" in line)
-        assert "Website-only" in row
     assert "410 `HR_ATTENDANCE_RETIRED`" in prd
     assert "Preserving logout" in prd
     assert "local_data_cleanup_service.dart" not in prd

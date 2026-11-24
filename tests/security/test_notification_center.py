@@ -74,8 +74,8 @@ class NotificationCenterTests(unittest.TestCase):
 
     def test_service_covers_every_live_role(self):
         roles = re.search(r"ROLE_LABELS = \[(.*?)\];", self.svc, re.S).group(1)
-        for role in ["super_admin", "school_admin", "info_dept", "edu_dept", "finance_dept",
-                     "material_dept", "hr_dept", "teacher", "attendance_taker",
+        for role in ["super_admin", "school_admin", "info_dept", "edu_dept",
+                     "hr_dept", "teacher", "attendance_taker",
                      "hr_attendance_taker", "content_editor"]:
             self.assertIn(f"'{role}'", roles, f"ROLE_LABELS missing {role} (stale-list bug)")
 
@@ -238,10 +238,8 @@ class NotificationCenterTests(unittest.TestCase):
     DASHBOARDS = [
         "admin/dashboards/super-admin.php", "admin/dashboards/school_admin.php",
         "admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php",
-        "admin/dashboards/edu_dept.php", "admin/dashboards/material_department.php",
         "admin/dashboards/teacher.php", "admin/dashboards/attendance_taker.php",
         "admin/dashboards/dept_taker.php", "admin/dashboards/content_editor.php",
-        "frontend/pages/finance_dept.php",
     ]
 
     def test_all_dashboards_include_the_center(self):
@@ -464,18 +462,6 @@ class NotificationCenterTests(unittest.TestCase):
         self.assertRegex(self.bell, r"function ncEsc\(")
         self.assertIn("function_exists('generateCsrfToken')", self.bell)
 
-    def test_frontend_shells_render_bell_before_base(self):
-        """Pin the architectural fact behind the incident: frontend shells
-        include the component inside the buffered body, BEFORE requiring
-        layouts/base.php — so the component MUST stay self-sufficient."""
-        for page in ("frontend/pages/finance_dept.php",):
-            src = (ROOT / page).read_text(encoding="utf-8")
-            self.assertLess(
-                src.index("notification_center.php"),
-                src.index("layouts/base.php"),
-                f"{page}: bell include runs before base.php — keep it working")
-            self.assertIn("renderNotificationCenter()", src)
-
     # ── 8. security posture of the new surfaces ───────────────
     def test_service_uses_prepared_statements_only(self):
         """Raw query() calls in the service must only ever carry ints."""
@@ -571,17 +557,6 @@ class CommPhase3Tests(unittest.TestCase):
         self.assertIn("@keyframes nc-msg-in", self.commCss)
         guard = self.commCss[self.commCss.find("prefers-reduced-motion"):]
         self.assertIn(".nc-msg", guard)
-
-    def test_phase3_frontend_departments_integrate_the_section(self):
-        """finance gets the same in-place Communication section:
-        one include + a data-comm-open opener, rendered into the page
-        buffer before the base layout."""
-        for page in ("frontend/pages/finance_dept.php",):
-            src = (ROOT / page).read_text(encoding="utf-8")
-            self.assertIn("comm_section.php", src, f"{page} includes the shared section")
-            self.assertIn('data-comm-open="inbox"', src, f"{page} exposes an opener")
-            self.assertEqual(src.count("comm_section.php"), 1,
-                             f"{page} renders the section exactly once")
 
     def test_phase3_runtime_gate_covers_phase3_behaviors(self):
         """The Node gate must not silently lose its Phase-3 checks: the

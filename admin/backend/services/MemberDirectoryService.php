@@ -423,9 +423,6 @@ final class MemberDirectoryService
             }
             return self::MANAGER_COLUMNS;
         }
-        if ($role === 'finance_dept') {
-            return self::PICKER_COLUMNS;
-        }
         if ($role === 'edu_dept') {
             return self::EDUCATION_COLUMNS;
         }

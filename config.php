@@ -890,8 +890,6 @@ Available roles:
 - school_admin   : School-level admin
 - info_dept      : Information department (member management)
 - edu_dept       : Education department
-- finance_dept   : Finance department
-- material_dept  : Material department
 */
 
 // ============================================================
