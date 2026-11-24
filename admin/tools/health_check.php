@@ -16,7 +16,8 @@ header('X-Frame-Options: DENY');
 header('Referrer-Policy: no-referrer');
 header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
 
-$envNames = ['.fkss_env.php', '.wbws_env.php'];
+// Keep in sync with $_envFileNames in /config.php.
+$envNames = ['.fkss_env.php', '.wbws_env.php', 'env_endriasfc.php'];
 $envDirs = [dirname(__DIR__, 2), dirname(__DIR__, 3), dirname(__DIR__, 4)];
 $envLoaded = false;
 foreach ($envDirs as $directory) {
