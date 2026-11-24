@@ -13,7 +13,7 @@
 
 | Document | Status and scope |
 |---|---|
-| [User manual](user_manual/README.md) | **Partial:** mobile account/device settings, updates/recovery and source-reviewed core Finance/Materials web workflows; not yet all departments or controls |
+| [User manual](user_manual/README.md) | **Partial:** mobile account/device settings, updates/recovery; not yet all departments or controls |
 | [Developer guide](DEVELOPER_GUIDE.md) | Human/AI-assisted investigation, worked fee trace, known source discrepancies and handoff |
 | [Agent contributor instructions](../AGENTS.md) | Compact repository-wide safety, evidence, testing and delivery contract |
 | [Change-impact map](CHANGE_IMPACT.md) | Entry points, shared boundaries, regression questions and stop conditions |

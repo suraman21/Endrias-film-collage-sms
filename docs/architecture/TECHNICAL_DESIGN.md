@@ -42,7 +42,7 @@ FKSS is a school management system for one Sunday school: web dashboards for eac
 
 ```mermaid
 flowchart LR
-  staff["Department staff<br/>(HR, Info, Education, Mezmur,<br/>Finance, Material, admins)"]
+  staff["Department staff<br/>(HR, Info, Education, Mezmur, admins)"]
   teacher["Teachers and<br/>attendance takers"]
   public["Public visitors"]
   fkss["FKSS system<br/>(web + REST API + database)"]
@@ -222,7 +222,7 @@ flowchart LR
 | Authorization | Role map per file name; in-endpoint checks for department ownership and class assignment; REST role helpers (`acl.php`); `authorization_version` invalidates stale sessions and tokens |
 | Input and output safety | Prepared statements; HTML escaping helpers (`e()`, `esc()`); hex-escaped JSON in script contexts; CSRF on web writes |
 | Personal data | Role-scoped fields (`apiRolesPii()`, reporting field permissions); private file storage; audited exports |
-| Auditing | `activity_logs`, `SecurityAuditService`, domain audit tables (attendance, Mezmur, finance ledger, exports) |
+| Auditing | `activity_logs`, `SecurityAuditService`, domain audit tables (attendance, Mezmur, exports) |
 | Idempotency and concurrency | `Idempotency-Key` reservations completed inside the business transaction; locking reads for duplicate checks; one packet per slot |
 | Error handling | Errors logged, not displayed; REST returns a stable JSON envelope and typed error codes (for example `AUTH_SCOPE_CHANGED`) |
 | Localisation | Ethiopian-calendar conversion at the edges; Amharic labels from single sources (`MemberCategory`) |

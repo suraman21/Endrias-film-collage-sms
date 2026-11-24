@@ -32,7 +32,7 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
     page = text(ACCOUNT_PAGE)
     expected_roles = {
         "super_admin", "school_admin", "info_dept", "edu_dept",
-        "hr_dept",
+        "hr_dept", "admissions_registrar_dept",
         "teacher", "attendance_taker",
         "hr_attendance_taker", "content_editor",
     }

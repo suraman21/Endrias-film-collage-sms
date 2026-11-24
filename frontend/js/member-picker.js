@@ -1,4 +1,4 @@
-/* Search-backed student select used by finance forms at large roster sizes.
+/* Search-backed student select used by member pickers at large roster sizes.
  *
  * Phase 3 paging (owner request 2026-10-22): every student is reachable.
  * - The first 50 load with the form; the list says how many there are.

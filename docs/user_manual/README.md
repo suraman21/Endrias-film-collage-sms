@@ -2,7 +2,7 @@
 
 **Edition:** source checkpoint 1.7.4+41, development baseline `7209278` (2026-10-28).
 
-**Coverage notice:** this is a growing, source-reviewed manual, not yet the requested complete all-department/all-control edition. The chapters below cover mobile account/device settings, updates/recovery and core Finance/Materials web workflows reviewed against `13f00ac`. The full departmental/every-control manual is active requested work, not deferred. Remaining departments, shared/dynamic/legacy controls, permissions and browser/device acceptance stay in the [coverage queue](COVERAGE.md). Do not infer a feature exists or works merely because a role, API action or screen is listed.
+**Coverage notice:** this is a growing, source-reviewed manual, not yet the requested complete all-department/all-control edition. The chapters below cover mobile account/device settings, updates and recovery. The full departmental/every-control manual is active requested work, not deferred. Remaining departments, shared/dynamic/legacy controls, permissions and browser/device acceptance stay in the [coverage queue](COVERAGE.md). Do not infer a feature exists or works merely because a role, API action or screen is listed.
 
 ## Start here
 

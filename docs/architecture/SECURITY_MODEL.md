@@ -14,7 +14,7 @@ This model makes explicit the assets, trust transitions, implementation evidence
 |---|---|---|
 | Staff/session/token identity | Establishes who can act, not merely what a client claims | Never publish tokens, cookies, credentials or unredacted request headers |
 | Member/education/attendance information | Student and staff privacy; role/class/year scope | Synthetic examples for development; minimal authorized access and private support evidence |
-| Finance and inventory | Integrity of money, stock, history and related records | Verify exact mutation/transaction semantics; do not blindly retry an uncertain insert |
+| Record mutations | Integrity of records, history and related data | Verify exact mutation/transaction semantics; do not blindly retry an uncertain insert |
 | Profile images and uploads | Ownership, content safety and storage exposure | Validate intended access and private-storage flow; filenames/URLs are not authorization |
 | Device-local work and diagnostics | Ownership, confidentiality and unsent work | A local save is not server acceptance; inspect logs before sharing; no real data in fixtures |
 | Repository, environment, backups and signing material | Application integrity and operational recovery | Separate development authority from production, database restore and release signing |
@@ -104,7 +104,6 @@ Maintain three separate conclusions: **source control exists**, **specific fixtu
 ## 6. Open verification work
 
 - Complete action-level authorization, field-level API and column-level schema reconciliation across all domains.
-- Reproduce/fix Finance submission recovery in a separately authorized behavioral change; see [worked trace](../DEVELOPER_GUIDE.md).
 - Independently review private upload/storage, proxy/header/configuration, backup/restore, operational ownership, signing and incident drill evidence.
 - Verify hosted versions, flags, actual schema, migration application and device behavior only with appropriate owner authorization.
 - Obtain independent maintainer/security review; a self-authored model and passing CI do not replace it.

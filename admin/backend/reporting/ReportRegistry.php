@@ -21,7 +21,7 @@
  * Clients never send SQL. They send field keys, operator keys and values;
  * ReportQueryService turns a validated definition into ONE prepared SELECT.
  *
- * Adding a department later (Education, Finance) = adding a dataset
+ * Adding a department later (for example Education) = adding a dataset
  * and fields here — no new endpoint, no new page.
  *
  * Shared‑hosting safe: pure PHP, no extensions, no Composer package.
@@ -44,8 +44,8 @@ final class ReportRegistry
     private const R_HR    = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'];
     /**
      * Owner decision 2026‑10‑19 (docs/planning/REPORTING_CENTRE_SCOPE_AND_ROLE_BOUNDARY_2026-10-19.md):
-     * future cross‑department / sensitive datasets (Finance, Material records,
-     * Education detail, telemetry) are Information‑Department‑only — use R_INFO for them.
+     * future cross‑department / sensitive datasets (Education detail,
+     * telemetry) are Information‑Department‑only — use R_INFO for them.
      * HR's scope is frozen at V2‑3 until user feedback is reviewed.
      */
     private const R_INFO  = ['super_admin', 'school_admin', 'info_dept'];

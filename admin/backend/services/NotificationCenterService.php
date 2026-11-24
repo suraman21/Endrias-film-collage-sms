@@ -50,7 +50,7 @@ final class NotificationCenterService
      * Who may SEND announcements, and to which roles.
      * Managers announce to everyone; a department announces to the
      * staff it coordinates (its takers / teachers). Recipients-only
-     * departments (finance, material, info) do not broadcast.
+     * departments (info) do not broadcast.
      */
     private const ANNOUNCE_SEND = [
         'super_admin'  => ['*'],

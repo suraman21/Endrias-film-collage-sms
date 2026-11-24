@@ -568,9 +568,6 @@ class P1EDoNotTouch(unittest.TestCase):
 
     def test_server_contract_unchanged(self):
         php = read(CLASSES_PHP)
-        # Role gate: finance/material stay 403.
-        self.assertIn("err('Classes are not available for this role. "
-                      "Use the website.', 403)", php)
         # Roster year resolution stays server-side, verbatim envelope.
         self.assertIn('EnrollmentService::resolveRosterYear', php)
         self.assertIn("'roster_year_id' => $scope['year_id'] ?? null",

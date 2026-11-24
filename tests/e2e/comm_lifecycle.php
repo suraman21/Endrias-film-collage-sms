@@ -329,7 +329,7 @@ switch ($SCENARIO) {
         [$r] = api(2, 'teacher', 'POST', [], ['action' => 'thread_start', 'to' => '4', 'subject' => 'nope', 'body' => 'nope']);
         ok(($r['status'] ?? '') === 'error' && strpos($r['message'] ?? '', 'cannot message') !== false, 'full: teacher→hr_dept start denied (permission matrix)');
 
-        // partner matrix: teacher sees only allowed roles (never finance)
+        // partner matrix: teacher sees only allowed roles (never hr_dept)
         [$p] = api(2, 'teacher', 'POST', [], ['action' => 'partners']);
         $roles = [];
         foreach (($p['partners'] ?? []) as $partner) { $roles[$partner['role']] = 1; }

@@ -4,7 +4,7 @@
  * FULL SYSTEM THEME — Covers ALL dashboards, ALL elements
  * ============================================================
  * Overrides: Tailwind classes, CSS variables, inline styles
- * Covers: info-dept, edu_dept, finance, material, teacher,
+ * Covers: info-dept, edu_dept, teacher,
  *         attendance_taker, school_admin, super-admin, login
  * ============================================================
  */
@@ -30,7 +30,7 @@ $tpBg=_hLight($_tp);$tpBg2=_hLight($_tp,0.85);
 
 /* ──────────────────────────────────────
    1. CSS VARIABLE OVERRIDES
-   Used by: school_admin, finance, material
+   Used by: school_admin
    ────────────────────────────────────── */
 :root {
     --ac: <?= $_ta ?> !important;
@@ -72,7 +72,7 @@ div[style*="background:linear-gradient(135deg,#7c3aed,#6366f1)"][style*="border-
     background: linear-gradient(180deg, <?= $_ta ?>, <?= $_ta2 ?>) !important;
 }
 
-/* finance/material active nav (overrides hardcoded rgba) */
+/* department active nav (overrides hardcoded rgba) */
 .np.active[style], .np.active {
     background: rgba(<?= $taR[0] ?>,<?= $taR[1] ?>,<?= $taR[2] ?>,0.15) !important;
     color: <?= $_ta ?> !important;

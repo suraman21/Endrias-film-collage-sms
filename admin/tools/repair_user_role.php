@@ -5,7 +5,7 @@
  *
  * Why this exists (Fix 13): the dashboard routers (admin/dashboard.php and
  * frontend/pages/dashboard.php) dispatch strictly by users.role. If an
- * account is stored with the wrong role (e.g. a finance officer saved as
+ * account is stored with the wrong role (e.g. an education officer saved as
  * 'school_admin'), the user silently lands on the wrong dashboard with no
  * error anywhere. This tool makes the stored role visible and repairable
  * without hand-editing SQL.

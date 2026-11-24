@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/theme.dart';
 
-/// Shown for work that stays on the website (create teacher, finance, etc.).
+/// Shown for work that stays on the website (create teacher, etc.).
 class UseWebsiteNote extends StatelessWidget {
   final String title;
   final String body;

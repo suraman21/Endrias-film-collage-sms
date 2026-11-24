@@ -167,10 +167,6 @@ define('DEPT_INFO_NAME', 'ማብራሪያ ክፍል');
 define('DEPT_INFO_NAME_EN', 'Information Department');
 define('DEPT_EDU_NAME', 'ትምህርት ክፍል');
 define('DEPT_EDU_NAME_EN', 'Education Department');
-define('DEPT_FINANCE_NAME', 'ገንዘብ ክፍል');
-define('DEPT_FINANCE_NAME_EN', 'Finance Department');
-define('DEPT_MATERIAL_NAME', 'ቁሳቁስ ክፍል');
-define('DEPT_MATERIAL_NAME_EN', 'Material Department');
 define('DEPT_GROUPS_NAME', 'የማህበራት አስተዳደር');
 define('DEPT_GROUPS_NAME_EN', 'Groups Management');
 

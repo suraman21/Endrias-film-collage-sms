@@ -1,6 +1,6 @@
 # Documentation catalog and review boundaries
 
-**Maintained catalog, 2026-10-28.** Review starts from pushed documentation baseline `7e28157`, itself based on development `7209278`. Developer-readiness, security-model and Finance/Materials additions were subsequently source-reviewed against merged development main `13f00ac`. This catalog records dispositions and targeted source review; it is not an assertion that every historical paragraph, endpoint, permission, UI control or runtime has been exhaustively audited.
+**Maintained catalog, 2026-10-28.** Review starts from pushed documentation baseline `7e28157`, itself based on development `7209278`. Developer-readiness and security-model additions were subsequently source-reviewed against merged development main `13f00ac`. This catalog records dispositions and targeted source review; it is not an assertion that every historical paragraph, endpoint, permission, UI control or runtime has been exhaustively audited.
 
 ## 1. Maintained entry points
 
@@ -52,7 +52,7 @@ The tracked Markdown/text inventory includes code/build inputs and third-party m
 ## 4. Unfinished work and excluded claims
 
 1. Remaining source-copy differences require complete review before retirement.
-2. The full departmental/every-control manual is now explicitly in the active requested scope. New Finance/Materials core chapters reduce but do not close it. All-action permission reconciliation, shared/dynamic/legacy controls and browser/phone acceptance remain unfinished acceptance requirements.
+2. The full departmental/every-control manual is now explicitly in the active requested scope. All-action permission reconciliation, shared/dynamic/legacy controls and browser/phone acceptance remain unfinished acceptance requirements.
 3. A regenerated column-level dictionary and complete field-level API conformance need dedicated isolated schema/contract work; no live-school data is authorized for this update.
 4. Actual development cron/deployment parity, owner acceptance and any production promotion are not accomplished by editing these documents.
 5. CI/check and integration outcomes belong to the final candidate/merge record. Do not substitute the previously green `7209278` baseline for fresh results.

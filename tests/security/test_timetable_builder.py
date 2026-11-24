@@ -14,7 +14,7 @@ Live (skipped unless the local server + seed are present):
   * full Education round-trip: days → period (overlap 4xx) → lesson → teacher
     double-booking refused → clear → copy bell → makeup (past date refused,
     weekday clash refused) → delete; teacher my_schedule sees the lesson;
-    teacher write 403; CSRF-less write 403; finance 403; audit rows written.
+    teacher write 403; CSRF-less write 403; HR 403; audit rows written.
 """
 from __future__ import annotations
 

@@ -80,10 +80,6 @@ if (!defined('DEPT_INFO_NAME'))         define('DEPT_INFO_NAME', 'መረጃ ክ�
 if (!defined('DEPT_INFO_NAME_EN'))      define('DEPT_INFO_NAME_EN', 'Information Department');
 if (!defined('DEPT_EDU_NAME'))          define('DEPT_EDU_NAME', 'ትምህርት ክፍል');
 if (!defined('DEPT_EDU_NAME_EN'))       define('DEPT_EDU_NAME_EN', 'Education Department');
-if (!defined('DEPT_FINANCE_NAME'))      define('DEPT_FINANCE_NAME', 'ፋይናንስ ክል');
-if (!defined('DEPT_FINANCE_NAME_EN'))   define('DEPT_FINANCE_NAME_EN', 'Finance Department');
-if (!defined('DEPT_MATERIAL_NAME'))     define('DEPT_MATERIAL_NAME', 'ንብረት ክፍል');
-if (!defined('DEPT_MATERIAL_NAME_EN'))  define('DEPT_MATERIAL_NAME_EN', 'Material Department');
 if (!defined('DEPT_GROUPS_NAME'))       define('DEPT_GROUPS_NAME', 'ቡድኖች');
 if (!defined('DEPT_GROUPS_NAME_EN'))    define('DEPT_GROUPS_NAME_EN', 'Groups');
 

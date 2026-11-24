@@ -15,7 +15,7 @@ if (getenv('SSMS_AUDIT_TESTING') !== '1') {
  *
  * Idempotent: safe to run twice. Creates the exact world the audit
  * findings live in:
- *   - 4 staff logins (super, edu, teacher, finance)  [finance = authz probe]
+ *   - 3 staff logins (super, edu, teacher)
  *   - academic year + current term
  *   - 3 classes; class 3 deliberately has NO class_subjects links
  *     (reproduces the "empty subject dropdown" symptom)

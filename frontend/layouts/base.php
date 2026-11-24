@@ -37,7 +37,7 @@ if (!defined('ROOT_PATH')) {
     }
 }
 
-// Ethiopian date picker for ALL frontend pages (finance etc.) — same engine
+// Ethiopian date picker for ALL frontend pages — same engine
 // the admin dashboards use. Converts every <input type="date"> to Ethiopian
 // while still storing/sending the Gregorian value.
 if (defined('ROOT_PATH') && is_file(ROOT_PATH . '/admin/backend/calendar_system.php')) {
@@ -160,8 +160,7 @@ $_isImpersonating = !empty($_SESSION['original_admin_role']);
             'logo' => function_exists('ssms_school_logo_url') ? ssms_school_logo_url() : ($_themeBase . '/assets/logos/school_logo.png'),
             'seal' => function_exists('ssms_school_seal_url') ? ssms_school_seal_url() : ($_themeBase . '/assets/seals/school_seal.png'),
             'features' => [
-                'ai' => feature_enabled('ai'), 'finance' => feature_enabled('finance'),
-                'material' => feature_enabled('material'),
+                'ai' => feature_enabled('ai'),
                 'groups' => feature_enabled('groups'), 'idcards' => feature_enabled('id_cards'),
                 'attendance' => feature_enabled('attendance'), 'grades' => feature_enabled('grades'),
                 'reports' => feature_enabled('reports'), 'pdf' => feature_enabled('export_pdf'),
@@ -169,8 +168,6 @@ $_isImpersonating = !empty($_SESSION['original_admin_role']);
             'depts' => [
                 'info' => ['am' => DEPT_INFO_NAME, 'en' => DEPT_INFO_NAME_EN],
                 'edu' => ['am' => DEPT_EDU_NAME, 'en' => DEPT_EDU_NAME_EN],
-                'finance' => ['am' => DEPT_FINANCE_NAME, 'en' => DEPT_FINANCE_NAME_EN],
-                'material' => ['am' => DEPT_MATERIAL_NAME, 'en' => DEPT_MATERIAL_NAME_EN],
             ],
         ],
         'theme' => $_activeTheme, 'themeBase' => $_themeBase,

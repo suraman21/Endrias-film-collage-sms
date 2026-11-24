@@ -37,12 +37,12 @@ class NotificationCenterTests(unittest.TestCase):
         cls.sectionSrc = cls.section.read_text(encoding="utf-8")
         cls.COMM_DASH_FILES = [
             "super-admin.php", "school_admin.php", "edu_dept.php",
-            "material_department.php", "attendance_taker.php", "teacher.php",
+            "attendance_taker.php", "teacher.php",
             "hr-dept.php", "info-dept.php", "dept_taker.php", "content_editor.php",
         ]
         cls.COMM_BOTTOM_NAV_FILES = [
             "super-admin.php", "school_admin.php", "edu_dept.php",
-            "material_department.php", "attendance_taker.php", "teacher.php",
+            "attendance_taker.php", "teacher.php",
         ]
 
     # ── 1. the single source of truth ─────────────────────────
@@ -218,10 +218,9 @@ class NotificationCenterTests(unittest.TestCase):
         self.assertIn("function toast(", self.commJs)          # success/error feedback
 
     def test_phase1_bell_not_buried_in_sidebar_bottom(self):
-        """edu/material bells live in the always-visible brand row, not the
+        """the edu bell lives in the always-visible brand row, not the
         cramped sidebar-bottom slot (the 'cannot access it' complaint)."""
-        for rel in ("admin/dashboards/edu_dept.php",
-                    "admin/dashboards/material_department.php"):
+        for rel in ("admin/dashboards/edu_dept.php",):
             src = (ROOT / rel).read_text(encoding="utf-8")
             marker = '<div style="flex:1"></div><?php include __DIR__ . \'/../components/notification_center.php\'; ?>'
             self.assertIn(marker, src, f"{rel}: bell must sit in the brand row")
@@ -302,8 +301,7 @@ class NotificationCenterTests(unittest.TestCase):
     def test_every_flutter_home_has_the_bell(self):
         homes = ["teacher/teacher_home.dart", "att_taker/att_taker_home.dart",
                  "hr/hr_home.dart", "hr/hr_taker_home.dart", "admin/admin_home.dart",
-                 "edu_dept/edu_home.dart", "info_dept/info_home.dart",
-                 "finance/finance_home.dart", "material/material_home.dart"]
+                 "edu_dept/edu_home.dart", "info_dept/info_home.dart"]
         for h in homes:
             src = (MOBILE / "screens" / h).read_text(encoding="utf-8")
             self.assertIn("NotificationBellButton", h + ": " + src[:0] if False else src,
@@ -712,14 +710,13 @@ class NotificationIncludeOrderRegression(unittest.TestCase):
         self.assertEqual(
             offenders, [],
             "Notification bell order defects (fatal after login):\n" + "\n".join(offenders))
-        # 10 dashboards + notifications.php + messages.php + 2 frontend pages
+        # 8 dashboards + notifications.php + messages.php + 1 frontend page
         # + 2 legacy bell shims (admin + backend) that delegate to the center.
         # Update this pin DELIBERATELY when adding a new bell surface.
-        self.assertEqual(checked, 16, f"expected 16 render surfaces, found {checked}")
+        self.assertEqual(checked, 13, f"expected 13 render surfaces, found {checked}")
 
     def test_hotfix_pinned_files_are_safe(self):
-        for rel in ("admin/dashboards/edu_dept.php",
-                    "admin/dashboards/material_department.php"):
+        for rel in ("admin/dashboards/edu_dept.php",):
             src = (ROOT / rel).read_text(encoding="utf-8")
             self.assertLess(
                 src.find(self.COMPONENT), src.find("renderNotificationCenter()"),

@@ -47,7 +47,7 @@ $extensions = [
     ['xmlwriter', 'XLSX export streaming — 500s (L1).'],
     ['dom', 'XLSX parsing (PhpSpreadsheet) — imports fail (L1).'],
     ['zip', 'XLSX packaging (OOXML is a zip) — exports/imports 500 (L1).'],
-    ['bcmath', 'precision money/fee math — finance + fee totals.'],
+    ['bcmath', 'precision money math — amounts and totals.'],
 ];
 
 foreach ($extensions as [$ext, $breaks]) {

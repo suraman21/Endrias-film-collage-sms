@@ -52,6 +52,10 @@ KNOWN_EXTERNALLY_DEFINED = {
     "users",
     "members",
     "subjects",
+    "finance_transactions",
+    "finance_member_fees",
+    "material_items",
+    "material_transactions",
 }
 
 # Measured 2026-10-02. (migration, table) pairs altered before their CREATE.

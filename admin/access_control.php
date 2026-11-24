@@ -12,9 +12,9 @@
  * Before this file, every admin script checked access on its own —
  * and several checked NOTHING. For example print_member.php and
  * info_manage_member.php could be opened by anyone on the internet,
- * exposing every student's full record. Other endpoints (finance,
- * education) only checked "is the person logged in?" — so a teacher
- * could read the finance ledger or delete a class.
+ * exposing every student's full record. Other endpoints (education)
+ * only checked "is the person logged in?" — so a teacher
+ * could delete a class.
  *
  * HOW IT DECIDES (in order)
  * -------------------------
