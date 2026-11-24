@@ -151,8 +151,8 @@ var Teachers = (function () {
             document.getElementById('memberQ').value = '';
             document.getElementById('memberHits').style.display = 'none';
             document.getElementById('memberPicked').textContent = memberId
-                ? ('Linked to member ' + (t.member_code || ('#' + memberId)))
-                : 'Not linked to a member record.';
+                ? ('Linked to student ' + (t.member_code || ('#' + memberId)))
+                : 'Not linked to a student record.';
             renderExisting();
             syncRoleUi();
             showForm();
@@ -205,7 +205,7 @@ var Teachers = (function () {
                     var list = d.members || [];
                     if (!list.length) {
                         hits.style.display = 'block';
-                        hits.innerHTML = '<div class="t-hit" style="cursor:default;color:var(--school-text-dim)">No members found</div>';
+                        hits.innerHTML = '<div class="t-hit" style="cursor:default;color:var(--school-text-dim)">No students found</div>';
                         return;
                     }
                     hits.style.display = 'block';

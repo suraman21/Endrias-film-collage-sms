@@ -295,7 +295,7 @@ switch ($action) {
         $date = validateDate($_POST['date'] ?? '', date('Y-m-d'));
         
         if (empty($memberCode) || !$classId) {
-            echo json_encode(['status' => 'error', 'message' => 'Member Code and Class ID required.']);
+            echo json_encode(['status' => 'error', 'message' => 'Student Code and Class ID required.']);
             exit;
         }
 

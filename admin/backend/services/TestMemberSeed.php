@@ -2,7 +2,7 @@
 /**
  * Load / remove the practice roster (city = TEST-FKSS).
  *
- * Used only for a full-system test. Real members are never matched
+ * Used only for a full-system test. Real students are never matched
  * or deleted. Classes 1ኛ–6ኛ ክፍል are created if they are missing;
  * existing class codes are left untouched.
  */
@@ -175,7 +175,7 @@ class TestMemberSeed
         ]);
 
         $stats['loaded'] = $loaded;
-        $stats['message'] = "Practice members ready: {$loaded} on the website"
+        $stats['message'] = "Practice students ready: {$loaded} on the website"
             . " ({$stats['inserted']} new, {$stats['updated']} already there).";
         if ($stats['errors']) {
             $stats['message'] .= " {$stats['errors']} row(s) had a problem.";
@@ -200,7 +200,7 @@ class TestMemberSeed
         $n = count($ids);
         if ($n === 0) {
             self::writeFlag($conn, ['status' => 'cleared', 'count' => 0, 'at' => date('c')]);
-            return ['ok' => true, 'removed' => 0, 'message' => 'No practice members to remove.'];
+            return ['ok' => true, 'removed' => 0, 'message' => 'No practice students to remove.'];
         }
 
         $placeholders = implode(',', array_fill(0, $n, '?'));
@@ -238,7 +238,7 @@ class TestMemberSeed
         return [
             'ok' => true,
             'removed' => max(0, (int)$removed),
-            'message' => 'Removed ' . max(0, (int)$removed) . ' practice members. Real members were not touched. Classes were kept.',
+            'message' => 'Removed ' . max(0, (int)$removed) . ' practice students. Real students were not touched. Classes were kept.',
         ];
     }
 
@@ -633,7 +633,7 @@ class TestMemberSeed
             return;
         }
         $key = self::FLAG_KEY;
-        $label = 'Test members flag';
+        $label = 'Test students flag';
         $stmt = $conn->prepare(
             "INSERT INTO system_branding (asset_key, asset_label, original_name)
              VALUES (?, ?, ?)

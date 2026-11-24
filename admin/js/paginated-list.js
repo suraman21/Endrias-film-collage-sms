@@ -1,7 +1,7 @@
 /*
  * Shared paginated list engine — one pager for every member list.
  *
- *   Showing 51–100 of 440 members          Per page [25|50|100|200]
+ *   Showing 51–100 of 440 students          Per page [25|50|100|200]
  *   ‹ Previous  1 2 [3] 4 … 9  Next ›      [Load more (340 left)]
  *
  * - Previous / page numbers / Next REPLACE the rows (jump to a page).
@@ -189,7 +189,7 @@
         var self = this;
         var r = this.range();
 
-        // ── Row 1: "Showing 51–100 of 440 members" + Per page ──
+        // ── Row 1: "Showing 51–100 of 440 students" + Per page ──
         var top = document.createElement('div');
         top.className = 'fk-pager flex items-center justify-between mt-3 px-4 py-2 flex-wrap gap-2';
         top.setAttribute('data-fk-pager', '');

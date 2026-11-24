@@ -431,7 +431,7 @@ final class MemberDirectoryService
         if (in_array($role, self::PRIVILEGED_ROLES, true)) {
             return self::FULL_COLUMNS;
         }
-        throw new InvalidArgumentException('The member directory is not available for this role.');
+        throw new InvalidArgumentException('The student directory is not available for this role.');
     }
 
     private static function booleanSearch(string $value): string

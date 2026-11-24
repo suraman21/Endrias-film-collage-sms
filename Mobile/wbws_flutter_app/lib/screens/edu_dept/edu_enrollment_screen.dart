@@ -152,7 +152,7 @@ class _EduEnrollmentScreenState extends State<EduEnrollmentScreen> {
                 TextField(
                   controller: _search,
                   decoration: InputDecoration(
-                    hintText: 'Name or member code',
+                    hintText: 'Name or student code',
                     prefixIcon: const Icon(Icons.search, size: 20),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.arrow_forward),

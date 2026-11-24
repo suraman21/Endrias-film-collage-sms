@@ -40,7 +40,7 @@ if (!in_array($tier, ['temporary', 'permanent', 'all'], true)) {
     exit('Invalid membership tier.');
 }
 $format = strtolower((string)($_GET['format'] ?? 'xlsx'));
-if (!in_array($format, ['xlsx', 'csv'], true) || ($tier === 'all' && $format !== 'csv')) {
+if (!in_array($format, ['xlsx', 'csv'], true)) {
     http_response_code(400);
     exit('Invalid export format.');
 }
@@ -95,7 +95,7 @@ if ($tooLargeForWorkbook) {
     );
 }
 
-$baseFilename = 'sundayschool_' . $tier . '_members_' . date('Y-m-d');
+$baseFilename = 'students_' . date('Y-m-d');
 try {
     if ($format === 'csv') {
         MemberExportService::streamCsv(
@@ -136,7 +136,7 @@ try {
         $yearId,
         $dateFormatter
     );
-    $title = $tier === 'temporary' ? 'Temporary Members Sync' : 'Permanent Members Sync';
+    $title = 'Students Sync';
     \App\Services\ExcelExportService::export(
         $title,
         $columns,

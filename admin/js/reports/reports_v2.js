@@ -365,7 +365,7 @@
       box.insertAdjacentHTML('beforeend', '<span class="rc-chip">' + esc(describeFilter(f)) + ' <button type="button" data-i="' + i + '" aria-label="Remove">×</button></span>');
     });
     if (!state.filters.length && !state.search) {
-      box.insertAdjacentHTML('beforeend', '<span class="rc-muted">All members — add filters on the left or pick a starter question.</span>');
+      box.insertAdjacentHTML('beforeend', '<span class="rc-muted">All students — add filters on the left or pick a starter question.</span>');
     }
     $$('button', box).forEach((b) => b.addEventListener('click', () => {
       if (b.hasAttribute('data-search')) state.search = ''; else removeFilterAt(parseInt(b.dataset.i, 10));
@@ -527,7 +527,7 @@
     const shared = v.scope !== 'private';
     const ok = await window.DangerConfirm.ask(shared
       ? { tier: 'medium', title: 'Delete the shared view “' + v.name + '”?', object: v.name, summary: 'This saved view is shared with other people.', intent: 'I want to delete this view',
-          consequences: ['The view disappears for EVERYONE who can see it.', 'Links that point to this view stop opening it.'], keeps: ['No member or attendance data is changed.'],
+          consequences: ['The view disappears for EVERYONE who can see it.', 'Links that point to this view stop opening it.'], keeps: ['No student or attendance data is changed.'],
           irreversible: true, phrase: 'DELETE VIEW', confirmLabel: 'Delete view' }
       : { tier: 'low', title: 'Delete your view “' + v.name + '”?', summary: 'Only your saved filters are removed. No data is changed.', confirmLabel: 'Delete view' });
     if (!ok) return;
@@ -566,7 +566,7 @@
     const chips = state.filters.length + (state.search ? 1 : 0);
     $('#rc-saveview-summary').textContent = existing
       ? 'The population and columns are kept as saved; use “Save view” from the panel to store a new population under a new name.'
-      : (chips ? chips + ' filter' + (chips > 1 ? 's' : '') : 'No filters (all members)') + ' · ' + state.columns.length + ' columns · opens on the ' + state.tab + ' tab.';
+      : (chips ? chips + ' filter' + (chips > 1 ? 's' : '') : 'No filters (all students)') + ' · ' + state.columns.length + ' columns · opens on the ' + state.tab + ' tab.';
     form.dataset.mode = existing ? 'edit' : 'new';
     modal.hidden = false;
     form.elements.name.focus();
@@ -749,7 +749,7 @@
       layout: 'fitDataFill',
       height: '62vh',
       columns: tableColumns(),
-      placeholder: 'No members match this population.',
+      placeholder: 'No students match this population.',
       pagination: true,
       paginationMode: 'remote',
       paginationSize: state.pageSize,
@@ -773,7 +773,7 @@
         }
         const d = response.data;
         const shown = Math.min(d.total, d.max_rows);
-        $('#rc-list-count').textContent = fmtNum(d.total) + ' members' + (d.truncated ? ' · showing the first ' + fmtNum(shown) + ' — narrow the filters to see all' : '');
+        $('#rc-list-count').textContent = fmtNum(d.total) + ' students' + (d.truncated ? ' · showing the first ' + fmtNum(shown) + ' — narrow the filters to see all' : '');
         if (response.generated_at) $('#rc-asof').textContent = 'Data as of ' + new Date(response.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return { last_page: Math.max(1, Math.ceil(shown / (params.size || state.pageSize))), data: d.rows };
       },

@@ -1,21 +1,21 @@
 <?php
 /**
- * Smart Member Import API (Excel .xlsx UPSERT) — v2 (2026-10-21)
+ * Smart Student Import API (Excel .xlsx UPSERT) — v2 (2026-10-21)
  * - CSRF + role gated (super_admin / hr_dept; school_admin removed 2026-11-18)
  * - Human headers AND legacy snake_case headers
  * - dry_run=1 ("Check file") validates the whole file and writes nothing.
  * - All-or-nothing: every row is validated first; ANY error rejects the
  *   whole file with a row list. Members, member codes and class
  *   enrollments are then written in ONE database transaction.
- * - Filled Excel cells update an existing member. Blank cells are left unchanged.
- * - Existing members are matched by member code → name + phone → name + birth date.
+ * - Filled Excel cells update an existing student. Blank cells are left unchanged.
+ * - Existing students are matched by student code → name + phone → name + birth date.
  * - Birth date is an Ethiopian date; date_of_birth (Gregorian) and the
  *   dob_ec_* fields are both stored. Age, age group and section are
  *   calculated from age (section = age group; it never decides the class).
  * - Class labels match active class names/codes exactly (spaces ignored);
  *   never by numeric id. Empty class = imported unassigned.
- * - Member code is never overwritten. Permanent members get a code from
- *   their age group; temporary members join the waiting list.
+ * - Student code is never overwritten. Permanent students get a code from
+ *   their age group; temporary students join the waiting list.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -122,7 +122,7 @@ if (!in_array($tier, ['temporary', 'permanent'], true)) {
     $tier = 'permanent';
 }
 $dryRun = in_array(strtolower((string)($_POST['dry_run'] ?? '')), ['1', 'true', 'yes'], true);
-// Danger confirmation (HIGH): a real import writes many members at once and
+// Danger confirmation (HIGH): a real import writes many students at once and
 // needs the typed phrase from the 3-step dialog. "Check file" (dry run) does not.
 if (!$dryRun) {
     dc_require_phrase('members.import');
@@ -176,7 +176,7 @@ $rows = array_filter($rows, function ($row) {
     return false;
 });
 if (count($rows) === 0) {
-    import_json(['success' => false, 'message' => 'The file has a header row but no member rows.']);
+    import_json(['success' => false, 'message' => 'The file has a header row but no student rows.']);
 }
 if (count($rows) > 2000) {
     import_json(['success' => false, 'message' => 'Too many rows (max 2,000). Split the file and try again.']);
@@ -198,7 +198,7 @@ foreach ($headers as $i => $raw) {
     $seenKeys[$key] = true;
 }
 if (!isset($seenKeys['full_name_am']) && !isset($seenKeys['member_code'])) {
-    $headerErrors[] = 'The file needs a "Full Name" (or "Member Code") column.';
+    $headerErrors[] = 'The file needs a "Full Name" (or "Student Code") column.';
 }
 if (!empty($headerErrors)) {
     import_json(['success' => false, 'message' => 'The file was not imported.', 'errors' => $headerErrors, 'error_count' => count($headerErrors)]);
@@ -231,7 +231,7 @@ foreach (['emergency_name', 'emergency_phone'] as $optional) {
 }
 if (!empty($missingSchema)) {
     error_log('api_import_members: members table is missing columns: ' . implode(', ', $missingSchema));
-    import_json(['success' => false, 'message' => 'The system database needs an update before importing (missing member fields). No changes were saved.'], 503);
+    import_json(['success' => false, 'message' => 'The system database needs an update before importing (missing student fields). No changes were saved.'], 503);
 }
 
 // Columns the importer computes itself or never writes from a sheet.
@@ -315,7 +315,7 @@ try {
         $name = MemberImportService::cleanName($cells['full_name_am'] ?? '');
         $code = $cells['member_code'] ?? '';
         if ($name === '' && $code === '' && ($cells['system_id'] ?? '') === '') {
-            $fail($excelRow, 'missing Full Name and Member Code.');
+            $fail($excelRow, 'missing Full Name and Student Code.');
             continue;
         }
 
@@ -423,14 +423,14 @@ try {
         }
         if (($fields['status'] ?? '') === 'archived') {
             // Archiving records who/when/why — it must go through the Archive action.
-            $fail($excelRow, 'Status "archived" cannot be set from Excel. Use the Archive action on the member.');
+            $fail($excelRow, 'Status "archived" cannot be set from Excel. Use the Archive action on the student.');
         }
         if ($name !== '' && mb_strlen($name, 'UTF-8') > (int)($colMeta['full_name_am']['max'] ?? 150)) {
             $fail($excelRow, 'Full Name is too long.');
         }
 
-        // ── Match an existing member ──
-        // Order: System ID → member code → name + phone → name + birth date.
+        // ── Match an existing student ──
+        // Order: System ID → student code → name + phone → name + birth date.
         $existing = null;
         $systemId = $cells['system_id'] ?? '';
         if ($systemId !== '') {
@@ -438,12 +438,12 @@ try {
                 ? $fetchOne('SELECT * FROM members WHERE id = ? LIMIT 1', 'i', [(int)$systemId])
                 : [];
             if (count($found) !== 1) {
-                $fail($excelRow, 'System ID "' . $systemId . '" was not found. Do not type in the System ID column; leave it empty for new members.');
+                $fail($excelRow, 'System ID "' . $systemId . '" was not found. Do not type in the System ID column; leave it empty for new students.');
                 continue;
             }
             $existing = $found[0];
             if ($code !== '' && (string)$existing['member_code'] !== $code) {
-                $fail($excelRow, 'Member Code "' . $code . '" does not belong to System ID ' . $systemId . '.');
+                $fail($excelRow, 'Student Code "' . $code . '" does not belong to System ID ' . $systemId . '.');
                 continue;
             }
         }
@@ -452,14 +452,14 @@ try {
             if (count($found) === 1) {
                 $existing = $found[0];
             } else {
-                $fail($excelRow, 'Member Code "' . $code . '" was not found. Clear the code to add a new member.');
+                $fail($excelRow, 'Student Code "' . $code . '" was not found. Clear the code to add a new student.');
                 continue;
             }
         }
         if ($existing === null && $name !== '' && ($fields['phone_number'] ?? '') !== '') {
             $found = $fetchOne('SELECT * FROM members WHERE full_name_am = ? AND phone_number = ? LIMIT 2', 'ss', [$name, $fields['phone_number']]);
             if (count($found) > 1) {
-                $fail($excelRow, 'more than one existing member has this name and phone. Add the Member Code to choose one.');
+                $fail($excelRow, 'more than one existing student has this name and phone. Add the Student Code to choose one.');
                 continue;
             }
             $existing = $found[0] ?? null;
@@ -471,7 +471,7 @@ try {
                 [$name, $dob['gregorian'], $dob['y'], $dob['m'], $dob['d']]
             );
             if (count($found) > 1) {
-                $fail($excelRow, 'more than one existing member has this name and birth date. Add the Member Code to choose one.');
+                $fail($excelRow, 'more than one existing student has this name and birth date. Add the Student Code to choose one.');
                 continue;
             }
             $existing = $found[0] ?? null;
@@ -489,7 +489,7 @@ try {
         }
         if ($dupKey !== null) {
             if (isset($inFileKeys[$dupKey])) {
-                $fail($excelRow, 'same member as row ' . $inFileKeys[$dupKey] . ' (same name and birth date/phone).');
+                $fail($excelRow, 'same student as row ' . $inFileKeys[$dupKey] . ' (same name and birth date/phone).');
                 continue;
             }
             $inFileKeys[$dupKey] = $excelRow;
@@ -502,10 +502,10 @@ try {
         [$ageGroup, $section, $sectionSource] = $sectionDecision($age, $sectionCell);
 
         if ($existing !== null) {
-            // ── Update: only filled cells; never the member code ──
+            // ── Update: only filled cells; never the student code ──
             if (($existing['status'] ?? '') === 'archived') {
                 $summary['skipped_archived']++;
-                $warn($excelRow, 'member ' . ($existing['member_code'] ?: ('#' . $existing['id'])) . ' is archived and was skipped. Restore the member first to update.');
+                $warn($excelRow, 'student ' . ($existing['member_code'] ?: ('#' . $existing['id'])) . ' is archived and was skipped. Restore the student first to update.');
                 continue;
             }
             $rowData = $fields;
@@ -552,18 +552,18 @@ try {
             $plan[] = ['action' => 'update', 'row' => $excelRow, 'id' => (int)$existing['id'], 'data' => $changes, 'class' => $class];
             $summary[empty($changes) ? 'unchanged' : 'updated']++;
         } else {
-            // ── New member ──
+            // ── New student ──
             if ($name === '') {
-                $fail($excelRow, 'Full Name is required for a new member.');
+                $fail($excelRow, 'Full Name is required for a new student.');
                 continue;
             }
             [$student, $father, $grandfather] = MemberImportService::splitName($name);
             if ($father === '') {
-                $fail($excelRow, 'Full Name must include at least the member\'s name and father\'s name.');
+                $fail($excelRow, 'Full Name must include at least the student\'s name and father\'s name.');
                 continue;
             }
             if ($gender === null) {
-                $fail($excelRow, 'Gender is required for a new member.');
+                $fail($excelRow, 'Gender is required for a new student.');
                 continue;
             }
             // Never silently create a second copy of someone already in the
@@ -583,10 +583,10 @@ try {
                 }
                 $who = (string)($sameName[0]['member_code'] ?: ('System ID ' . $sameName[0]['id']));
                 if (!$provablyDifferent) {
-                    $fail($excelRow, '"' . $name . '" already exists (' . $who . '). If it is the same person, use the exported sheet (System ID) or add the Member Code; if it is a different person, both members need a Date of Birth.');
+                    $fail($excelRow, '"' . $name . '" already exists (' . $who . '). If it is the same person, use the exported sheet (System ID) or add the Student Code; if it is a different person, both students need a Date of Birth.');
                     continue;
                 }
-                $warn($excelRow, 'a member with the same name already exists (' . $who . ', different birth date); this row is added as a new member.');
+                $warn($excelRow, 'a student with the same name already exists (' . $who . ', different birth date); this row is added as a new student.');
             }
             // Same rule inside the file: two new rows with the same name must
             // both have different birth dates.
@@ -621,7 +621,7 @@ try {
             $rowData['age_group'] = $ageGroup;
             $rowData['current_section'] = $section;
             if ($sectionSource === 'none') {
-                $warn($excelRow, 'no birth date, age or section — section' . ($rowTier === 'permanent' ? ' and member code stay' : ' stays') . ' pending.');
+                $warn($excelRow, 'no birth date, age or section — section' . ($rowTier === 'permanent' ? ' and student code stay' : ' stays') . ' pending.');
             }
             if ($rowTier === 'temporary') {
                 $rowData['registration_type'] = 'waiting';

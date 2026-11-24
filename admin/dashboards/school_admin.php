@@ -273,7 +273,7 @@ select.inp{cursor:pointer}
 <div class="brand"><div class="brand-logo"><i class="fa-solid fa-church"></i></div><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:.88rem;font-weight:700;color:var(--bright)"><?= ADMIN_PANEL_TITLE ?></span><span class="amharic" style="font-size:.6rem;color:var(--dim)">ት/ቤት አስተዳዳሪ</span></div></div>
 <div class="nt">Main</div>
 <button class="np active" data-section="dashboard"><i class="fa-solid fa-gauge-high"></i> Overview <?php if($recentRegs>0):?><span class="badge"><?=$recentRegs?></span><?php endif;?></button>
-<button class="np" data-section="members"><i class="fa-solid fa-users"></i> Members <span class="badge" style="background:var(--purple)"><?=$stats['total']?></span></button>
+<button class="np" data-section="members"><i class="fa-solid fa-users"></i> Students <span class="badge" style="background:var(--purple)"><?=$stats['total']?></span></button>
 <button class="np" data-section="attendance"><i class="fa-solid fa-clipboard-check"></i> Attendance</button>
 <button class="np" data-section="classes"><i class="fa-solid fa-chalkboard"></i> Classes</button>
 <button class="np" data-section="academicyear"><i class="fa-solid fa-calendar-days"></i> Academic Year</button>
@@ -314,7 +314,7 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div id="section-dashboard" class="cs active">
 <!-- Stats -->
 <div class="sg">
-<div class="sc"><div class="ico" style="background:rgba(6,182,212,.1);color:var(--info)"><i class="fa-solid fa-users"></i></div><div class="val"><span class="count-up" data-target="<?=$stats['total']?>">0</span></div><div class="lbl">Total Members</div><?php if($recentRegs>0):?><div class="trend"><i class="fa-solid fa-arrow-up" style="font-size:.45rem"></i> +<?=$recentRegs?> this week</div><?php endif;?></div>
+<div class="sc"><div class="ico" style="background:rgba(6,182,212,.1);color:var(--info)"><i class="fa-solid fa-users"></i></div><div class="val"><span class="count-up" data-target="<?=$stats['total']?>">0</span></div><div class="lbl">Total Students</div><?php if($recentRegs>0):?><div class="trend"><i class="fa-solid fa-arrow-up" style="font-size:.45rem"></i> +<?=$recentRegs?> this week</div><?php endif;?></div>
 <div class="sc"><div class="ico" style="background:rgba(16,185,129,.1);color:var(--ok)"><i class="fa-solid fa-user-check"></i></div><div class="val"><span class="count-up" data-target="<?=$stats['active']?>">0</span></div><div class="lbl">Active</div><?php if($stats['total']>0):?><div class="trend"><?=round($stats['active']/$stats['total']*100)?>%</div><?php endif;?></div>
 <div class="sc"><div class="ico" style="background:rgba(245,158,11,.1);color:var(--warn)"><i class="fa-solid fa-hourglass-half"></i></div><div class="val"><span class="count-up" data-target="<?=$stats['pending']?>">0</span></div><div class="lbl">Pending</div></div>
 <div class="sc"><div class="ico" style="background:rgba(239,68,68,.08);color:var(--bad)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="val"><span class="count-up" data-target="<?=$stats['warning']+$stats['inactive']?>">0</span></div><div class="lbl">Warning+Inactive</div></div>
@@ -325,7 +325,7 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <!-- Quick Actions -->
 <div class="cd"><div class="ct"><i class="fa-solid fa-bolt" style="color:var(--warn)"></i> Quick Actions</div>
 <div class="qa-grid">
-<a class="qa-btn" onclick="nav('members')"><i class="fa-solid fa-users" style="color:var(--ac)"></i><span>View Members</span></a>
+<a class="qa-btn" onclick="nav('members')"><i class="fa-solid fa-users" style="color:var(--ac)"></i><span>View Students</span></a>
 <a class="qa-btn" onclick="nav('attendance')"><i class="fa-solid fa-clipboard-check" style="color:var(--purple)"></i><span>Attendance</span></a>
 <a class="qa-btn" onclick="nav('departments')"><i class="fa-solid fa-building" style="color:var(--warn)"></i><span>Departments</span></a>
 <a class="qa-btn" onclick="nav('reports')"><i class="fa-solid fa-chart-line" style="color:var(--pink)"></i><span>Reports</span></a>
@@ -378,10 +378,10 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 </div>
 </div>
 
-<!-- ═══ MEMBERS ═══ -->
+<!-- ═══ STUDENTS ═══ -->
 <div id="section-members" class="cs">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem">
-<h2 style="font-size:1.1rem;font-weight:700;color:var(--bright)"><i class="fa-solid fa-users" style="color:var(--ac)"></i> Members Browser</h2>
+<h2 style="font-size:1.1rem;font-weight:700;color:var(--bright)"><i class="fa-solid fa-users" style="color:var(--ac)"></i> Students Browser</h2>
 <div style="display:flex;gap:.35rem;flex-wrap:wrap" class="no-print"><button class="btn bo bs" onclick="exportData('excel')" title="Export the visible page"><i class="fa-solid fa-file-excel" style="color:var(--ok)"></i> Page Excel</button><button class="btn bo bs" onclick="exportData('pdf')" title="Export the visible page"><i class="fa-solid fa-file-pdf" style="color:var(--bad)"></i> Page PDF</button><button class="btn bo bs" onclick="exportData('word')" title="Export the visible page"><i class="fa-solid fa-file-word" style="color:var(--info)"></i> Page Word</button><a class="btn bo bs" href="/admin/api_export_members.php?tier=all&amp;format=csv"><i class="fa-solid fa-download"></i> Complete CSV</a></div>
 </div>
 <div class="cd no-print"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem"><div class="ct" style="margin-bottom:0"><i class="fa-solid fa-filter" style="color:var(--ac)"></i> Filters</div><button class="btn bs bo" onclick="resetFilters()"><i class="fa-solid fa-rotate-left"></i> Reset</button></div>
@@ -418,7 +418,7 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div class="ct" style="margin-bottom:0"><i class="fa-solid fa-sliders" style="color:var(--ac)"></i> Attendance policy (per department)</div>
 <span id="attPolicyState" style="font-size:.7rem;color:var(--muted,#94a3b8)"></span>
 </div>
-<p style="font-size:.72rem;color:var(--muted,#94a3b8);margin-bottom:.6rem">Consecutive-absence stages (standard → prolonged → critical), the low-attendance threshold and the minimum number of sessions before a rate counts. Warnings go to the department, HR and Information; the member's global status is never changed automatically.</p>
+<p style="font-size:.72rem;color:var(--muted,#94a3b8);margin-bottom:.6rem">Consecutive-absence stages (standard → prolonged → critical), the low-attendance threshold and the minimum number of sessions before a rate counts. Warnings go to the department, HR and Information; the student's global status is never changed automatically.</p>
 <div id="attPolicyGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.7rem"></div>
 </div>
 </div>
@@ -482,7 +482,7 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div class="cd"><div class="ct"><i class="fa-solid fa-download" style="color:var(--info)"></i> Quick Export</div><p style="font-size:.72rem;color:var(--dim);margin-bottom:.75rem">Stream the complete member roster without loading it into this page.</p><div style="display:flex;flex-wrap:wrap;gap:.35rem"><a class="btn bo bs" href="/admin/api_export_members.php?tier=all&amp;format=csv"><i class="fa-solid fa-file-csv" style="color:var(--ok)"></i> Complete CSV</a></div></div>
 <div class="cd"><div class="ct"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--purple)"></i> Custom Report</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.6rem"><div><label class="flbl">Type</label><select id="crType" class="inp" style="width:100%"><option value="sections">Sections</option><option value="gender">Gender</option><option value="registration">Registration</option></select></div><div><label class="flbl">Format</label><select id="crFmt" class="inp" style="width:100%"><option value="pdf">PDF</option><option value="excel">Excel</option><option value="word">Word</option></select></div></div><button class="btn bp bs" onclick="genCustomReport()"><i class="fa-solid fa-download"></i> Generate</button></div>
 </div>
-<div class="cd"><div class="ct"><i class="fa-solid fa-chart-bar" style="color:var(--warn)"></i> Membership Analysis</div><div id="membershipAnalysis" style="font-size:.78rem;color:var(--dim)">Load Members first.</div></div>
+<div class="cd"><div class="ct"><i class="fa-solid fa-chart-bar" style="color:var(--warn)"></i> Student Analysis</div><div id="membershipAnalysis" style="font-size:.78rem;color:var(--dim)">Load Students first.</div></div>
 </div>
 
 <!-- ═══ SYSTEM HEALTH ═══ -->
@@ -586,7 +586,7 @@ renderProfileTabSection('section-profile', 'cs');
 $navItems = [
     [
         ['icon' => 'fa-solid fa-gauge-high', 'label' => 'Home', 'attrs' => 'data-section="dashboard"', 'active' => true],
-        ['icon' => 'fa-solid fa-users', 'label' => 'Members', 'attrs' => 'data-section="members"'],
+        ['icon' => 'fa-solid fa-users', 'label' => 'Students', 'attrs' => 'data-section="members"'],
         ['icon' => 'fa-solid fa-school', 'label' => 'Classes', 'attrs' => 'data-section="classes"'],
         ['icon' => 'fa-solid fa-clipboard-check', 'label' => 'Attend', 'attrs' => 'data-section="attendance"'],
     ],
@@ -672,7 +672,7 @@ async function restoreRole(){try{const fd=new FormData();fd.append('action','res
 
 // SECTION BARS
 
-// MEMBERS
+// STUDENTS
 async function loadMembers(page=1,append=false){
     const rc=document.getElementById('resultCount');
     const pp=memberPerPage();
@@ -717,7 +717,7 @@ document.getElementById('memberDetail').innerHTML=`
 <div style="flex:1;min-width:0"><div style="font-size:1.05rem;font-weight:700;color:var(--bright)">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
 <div style="font-size:.72rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.2rem"><span class="bg bg-info">${esc(m.member_code||'—')}</span> ${stBg(m.status)} ${rgBg(m.registration_type)} <span style="color:${m.gender==='male'?'var(--info)':'var(--pink)'}">${m.gender==='male'?'♂ Male':'♀ Female'}</span></div></div></div>
 ${sec('Personal Information','user','var(--ac)',[['Full Name',`<strong>${esc(m.student_name)}</strong>`],['Father Name',esc(m.father_name)],['Grandfather Name',esc(m.grandfather_name)],['Christian Name (የክርስትና ስም)',esc(m.baptismal_name)],['Gender',m.gender==='male'?'♂ Male':'♀ Female']])}
-${sec('Church & Education','graduation-cap','var(--purple)',[['Registration Type',esc(m.registration_type)],['Education Level',esc(m.education_level)],['Profession',esc(m.work_profession)],['Member Code',esc(m.member_code)]])}
+${sec('Church & Education','graduation-cap','var(--purple)',[['Registration Type',esc(m.registration_type)],['Education Level',esc(m.education_level)],['Profession',esc(m.work_profession)],['Student Code',esc(m.member_code)]])}
 ${sec('Contact Details','phone','var(--ok)',[['Phone Number',esc(m.phone_number)],['Alt Phone',esc(m.alt_phone_number)],['Guardian Name',esc(m.guardian_name)],['Guardian Phone 1',esc(m.guardian_phone1)]])}
 ${sec('Address','location-dot','var(--warn)',[['City',esc(m.city)],['Sub City',esc(m.sub_city)],['Woreda',esc(m.woreda)],['Mender',esc(m.mender)],['Block Number',esc(m.block_number)],['House Number',esc(m.house_number)]])}
 <div style="text-align:right;font-size:.65rem;color:var(--dim);margin-top:.5rem;padding-top:.4rem;border-top:1px solid var(--cb)">Registered: ${fmtDate(m.created_at)} • Student ID: ${m.id}</div>`;
@@ -826,7 +826,7 @@ function pdfHeader(doc,title,subtitle){
     doc.setFontSize(15);doc.setFont(undefined,'bold');doc.setTextColor(255,255,255);
     doc.text('<?= addslashes(SCHOOL_NAME) ?>',14,14);
     doc.setFontSize(9);doc.setFont(undefined,'normal');doc.setTextColor(220,252,231);
-    doc.text(title||'Member Report',14,21);
+    doc.text(title||'Student Report',14,21);
     doc.setFontSize(7);doc.setTextColor(187,247,208);
     doc.text((subtitle?subtitle+' | ':'')+'Generated: '+genStamp(),14,27);
     doc.setTextColor(0,0,0);
@@ -858,7 +858,7 @@ function pdfStatBox(doc,x,y,w,label,value,color){
     doc.text(label,x+11,y+15);
 }
 
-// ═══ EXPORT MEMBER PROFILE (Single member) ═══
+// ═══ EXPORT STUDENT PROFILE (Single student) ═══
 function exportMemberProfile(fmt){
     const m=currentViewMember;if(!m)return toast('No student selected','e');
     if(fmt==='pdf')exportMemberPDF(m);
@@ -897,7 +897,7 @@ function exportMemberPDF(m){
     <div style="font-size:14pt;font-weight:bold">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
     <div style="margin-top:4px"><span class="badge b-info">${esc(m.member_code||'—')}</span><span class="badge b-${m.status==='active'?'ok':(m.status==='warning'?'w':'bad')}">${(m.status||'—').toUpperCase()}</span><span class="badge b-info">${(m.registration_type||'').toUpperCase()}</span><span class="badge b-info">${m.gender==='male'?'Male':'Female'}</span></div></div></div>
     ${[{t:'Personal Information',c:'st1',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female']]},
-    {t:'Church & Education',c:'st2',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
+    {t:'Church & Education',c:'st2',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Student Code',m.member_code]]},
     {t:'Contact Details',c:'st3',f:[['Phone Number',m.phone_number],['Alt Phone',m.alt_phone_number],['Guardian Name',m.guardian_name],['Guardian Phone',m.guardian_phone1]]},
     {t:'Address Information',c:'st4',f:[['City',m.city],['Sub City',m.sub_city],['Woreda',m.woreda],['Mender',m.mender],['Block Number',m.block_number],['House Number',m.house_number]]}
     ].map(s=>'<div class="sec"><div class="sec-title '+s.c+'">'+s.t+'</div><table class="f">'+s.f.map(([l,v],i)=>i%2===0?'<tr><td style="width:50%"><span class="lbl">'+l+'</span><span class="val">'+(esc(v)||'—')+'</span></td>'+(s.f[i+1]?'<td><span class="lbl">'+s.f[i+1][0]+'</span><span class="val">'+(esc(s.f[i+1][1])||'—')+'</span></td>':'<td></td>')+'</tr>':'').filter(Boolean).join('')+'</table></div>').join('')}
@@ -925,23 +925,23 @@ function exportMemberWord(m){
     .footer{margin-top:16px;padding-top:8px;border-top:2px solid #16a34a;color:#9ca3af;font-size:8pt;text-align:center}
     </style><link rel="stylesheet" href="/admin/css/mobile.css?v=<?= SSMS_ASSET_VER ?>">
 </head><body>
-    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> Member Profile</h1><p><?= SCHOOL_TAGLINE ?> — Official Record</p></div>
+    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> Student Profile</h1><p><?= SCHOOL_TAGLINE ?> — Official Record</p></div>
     <div class="profile-card"><div class="avatar">${(m.student_name||'?')[0].toUpperCase()}</div><div>
     <div style="font-size:14pt;font-weight:bold;color:#111827">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
     <div style="margin-top:4px"><span class="badge bg-info">${esc(m.member_code||'—')}</span><span class="badge bg-${m.status==='active'?'active':(m.status==='warning'?'warning':'inactive')}">${(m.status||'—').toUpperCase()}</span><span class="badge bg-info">${(m.registration_type||'—').toUpperCase()}</span><span class="badge bg-info">${m.gender==='male'?'Male':'Female'}</span></div>
     </div></div>
     ${[{t:'Personal Information',c:'personal',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female']]},
-    {t:'Church & Education',c:'church',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
+    {t:'Church & Education',c:'church',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Student Code',m.member_code]]},
     {t:'Contact Details',c:'contact',f:[['Phone Number',m.phone_number],['Alt Phone',m.alt_phone_number],['Guardian Name',m.guardian_name],['Guardian Phone',m.guardian_phone1]]},
     {t:'Address Information',c:'address',f:[['City',m.city],['Sub City',m.sub_city],['Woreda',m.woreda],['Mender',m.mender],['Block Number',m.block_number],['House Number',m.house_number]]}
     ].map(s=>`<div class="section"><div class="section-title st-${s.c}">${s.t}</div><table class="fields">${s.f.map(([l,v],i)=>i%2===0?`<tr><td style="width:25%"><span class="label">${l}</span><br><span class="value">${esc(v)||'—'}</span></td>${s.f[i+1]?`<td style="width:25%"><span class="label">${s.f[i+1][0]}</span><br><span class="value">${esc(s.f[i+1][1])||'—'}</span></td>`:'<td></td>'}</tr>`:'').filter(Boolean).join('')}</table></div>`).join('')}
-    <div class="footer">Generated: ${genStamp()} | Member ID: ${m.id} | <?= SCHOOL_NAME ?> | Registered: ${fmtDate(m.created_at)}</div>
+    <div class="footer">Generated: ${genStamp()} | Student ID: ${m.id} | <?= SCHOOL_NAME ?> | Registered: ${fmtDate(m.created_at)}</div>
     </body></html>`;
     dlFile(html,'<?= MEMBER_CODE_PREFIX ?>_Member_'+(m.student_name||'profile').replace(/\s/g,'_')+'.doc','application/msword');
     toast('Student profile exported as Word','s');
 }
 
-// ═══ MAIN DATA EXPORT (filtered members list + analytics) ═══
+// ═══ MAIN DATA EXPORT (filtered students list + analytics) ═══
 function exportData(fmt){
     if(!allMembers.length){loadMembers().then(()=>exportData(fmt));return;}
     const data=filteredMembers.length?filteredMembers:allMembers;
@@ -983,7 +983,7 @@ function exportExcelPro(data){
     ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:2}},{s:{r:1,c:0},e:{r:1,c:2}}];
     XLSX.utils.book_append_sheet(wb,ws1,'📊 Summary');
 
-    // Sheet 2: Full Member Data
+    // Sheet 2: Full Student Data
     const headers=['Code','Name','Father','Grandfather','Christian Name (የክርስትና ስም)','Gender','Status','Reg Type','Phone','Alt Phone','Guardian','Guardian Phone','City','Sub City','Woreda','Education','Profession','Registered'];
     const rows=data.map(m=>[m.member_code,m.student_name,m.father_name,m.grandfather_name,m.baptismal_name,m.gender,m.status,m.registration_type,m.phone_number,m.alt_phone_number,m.guardian_name,m.guardian_phone1,m.city,m.sub_city,m.woreda,m.education_level,m.work_profession,m.created_at?fmtDate(m.created_at):''].map(v=>v||''));
     const ws2=XLSX.utils.aoa_to_sheet([headers,...rows]);
@@ -1149,8 +1149,8 @@ function genCustomReport(){
     if(fmt==='pdf'){
         const{jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4');
         const pw=doc.internal.pageSize.getWidth();
-        let y=pdfHeader(doc,title,`${a.total} total members analyzed`);
-        pdfStatBox(doc,14,y,(pw-32)/3,'Total Members',a.total,PDF_COLORS.primary);
+        let y=pdfHeader(doc,title,`${a.total} total students analyzed`);
+        pdfStatBox(doc,14,y,(pw-32)/3,'Total Students',a.total,PDF_COLORS.primary);
         pdfStatBox(doc,14+(pw-32)/3+4,y,(pw-32)/3,'Active',a.bySt.active,PDF_COLORS.ok);
         pdfStatBox(doc,14+((pw-32)/3+4)*2,y,(pw-32)/3,'Sections',a.bySec.length,PDF_COLORS.secondary);
         y+=25;
@@ -1171,7 +1171,7 @@ function genCustomReport(){
         td{padding:5px 10px;border-bottom:1px solid #e5e7eb;font-size:9pt}tr:nth-child(even){background:#f8fafc}
         .footer{margin-top:15px;padding-top:5px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:7pt;text-align:center}
         </style><link rel="stylesheet" href="/admin/css/mobile.css?v=<?= SSMS_ASSET_VER ?>">
-</head><body><div class="header"><h1>⛪ ${title}</h1><p>${allMembers.length} members analyzed • ${genDate()}</p></div>
+</head><body><div class="header"><h1>⛪ ${title}</h1><p>${allMembers.length} students analyzed • ${genDate()}</p></div>
         <table><tr>${h.slice(0,3).map(x=>'<th>'+x+'</th>').join('')}</tr>
         ${r.map((x,i)=>'<tr'+(i%2?' style="background:#f8fafc"':'')+'>'+x.slice(0,3).map(c=>'<td>'+esc(c+'')+'</td>').join('')+'</tr>').join('')}</table>
         <div class="footer"><?= SCHOOL_NAME ?> — Generated ${genStamp()}</div></body></html>`;
@@ -1558,7 +1558,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
     }).catch(()=>{grid.innerHTML='<div style="font-size:.75rem">Could not load the attendance policy.</div>';});
   };
   window.saveAttPolicy=async function(dep){
-    const dc=await dcAsk({tier:'medium',title:'Save the attendance alert rules for '+dep+'?',summary:'These thresholds decide when members get attendance warnings.',intent:'I want to change the alert rules',consequences:['Warnings, risk levels and alerts for every member of this department are recalculated with the new rules.','Members may enter or leave the warning lists right away.'],keeps:['Attendance records themselves are not changed.','You can change the rules back at any time.'],phrase:'SAVE POLICY',confirmLabel:'Save alert rules'});
+    const dc=await dcAsk({tier:'medium',title:'Save the attendance alert rules for '+dep+'?',summary:'These thresholds decide when students get attendance warnings.',intent:'I want to change the alert rules',consequences:['Warnings, risk levels and alerts for every student of this department are recalculated with the new rules.','Students may enter or leave the warning lists right away.'],keeps:['Attendance records themselves are not changed.','You can change the rules back at any time.'],phrase:'SAVE POLICY',confirmLabel:'Save alert rules'});
     if(!dc)return;
     const body={action:'save',department:dep,csrf_token:CSRF};
     grid.querySelectorAll('[data-pol="'+dep+'"]').forEach(el=>{body[el.getAttribute('data-f')]=el.type==='checkbox'?(el.checked?1:0):el.value;});

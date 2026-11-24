@@ -19,7 +19,7 @@ if (!isLoggedIn()) {
 // Get member ID
 $memberId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($memberId <= 0) {
-    die('<h2 style="color:red;text-align:center;margin-top:50px;">Invalid member ID</h2>');
+    die('<h2 style="color:red;text-align:center;margin-top:50px;">Invalid student ID</h2>');
 }
 
 // Fetch member

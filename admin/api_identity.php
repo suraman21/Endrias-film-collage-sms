@@ -196,7 +196,7 @@ try {
                 echo json_encode(['status' => 'error', 'message' => 'Position code must be 1-4 uppercase A-Z letters.']); exit;
             }
             if ($roleCode === IdentityCodeService::ORDINARY_MARKER) {
-                echo json_encode(['status' => 'error', 'message' => "'N' is reserved for ordinary members."]); exit;
+                echo json_encode(['status' => 'error', 'message' => "'N' is reserved for ordinary students."]); exit;
             }
             if ($deptId === null && !PositionSyncService::departmentNullable($conn)) {
                 echo json_encode(['status' => 'error', 'message' => 'Free positions (no department) require sql/020 to be applied first.']); exit;

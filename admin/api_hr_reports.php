@@ -164,14 +164,14 @@ switch ($action) {
             $stmt->close();
             hr_reports_respond(['status' => 'success', 'items' => $items]);
         } catch (\Throwable $e) {
-            hr_reports_respond(['status' => 'error', 'message' => 'Could not search members. Please try again.']);
+            hr_reports_respond(['status' => 'error', 'message' => 'Could not search students. Please try again.']);
         }
     }
 
     case 'member_detail': {
         $memberId = (int)($_GET['member_id'] ?? 0);
         if ($memberId <= 0) {
-            hr_reports_respond(['status' => 'error', 'message' => 'A member is required.']);
+            hr_reports_respond(['status' => 'error', 'message' => 'A student is required.']);
         }
         $month = hr_reports_month((string)($_GET['month'] ?? ''));
         $like = $month . '-%';

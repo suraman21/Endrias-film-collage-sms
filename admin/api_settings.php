@@ -571,7 +571,7 @@ try {
                 'dept_name_am' => 'ማብራሪያ ክፍል',
                 'church_name_en' => SCHOOL_TRANSLATION_EN . ' ' . SCHOOL_TYPE,
                 'church_name_am' => SCHOOL_NAME_SHORT_AM . ' የ' . SCHOOL_TYPE_AM,
-                'dept_description' => 'Manages member registration, ID cards, and member information.',
+                'dept_description' => 'Manages student registration, ID cards, and student information.',
                 'member_code_prefix' => '',
                 'member_code_digits' => '4',
                 'auto_generate_code' => '1',

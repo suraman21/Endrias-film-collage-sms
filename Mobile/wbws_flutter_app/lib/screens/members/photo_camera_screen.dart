@@ -1111,7 +1111,7 @@ class _PhotoCameraScreenState extends State<PhotoCameraScreen>
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                          'Video capture is not used for member photos.'),
+                          'Video capture is not used for student photos.'),
                       duration: Duration(seconds: 2),
                     ),
                   );

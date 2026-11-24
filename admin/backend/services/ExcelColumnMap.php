@@ -17,7 +17,7 @@ class ExcelColumnMap
      * key => [display header, aliases...]
      */
     private const META = [
-        'member_code'        => ['Member Code'],
+        'member_code'        => ['Student Code', 'Member Code'],
         // members.id — exported read-only so re-uploads match exactly, even
         // for temporary members and permanent members with a pending code.
         'system_id'          => ['System ID'],
@@ -30,7 +30,7 @@ class ExcelColumnMap
         'date_of_birth'      => ['Date of Birth', 'dob'],
         'age'                => ['Age'],
         'spiritual_education'=> ['Spiritual Education'],
-        'member_type'        => ['Member Type'],
+        'member_type'        => ['Student Type', 'Member Type'],
         'membership_tier'    => ['Membership Tier'],
         'status'             => ['Status'],
         'phone_primary'      => ['Primary Phone'],
@@ -55,10 +55,14 @@ class ExcelColumnMap
     public static function columns(string $tier): array
     {
         if ($tier === 'all') {
-            return array_values(array_unique(array_merge(
+            $merged = array_values(array_unique(array_merge(
                 self::columns('permanent'),
                 self::columns('temporary')
             )));
+            // SS section/waiting identity fields are not part of the student
+            // template (removed 2026-11-24); META keeps them as aliases so
+            // older workbooks still import.
+            return array_values(array_diff($merged, ['current_section', 'waiting_since']));
         }
         if ($tier === 'temporary') {
             return [
@@ -78,10 +82,9 @@ class ExcelColumnMap
             'full_name_am',
             'baptismal_name',
             'class',
-            'current_section',
             'education_level',
             'gender', 'date_of_birth', 'age',
-            'spiritual_education', 'member_type', 'membership_tier',
+            'spiritual_education',
             'status',
             'phone_primary', 'phone_number', 'alt_phone_number', 'phone_guardian',
             'guardian_name', 'guardian_phone1', 'guardian_phone2',

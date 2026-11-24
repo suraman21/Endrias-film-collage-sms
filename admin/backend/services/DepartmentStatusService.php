@@ -330,7 +330,7 @@ final class DepartmentStatusService
                 throw new \DomainException('Student not found.');
             }
             if ((string)$member['status'] === 'archived') {
-                throw new \DomainException('Archived members cannot change department status.');
+                throw new \DomainException('Archived students cannot change department status.');
             }
 
             $open = $conn->prepare(
@@ -460,7 +460,7 @@ final class DepartmentStatusService
             return '';
         }
         if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $memberIdExpr)) {
-            throw new \InvalidArgumentException('Unsafe member id expression.');
+            throw new \InvalidArgumentException('Unsafe student id expression.');
         }
         if ($strictPreparation && $probeColumns) {
             // Do not trust a permissive cached availability result. Probe every

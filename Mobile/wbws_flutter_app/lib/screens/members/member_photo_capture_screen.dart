@@ -61,7 +61,7 @@ class _MemberPhotoCaptureScreenState extends State<MemberPhotoCaptureScreen> {
   String get _memberName =>
       ((ModalRoute.of(context)?.settings.arguments
           as Map<String, dynamic>?)?['memberName'] as String?) ??
-      'Member';
+      'Student';
   PhotoField get _field =>
       ((ModalRoute.of(context)?.settings.arguments
           as Map<String, dynamic>?)?['field'] as PhotoField?) ??
@@ -329,7 +329,7 @@ class _IdlePanel extends StatelessWidget {
             localPhotoPath: localPhotoPath,
           ),
           const SizedBox(height: 16),
-          const Text('Take a clear member portrait',
+          const Text('Take a clear student portrait',
               style: TextStyle(fontSize: 16)),
           const SizedBox(height: 8),
           Text('Center the face · use even light · avoid shadows',

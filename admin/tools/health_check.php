@@ -108,7 +108,7 @@ try {
 if ($dbOk) {
     $counts = [
         'Staff login rows' => 'users',
-        'Member rows' => 'members',
+        'Student rows' => 'members',
         'Attendance rows' => 'attendance',
         'Academic year rows' => 'academic_years',
     ];

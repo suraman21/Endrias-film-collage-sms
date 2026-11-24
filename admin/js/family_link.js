@@ -2,7 +2,7 @@
  * Family Link — HR workspace (guardians, families, review queue, backfill).
  *
  * Talks to /admin/api_guardians.php. Mounts into #section-family of the HR
- * dashboard; the member profile opens through window.openManageSheet when
+ * dashboard; the student profile opens through window.openManageSheet when
  * the dashboard provides it. Light theme to match the HR content area.
  */
 (function (window, document) {
@@ -87,7 +87,7 @@
         box.innerHTML = [
           kpi('fa-people-roof', 'Guardians', s.guardians, 'Active guardian records', 'emerald', null),
           kpi('fa-children', 'Families with 2+ children', s.families_multi, 'Siblings linked under one guardian', 'sky', 'multi'),
-          kpi('fa-link', 'Members linked', s.members_linked, 'Members with a guardian record', 'indigo', null),
+          kpi('fa-link', 'Students linked', s.members_linked, 'Students with a guardian record', 'indigo', null),
           kpi('fa-link-slash', 'Not linked yet', s.members_unlinked, s.members_unlinked ? 'Have a guardian name but no record — click to link' : 'All legacy guardian data linked', s.members_unlinked ? 'amber' : 'slate', 'unlinked'),
           kpi('fa-scale-balanced', 'Needs review', s.pending_reviews, s.pending_reviews ? 'Probable duplicate guardians' : 'No duplicates pending', s.pending_reviews ? 'rose' : 'slate', 'review'),
           kpi('fa-shield-halved', 'Unverified links', s.links_unverified, s.links_unverified ? 'Auto-linked children awaiting an office check' : 'Every link is office-verified', s.links_unverified ? 'amber' : 'slate', null)
@@ -160,8 +160,8 @@
     if (state.q) return '<div class="fam-empty"><i class="fa-regular fa-face-meh text-2xl mb-2"></i><div class="font-semibold">No guardian matches "' + esc(state.q) + '"</div><div class="text-slate-400 mt-1">Try the phone number, a shorter name, or an Amharic spelling. New guardians are created when HR registers a child.</div></div>';
     if (state.filter !== 'all') return '<div class="fam-empty"><div class="font-semibold">Nothing in this filter</div><div class="text-slate-400 mt-1">Switch back to <b>All</b> to see every guardian.</div></div>';
     var s = state.stats || {};
-    if (s.members_unlinked > 0) return '<div class="fam-empty"><i class="fa-solid fa-link-slash text-2xl text-amber-500 mb-2"></i><div class="font-semibold">No guardian records yet — but ' + esc(s.members_unlinked) + ' members already have guardian details</div><div class="text-slate-400 mt-1 mb-3">Link them now to build the family picture. Nothing is merged automatically; near-duplicates go to the review queue.</div><button class="fam-btn fam-btn-primary" onclick="FamilyLink.go(\'unlinked\')"><i class="fa-solid fa-wand-magic-sparkles"></i> Go to “Not linked yet”</button></div>';
-    return '<div class="fam-empty"><i class="fa-solid fa-people-roof text-2xl text-emerald-500 mb-2"></i><div class="font-semibold">No guardians yet</div><div class="text-slate-400 mt-1">Guardian records are created automatically when HR registers a member with guardian details.</div></div>';
+    if (s.members_unlinked > 0) return '<div class="fam-empty"><i class="fa-solid fa-link-slash text-2xl text-amber-500 mb-2"></i><div class="font-semibold">No guardian records yet — but ' + esc(s.members_unlinked) + ' students already have guardian details</div><div class="text-slate-400 mt-1 mb-3">Link them now to build the family picture. Nothing is merged automatically; near-duplicates go to the review queue.</div><button class="fam-btn fam-btn-primary" onclick="FamilyLink.go(\'unlinked\')"><i class="fa-solid fa-wand-magic-sparkles"></i> Go to “Not linked yet”</button></div>';
+    return '<div class="fam-empty"><i class="fa-solid fa-people-roof text-2xl text-emerald-500 mb-2"></i><div class="font-semibold">No guardians yet</div><div class="text-slate-400 mt-1">Guardian records are created automatically when HR registers a student with guardian details.</div></div>';
   }
   function renderPager(d) {
     var p = $('famPager'); if (!p) return;
@@ -217,7 +217,7 @@
     // children
     html += '<div class="fam-card"><div class="fam-card-hd"><span><i class="fa-solid fa-children text-sky-500"></i> Children (' + kids.length + ')</span></div>';
     if (!kids.length) html += '<div class="fam-empty fam-empty-sm">No children linked yet. Add one below.</div>';
-    else html += '<table class="fam-table fam-table-sm"><thead><tr><th>Student</th><th>Relation</th><th title="Primary contact: whose phone appears on the member record">Primary</th><th title="Office-verified links are the only ones a parent account can see">Verified</th><th></th></tr></thead><tbody>' + kids.map(function (k) {
+    else html += '<table class="fam-table fam-table-sm"><thead><tr><th>Student</th><th>Relation</th><th title="Primary contact: whose phone appears on the student record">Primary</th><th title="Office-verified links are the only ones a parent account can see">Verified</th><th></th></tr></thead><tbody>' + kids.map(function (k) {
       var mid = parseInt(k.id, 10);
       var gid = parseInt(g.id, 10);
       var verified = parseInt(k.is_verified, 10) === 1;
@@ -225,7 +225,7 @@
         '<td><select class="fam-input fam-input-sm" onchange="FamilyLink.setRelation(' + gid + ',' + mid + ',this.value,null)">' + ['father', 'mother', 'other'].map(function (r) { return '<option value="' + r + '"' + (k.relation === r ? ' selected' : '') + '>' + relLabel(r) + '</option>'; }).join('') + '</select></td>' +
         '<td class="text-center">' + (parseInt(k.is_primary, 10) === 1 ? '<span class="fam-pill fam-pill-ok" title="This guardian is the primary contact for ' + esc(kidName(k)) + '">&#9733; Primary</span>' : '<button class="fam-btn fam-btn-sm" title="Make this guardian the primary contact for ' + esc(kidName(k)) + '" onclick="FamilyLink.setRelation(' + gid + ',' + mid + ',null,1)">Make primary</button>') + '</td>' +
         '<td class="text-center whitespace-nowrap">' + (verified ? '<span class="fam-pill fam-pill-ok" title="Office-verified' + (k.verified_at ? ' ' + esc(k.verified_at) : '') + '">&#10003; Verified</span> <button class="fam-btn fam-btn-sm" title="Clear verification (the link stays)" onclick="FamilyLink.unverify(' + gid + ',' + mid + ')">Clear</button>' : '<button class="fam-btn fam-btn-sm fam-btn-primary" title="Confirm this office-checked relationship" onclick="FamilyLink.verify(' + gid + ',' + mid + ')">Verify</button>') + '</td>' +
-        '<td class="text-right whitespace-nowrap"><button class="fam-btn fam-btn-sm" title="Open member profile" onclick="FamilyLink.profile(' + mid + ')"><i class="fa-regular fa-id-badge"></i></button> <button class="fam-btn fam-btn-sm fam-btn-danger" title="Unlink from this guardian" onclick="FamilyLink.unlink(' + gid + ',' + mid + ',' + esc(JSON.stringify(String(kidName(k)))) + ')"><i class="fa-solid fa-link-slash"></i></button></td></tr>';
+        '<td class="text-right whitespace-nowrap"><button class="fam-btn fam-btn-sm" title="Open student profile" onclick="FamilyLink.profile(' + mid + ')"><i class="fa-regular fa-id-badge"></i></button> <button class="fam-btn fam-btn-sm fam-btn-danger" title="Unlink from this guardian" onclick="FamilyLink.unlink(' + gid + ',' + mid + ',' + esc(JSON.stringify(String(kidName(k)))) + ')"><i class="fa-solid fa-link-slash"></i></button></td></tr>';
     }).join('') + '</tbody></table>';
     html += '<div class="mt-3" style="position:relative"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Add a child</div><div class="flex gap-2"><input id="famKidQ" autocomplete="off" placeholder="Type member name or code…" class="fam-input flex-1" ' + (merged ? 'disabled' : '') + '><select id="famKidRel" class="fam-input" style="width:auto"><option value="father">Father</option><option value="mother">Mother</option><option value="other" selected>Guardian</option></select></div><div id="famKidL" class="fam-dropdown" style="display:none"></div></div></div>';
 
@@ -289,9 +289,9 @@
   }
   function unlink(gid, mid, name) {
     dcAsk({ tier: 'medium', title: 'Remove ' + name + ' from this guardian?', object: name,
-      summary: 'The family link between this member and this guardian is removed.', intent: 'I want to remove this link',
-      consequences: ['This guardian no longer sees ' + name + ' (Parent app, family lists and contact).', 'If another guardian is linked, that guardian becomes the primary contact; otherwise the member has no guardian.'],
-      keeps: ['The member record itself is not changed.', 'You can link them again at any time.'],
+      summary: 'The family link between this student and this guardian is removed.', intent: 'I want to remove this link',
+      consequences: ['This guardian no longer sees ' + name + ' (Parent app, family lists and contact).', 'If another guardian is linked, that guardian becomes the primary contact; otherwise the student has no guardian.'],
+      keeps: ['The student record itself is not changed.', 'You can link them again at any time.'],
       phrase: 'UNLINK CHILD', confirmLabel: 'Remove link' }).then(function (ok) {
       if (!ok) return;
       post('unlink', { guardian_id: gid, member_id: mid }).then(function () { toast('Unlinked.'); refresh(); }).catch(fail);
@@ -303,7 +303,7 @@
       var q = input.value.trim(); if (q.length < 2) { list.style.display = 'none'; return; }
       fetch('/admin/api_list_members.php?q=' + encodeURIComponent(q) + '&limit=8', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
         var rows = (d && d.members) || [];
-        if (!rows.length) { list.innerHTML = '<div class="fam-dd-empty">No member found</div>'; list.style.display = 'block'; return; }
+        if (!rows.length) { list.innerHTML = '<div class="fam-dd-empty">No student found</div>'; list.style.display = 'block'; return; }
         list.innerHTML = rows.map(function (m) { return '<button type="button" data-mid="' + parseInt(m.id, 10) + '" class="fam-dd-item"><b>' + esc(m.student_name || m.full_name_am) + '</b> <span class="text-slate-400">' + esc(m.member_code || '') + (m.current_section ? ' · ' + esc(m.current_section) : '') + '</span>' + (m.guardian_name ? '<div class="text-[11px] text-slate-400">guardian on record: ' + esc(m.guardian_name) + '</div>' : '') + '</button>'; }).join('');
         list.style.display = 'block';
         Array.prototype.forEach.call(list.querySelectorAll('[data-mid]'), function (b) {
@@ -339,7 +339,7 @@
             dcAsk({ tier: 'medium', title: 'Merge "' + name + '" into "' + into + '"?', object: name + '  \u2192  ' + into,
               summary: 'Two guardian records become one.', intent: 'I want to merge these guardians',
               consequences: ['All children of "' + name + '" move to "' + into + '".', 'The "' + name + '" record is closed; its spelling is kept as an alias.'],
-              keeps: ['No member record is changed.', 'HR can reverse the merge.'],
+              keeps: ['No student record is changed.', 'HR can reverse the merge.'],
               phrase: 'MERGE GUARDIANS', confirmLabel: 'Merge guardians' }).then(function (ok) {
               if (!ok) return;
               post('merge', { from_id: other, into_id: gid }).then(function () { toast('Merged.'); refresh(); loadStats(); }).catch(fail);
@@ -390,7 +390,7 @@
         var sid = parseInt(s.id, 10);
         return '<div class="fam-sug">' +
           '<div class="fam-sug-hd"><div><span class="fam-score ' + (score >= 0.8 ? 'fam-score-hi' : 'fam-score-mid') + '">' + Math.round(score * 100) + '% match</span> ' + evidenceWords(ev) + '</div>' +
-          '<div class="text-[11px] text-slate-400">filed ' + fmtDate(s.created_at) + (s.member_id ? ' · at registration of member #' + esc(s.member_id) : '') + '</div></div>' +
+          '<div class="text-[11px] text-slate-400">filed ' + fmtDate(s.created_at) + (s.member_id ? ' · at registration of student #' + esc(s.member_id) : '') + '</div></div>' +
           '<div class="fam-cmp-grid">' + compareCol(s.guardian_a_row, 'A', sid, true) + '<div class="fam-cmp-vs">vs</div>' + compareCol(s.guardian_b_row, 'B', sid, true) + '</div>' +
           '<div class="flex justify-end gap-2 mt-2"><button class="fam-btn" onclick="FamilyLink.resolve(' + sid + ',\'keep\')"><i class="fa-solid fa-people-arrows"></i> Different people — keep both</button></div></div>';
       }).join('') + (total > rows.length
@@ -405,7 +405,7 @@
     }
     dcAsk({ tier: 'medium', title: 'Merge these two guardian records?', summary: 'Two guardian records become one.', intent: 'I want to merge these guardians',
       consequences: ['All children move to the record you chose to keep.', 'The other record is closed; its spelling stays as an alias.'],
-      keeps: ['No member record is changed.', 'HR can reverse the merge.'],
+      keeps: ['No student record is changed.', 'HR can reverse the merge.'],
       phrase: 'MERGE GUARDIANS', confirmLabel: 'Merge guardians' }).then(function (ok) {
       if (!ok) return;
       post('merge_suggestion', { suggestion_id: sid, keep: how }).then(function () { toast('Merged.'); loadQueue(); loadStats(); }).catch(function (e) { fail(e); loadQueue(); });
@@ -438,11 +438,11 @@
     get('unlinked_members', { page: state.unlinkedPage }).then(function (d) {
       var rows = (d && d.rows) || [];
       setCount('famTabUnlinkedCount', d.total || 0);
-      var meta = $('famUnlinkedMeta'); if (meta) meta.textContent = (d.total || 0) + ' member' + (d.total === 1 ? '' : 's') + ' with guardian details but no guardian record';
+      var meta = $('famUnlinkedMeta'); if (meta) meta.textContent = (d.total || 0) + ' student' + (d.total === 1 ? '' : 's') + ' with guardian details but no guardian record';
       var allBtn = $('famLinkAllBtn'); if (allBtn) allBtn.style.display = (d.total || 0) > 0 ? '' : 'none';
       if (!rows.length) {
         var s = state.stats || {};
-        box.innerHTML = '<div class="fam-empty"><i class="fa-regular fa-circle-check text-2xl text-emerald-500 mb-2"></i><div class="font-semibold">Everything is linked</div><div class="text-slate-400 mt-1">Every member with guardian details has a guardian record.' + (s.members_no_guardian ? ' <b>' + esc(s.members_no_guardian) + '</b> members have no guardian details at all — add them from the member profile when known.' : '') + '</div></div>';
+        box.innerHTML = '<div class="fam-empty"><i class="fa-regular fa-circle-check text-2xl text-emerald-500 mb-2"></i><div class="font-semibold">Everything is linked</div><div class="text-slate-400 mt-1">Every student with guardian details has a guardian record.' + (s.members_no_guardian ? ' <b>' + esc(s.members_no_guardian) + '</b> students have no guardian details at all — add them from the student profile when known.' : '') + '</div></div>';
         $('famUnlinkedPager').innerHTML = ''; return;
       }
       box.innerHTML = '<table class="fam-table"><thead><tr><th>Student</th><th>Guardian on record</th><th>Phone</th><th class="text-right">Action</th></tr></thead><tbody>' + rows.map(function (m) {
@@ -467,15 +467,15 @@
     var btn = $('famLinkAllBtn');
     if (!acc || !acc.phrase) {
       var n = (state.stats && state.stats.members_unlinked) || 0;
-      dcAsk({ tier: 'high', title: 'Link all ' + (n || '') + ' unlinked members to guardians?', object: (n || 'All') + ' unlinked member(s)',
-        summary: 'Every member without a guardian is linked in one run.', intent: 'I want to link all members',
+      dcAsk({ tier: 'high', title: 'Link all ' + (n || '') + ' unlinked students to guardians?', object: (n || 'All') + ' unlinked student(s)',
+        summary: 'Every student without a guardian is linked in one run.', intent: 'I want to link all students',
         consequences: [
-          (n ? n + ' member(s)' : 'Every unlinked member') + ' is matched to an existing guardian (same phone or near-identical name) or gets a NEW guardian record.',
+          (n ? n + ' student(s)' : 'Every unlinked student') + ' is matched to an existing guardian (same phone or near-identical name) or gets a NEW guardian record.',
           'New guardians become visible to Family Link and the Parent app.',
           'Wrong matches have to be fixed one by one afterwards (unlink or merge).'
         ],
-        keeps: ['Members that already have a guardian are not touched.', 'Nothing is merged automatically.'],
-        phrase: 'LINK ALL', confirmLabel: 'Link all members' }).then(function (r) {
+        keeps: ['Students that already have a guardian are not touched.', 'Nothing is merged automatically.'],
+        phrase: 'LINK ALL', confirmLabel: 'Link all students' }).then(function (r) {
         if (r) linkAll(0, { processed: 0, created: 0, matched: 0, failed: 0, phrase: r.phrase });
       });
       return;
@@ -504,7 +504,7 @@
     }).catch(function () { box.innerHTML = '<div class="fam-empty">Network error</div>'; });
   }
 
-  // ── registration picker glue (HR "New member" form) ──────────────
+  // ── registration picker glue (HR "New student" form) ──────────────
   function clearPick() { var i = $('regGuardianLinkId'); if (i) i.value = 0; var c = $('regGuardianPicked'); if (c) c.style.display = 'none'; }
   function initRegistrationPicker() {
     if (!window.GuardianPicker) return;

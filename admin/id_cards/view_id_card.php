@@ -372,7 +372,7 @@ $member['emergency_phone'] = $member['guardian_phone1'] ?? '---';
 (function () {
     var f = document.getElementById('dcRenewCardForm');
     if (f && window.DangerConfirm && window.DangerConfirm.guardForm) {
-        window.DangerConfirm.guardForm(f, { tier: 'medium', title: 'Renew this ID card?', summary: 'A renewed card replaces the current one.', intent: 'I want to renew this card', consequences: ['The issue date is reset to TODAY and a new expiry date is calculated.', 'The card that was printed before shows old dates; print and hand out the new card.'], keeps: ['The member code and QR code stay the same.', 'Student data is not changed.'], phrase: 'RENEW CARD', confirmLabel: 'Renew card' });
+        window.DangerConfirm.guardForm(f, { tier: 'medium', title: 'Renew this ID card?', summary: 'A renewed card replaces the current one.', intent: 'I want to renew this card', consequences: ['The issue date is reset to TODAY and a new expiry date is calculated.', 'The card that was printed before shows old dates; print and hand out the new card.'], keeps: ['The student code and QR code stay the same.', 'Student data is not changed.'], phrase: 'RENEW CARD', confirmLabel: 'Renew card' });
     } else if (f) {
         f.addEventListener('submit', function (e) { e.preventDefault(); alert('The confirmation dialog did not load. Reload the page and try again.'); });
     }

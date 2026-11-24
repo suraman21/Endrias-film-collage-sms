@@ -4,7 +4,7 @@
  * School Info Dept Attendance & Status API
  * ============================================================
  * For the Information Department to MONITOR attendance and
- * MANAGE member status. Does NOT take attendance (that's
+ * MANAGE student status. Does NOT take attendance (that's
  * the attendance_taker role via api_attendance.php).
  * ============================================================
  */
@@ -25,10 +25,10 @@ $adminId = (int)($_SESSION['admin_id'] ?? 0);
 requireCsrfForPost();
 $adminId = (int)($_SESSION['admin_id'] ?? 0);
 
-// ── Member-status writes: HR and Information ONLY (owner decision 2026-10-19,
+// ── Student-status writes: HR and Information ONLY (owner decision 2026-10-19,
 // ATTENDANCE_DEPT_STATUS_ALERTS_REQUIREMENTS §2 / §7). Education, teachers and
 // attendance takers keep the read-only monitoring actions of this API; admins
-// do not change member status through the attendance workflow. Enforced here,
+// do not change student status through the attendance workflow. Enforced here,
 // server-side, independent of which dashboard rendered the button.
 const ATTENDANCE_STATUS_WRITER_ROLES = ['hr_dept', 'admissions_registrar_dept', 'info_dept'];
 // Manual values allowed through this workflow. 'warning' is no longer set by
@@ -38,7 +38,7 @@ if (in_array($action, ['update_status', 'bulk_status'], true)) {
     $actorRole = (string)($_SESSION['admin_role'] ?? '');
     if (!in_array($actorRole, ATTENDANCE_STATUS_WRITER_ROLES, true)) {
         http_response_code(403);
-        echo json_encode(['status' => 'error', 'message' => 'Only HR and Information may change member status.']);
+        echo json_encode(['status' => 'error', 'message' => 'Only HR and Information may change student status.']);
         exit;
     }
     require_once __DIR__ . '/backend/services/SecurityAuditService.php';
@@ -72,11 +72,11 @@ case 'overview':
         FROM attendance WHERE attendance_date = '$today'");
     $data['today'] = $r ? $r->fetch_assoc() : ['recorded'=>0,'present_cnt'=>0,'absent_cnt'=>0,'late_cnt'=>0,'excused_cnt'=>0];
 
-    // Total active members (for attendance rate calc)
+    // Total active students (for attendance rate calc)
     $r = $conn->query("SELECT COUNT(*) as cnt FROM members WHERE status IN ('active','warning')");
     $data['total_active'] = $r ? (int)$r->fetch_assoc()['cnt'] : 0;
 
-    // Member status breakdown
+    // Student status breakdown
     $r = $conn->query("SELECT 
         COALESCE(SUM(status='active'),0) as active_cnt,
         COALESCE(SUM(status='warning'),0) as warning_cnt,
@@ -139,9 +139,9 @@ case 'overview':
 case 'member_attendance':
 // ============================================================
     $memberId = (int)($_GET['member_id'] ?? 0);
-    if (!$memberId) { echo json_encode(['status'=>'error','message'=>'Member ID required']); break; }
+    if (!$memberId) { echo json_encode(['status'=>'error','message'=>'Student ID required']); break; }
 
-    // Get member info
+    // Get student info
     $stmt = $conn->prepare("SELECT id, member_code, student_name, father_name, grandfather_name, gender, age_group, status, phone_number FROM members WHERE id = ?");
     $stmt->bind_param('i', $memberId);
     $stmt->execute();
@@ -194,11 +194,11 @@ case 'update_status':
     $reason = trim($input['reason'] ?? '');
 
     if (!$memberId || !is_string($newStatus) || !in_array($newStatus, ATTENDANCE_MANUAL_STATUSES, true)) {
-        echo json_encode(['status'=>'error','message'=>'Valid member_id and status (active or inactive) required']);
+        echo json_encode(['status'=>'error','message'=>'Valid student id and status (active or inactive) required']);
         break;
     }
     if ($newStatus === 'inactive' && mb_strlen($reason) < 3) {
-        echo json_encode(['status'=>'error','message'=>'A reason is required to deactivate a member.']);
+        echo json_encode(['status'=>'error','message'=>'A reason is required to deactivate a student.']);
         break;
     }
 
@@ -211,7 +211,7 @@ case 'update_status':
     if (!$old) { echo json_encode(['status'=>'error','message'=>'Student not found']); break; }
 
     if ($old['status'] === 'archived') {
-        echo json_encode(['status'=>'error','message'=>'Archived members are restored through the archive workflow.']);
+        echo json_encode(['status'=>'error','message'=>'Archived students are restored through the archive workflow.']);
         break;
     }
 
@@ -257,11 +257,11 @@ case 'bulk_status':
         break;
     }
     if (count($memberIds) > 200) {
-        echo json_encode(['status'=>'error','message'=>'At most 200 members per bulk change.']);
+        echo json_encode(['status'=>'error','message'=>'At most 200 students per bulk change.']);
         break;
     }
     if ($newStatus === 'inactive' && mb_strlen($reason) < 3) {
-        echo json_encode(['status'=>'error','message'=>'A reason is required to deactivate members.']);
+        echo json_encode(['status'=>'error','message'=>'A reason is required to deactivate students.']);
         break;
     }
 
@@ -286,7 +286,7 @@ case 'bulk_status':
 
     // Log bulk change
     try {
-        $det = "Bulk status change to '$newStatus' for $updated members" . ($reason ? " — $reason" : '');
+        $det = "Bulk status change to '$newStatus' for $updated students" . ($reason ? " — $reason" : '');
         $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, username, action, details, ip_address) VALUES (?, ?, 'Bulk Status Change', ?, ?)");
         if ($logStmt) {
             $logUsername = $_SESSION['admin_username'] ?? '';
@@ -297,7 +297,7 @@ case 'bulk_status':
         }
     } catch (Exception $e) {}
 
-    echo json_encode(['status'=>'success','message'=>"$updated members updated to $newStatus"]);
+    echo json_encode(['status'=>'success','message'=>"$updated students updated to $newStatus"]);
     break;
 
 // ============================================================

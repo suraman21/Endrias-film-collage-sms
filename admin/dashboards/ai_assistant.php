@@ -166,7 +166,7 @@ $csrfToken = generateCsrfToken();
         <div class="sidebar-section">
             <div class="sidebar-section-title"><i class="fa-solid fa-bolt"></i> Quick Insights</div>
             <button class="insight-btn" onclick="quickInsight('overview')"><i class="fa-solid fa-gauge-high ic-green"></i> School Overview</button>
-            <button class="insight-btn" onclick="quickInsight('members')"><i class="fa-solid fa-users ic-blue"></i> Member Analysis</button>
+            <button class="insight-btn" onclick="quickInsight('members')"><i class="fa-solid fa-users ic-blue"></i> Student Analysis</button>
             <button class="insight-btn" onclick="quickInsight('attendance')"><i class="fa-solid fa-calendar-check ic-purple"></i> Attendance Patterns</button>
             <button class="insight-btn" onclick="quickInsight('education')"><i class="fa-solid fa-graduation-cap ic-amber"></i> Education Status</button>
             <button class="insight-btn" onclick="quickInsight('finance')"><i class="fa-solid fa-coins ic-green"></i> Finance Summary</button>
@@ -212,9 +212,9 @@ $csrfToken = generateCsrfToken();
             <div class="welcome" id="welcomeState">
                 <div class="welcome-icon"><i class="fa-solid fa-robot"></i></div>
                 <h2><?= SCHOOL_NAME_SHORT ?> AI Assistant</h2>
-                <p>Ask me anything about your school data — members, attendance, finances, classes. I analyze trends, generate reports, and give actionable insights.</p>
+                <p>Ask me anything about your school data — students, attendance, finances, classes. I analyze trends, generate reports, and give actionable insights.</p>
                 <div class="welcome-suggestions">
-                    <button class="suggest-btn" onclick="sendSuggestion('How many active members and what is the gender breakdown?')">👥 Member Stats</button>
+                    <button class="suggest-btn" onclick="sendSuggestion('How many active students and what is the gender breakdown?')">👥 Student Stats</button>
                     <button class="suggest-btn" onclick="sendSuggestion('What is our attendance rate and which days are lowest?')">📊 Attendance</button>
                     <button class="suggest-btn" onclick="sendSuggestion('Give me a summary of our financial health')">💰 Finance</button>
                     <button class="suggest-btn" onclick="sendSuggestion('Which classes need more students?')">🏫 Classes</button>
@@ -460,7 +460,7 @@ async function sendMessage() {
 async function quickInsight(type) {
     if (isProcessing) return;
     if (!hasApiKey) { sendMessage(); return; }
-    const labels = {overview:'School Overview',members:'Member Analysis',attendance:'Attendance Patterns',education:'Education Status',finance:'Financial Health'};
+    const labels = {overview:'School Overview',members:'Student Analysis',attendance:'Attendance Patterns',education:'Education Status',finance:'Financial Health'};
     document.getElementById('welcomeState').style.display = 'none';
     appendMessage('user', '📊 ' + (labels[type] || type), false);
     showTyping(); isProcessing = true;

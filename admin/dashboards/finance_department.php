@@ -250,7 +250,7 @@ if(!(window.DangerConfirm&&window.DangerConfirm.ask)){toast('The confirmation di
 const dc=await window.DangerConfirm.ask({tier:'high',title:'Delete this '+type+' record?',object:what+(t.receipt_number?' · receipt '+t.receipt_number:''),
 summary:'A money record is removed from the books.',intent:'I want to delete this transaction',
 consequences:['The record is deleted permanently. There is no undo or recycle bin.','Totals, balances and finance reports change immediately.'+(t.description?' ('+t.description+')':''),'Only a short audit note stays (amount, date, receipt).'],
-keeps:['Other transactions, categories and member fees are not touched.','If this was a mistake in the amount, use Edit instead of Delete.'],
+keeps:['Other transactions, categories and student fees are not touched.','If this was a mistake in the amount, use Edit instead of Delete.'],
 irreversible:true,phrase:'DELETE TRANSACTION',confirmLabel:'Delete transaction'});
 if(!dc)return;const fd=new FormData();fd.append('action','delete_transaction');fd.append('id',id);fd.append('confirm_phrase',dc.phrase);try{const d=await postAPI(fd);if(d.status==='success'){toast('Deleted','s');loadTxns(type);loadDashboard();}else toast(d.message||'Error','e');}catch(e){toast('Error','e');}}
 

@@ -58,7 +58,7 @@ function db_fetch_all_assoc(mysqli $conn, string $sql, array $params = []): arra
 }
 
 // ------------------------------------------------------------
-// Live data: members, stats, recent
+// Live data: students, stats, recent
 // ------------------------------------------------------------
 $membersList = [];
 $recentMembers = [];
@@ -84,7 +84,7 @@ $memberTypeHonor   = 0;
 $atRiskStudents = 0; // placeholder: define logic later
 
 if (isset($conn)) {
-    // Pull latest 400 members for table (paginate if needed)
+    // Pull latest 400 students for table (paginate if needed)
     $membersList = db_fetch_all_assoc(
         $conn,
         "SELECT 
@@ -142,7 +142,7 @@ if (isset($conn)) {
          LIMIT 10"
     );
 
-    // Eligible new members (temporary, 6+ months) count for badge
+    // Eligible new students (temporary, 6+ months) count for badge
     $eligibleNewMembersCount = 0;
     try {
         $r = $conn->query("SELECT COUNT(*) AS c FROM members WHERE membership_tier='temporary' AND status!='archived' AND registered_at <= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)");
@@ -238,7 +238,7 @@ function sectionLabelFromGroup(?string $ageGroup): string
 }
 
 // ------------------------------------------------------------
-// Recent members normalized for UI
+// Recent students normalized for UI
 // ------------------------------------------------------------
 $recentMembers = array_map(function ($row) {
     $name = trim(($row['student_name'] ?? '') . ' ' . ($row['father_name'] ?? '') . ' ' . ($row['grandfather_name'] ?? ''));
@@ -252,7 +252,7 @@ $recentMembers = array_map(function ($row) {
 }, $recentMembers);
 
 // ------------------------------------------------------------
-// Helpers: next member code (simple illustrative logic)
+// Helpers: next student code (simple illustrative logic)
 // ------------------------------------------------------------
 function generate_next_member_code(mysqli $conn): string
 {
@@ -1084,7 +1084,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </div>
             </section>
 
-            <!-- ALL MEMBERS -->
+            <!-- ALL STUDENTS -->
             <section id="section-members" class="content-section">
                 <div id="membersHeaderSection" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200 py-3 px-4 -mx-4">
                     <div>
@@ -1302,7 +1302,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             </div>
                         </div>
 
-                        <!-- Registration Date for Existing Members -->
+                        <!-- Registration Date for Existing Students -->
                         <div class="permanent-only bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 mb-4">
                             <h4 class="text-xs font-semibold text-blue-900 mb-2 flex items-center gap-2">
                                 <span class="w-6 h-6 rounded-lg bg-blue-200 flex items-center justify-center">
@@ -1312,7 +1312,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             </h4>
                             <p class="text-[10px] text-blue-700 mb-3">
                                 <i class="fa-solid fa-info-circle mr-1"></i>
-                                If this member was registered before the system was created, enter their original registration date. Leave empty for new members (today's date will be used).
+                                If this student was registered before the system was created, enter their original registration date. Leave empty for new students (today's date will be used).
                             </p>
 
                             <div class="flex items-center gap-3 mb-3">
@@ -1378,8 +1378,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <span>Positions &amp; Responsibilities (optional)</span>
                             </h4>
                             <p class="text-[11px] text-amber-800 mb-2">
-                                Available for regular and special regular members. Selected positions
-                                build the member's identity code (e.g. <span class="font-mono">DT-48291</span>)
+                                Available for regular and special regular students. Selected positions
+                                build the student's identity code (e.g. <span class="font-mono">DT-48291</span>)
                                 and keep the legacy role flags in sync automatically.
                             </p>
                             <?php if (empty($idCat['departments']) && empty($idCat['free'])): ?>
@@ -1431,7 +1431,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     </div>
                                     <label class="text-[11px] text-emerald-700 cursor-pointer">
                                         <span class="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100">
-                                            Upload Member Photo
+                                            Upload Student Photo
                                         </span>
                                         <input type="file" name="student_photo" accept="image/*" class="hidden"
                                                onchange="previewImage(this, 'studentPhotoPreview', 'studentPhotoPlaceholder')">
@@ -1570,7 +1570,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                             <?php endforeach; ?>
                                         </select>
                                         <p class="text-[10px] text-slate-400 mt-1">
-                                            Assigns the member to this Education class for the active academic year. Education can still transfer or unenroll them.
+                                            Assigns the student to this Education class for the active academic year. Education can still transfer or unenroll them.
                                             <?php if (empty($hrClasses)): ?>
                                             <span class="text-amber-600">No classes found — Education must create classes first.</span>
                                             <?php endif; ?>
@@ -1771,12 +1771,12 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 
                                     <div class="md:col-span-2 flex items-center justify-between gap-2">
                                         <span class="text-[11px] text-slate-500">
-                                            Guardian Address (same structure as member).
+                                            Guardian Address (same structure as student).
                                         </span>
                                         <button type="button"
                                                 onclick="copyMemberAddressToGuardian()"
                                                 class="px-3 py-1.5 rounded-full border border-emerald-200 text-[11px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
-                                            Same as member
+                                            Same as student
                                         </button>
                                     </div>
 
@@ -1905,7 +1905,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </div>
             </section>
 
-            <!-- NEW MEMBERS (temporary, promotion tracking) -->
+            <!-- NEW STUDENTS (temporary, promotion tracking) -->
             <section id="section-family" class="content-section">
                 <div class="panel p-4 mobile-card">
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
@@ -1980,7 +1980,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </div>
             </section>
 
-            <!-- Guardian drawer (opens over the Family Link page; member profiles open above it) -->
+            <!-- Guardian drawer (opens over the Family Link page; student profiles open above it) -->
             <div id="famDrawer" class="fam-drawer" aria-hidden="true">
                 <div class="fam-drawer-backdrop" onclick="FamilyLink.close()"></div>
                 <div class="fam-drawer-panel" role="dialog" aria-label="Guardian">
@@ -2011,7 +2011,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         </div>
                     </div>
 
-                    <!-- Search & Filter Bar (Duplicated from All Members for convenience) -->
+                    <!-- Search & Filter Bar (Duplicated from All Students for convenience) -->
                     <div class="bg-white border border-slate-200 rounded-xl p-3 mb-4 shadow-sm">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                             <div class="relative">
@@ -2102,10 +2102,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                         <div>
                             <h3 class="text-sm font-semibold text-slate-800 mb-1">
-                                <i class="fa-solid fa-box-archive text-amber-500 mr-2"></i>Old Members Archive
+                                <i class="fa-solid fa-box-archive text-amber-500 mr-2"></i>Old Students Archive
                             </h3>
                             <p class="text-xs text-slate-500">
-                                Archived / left members. You can restore them back to active if they return.
+                                Archived / left students. You can restore them back to active if they return.
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -2122,7 +2122,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <div class="mb-4">
                         <div class="relative">
                             <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="archiveSearch" autocomplete="off" placeholder="Search archived members..." 
+                            <input type="text" id="archiveSearch" autocomplete="off" placeholder="Search archived students..." 
                                    oninput="filterArchivedMembers()"
                                    class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
                         </div>
@@ -2137,11 +2137,11 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         </button>
                     </div>
                     
-                    <!-- Archived Members List -->
+                    <!-- Archived Students List -->
                     <div id="archivedMembersList" class="space-y-3">
                         <div class="text-center py-8 text-slate-400">
                             <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p class="text-sm">Loading archived members...</p>
+                            <p class="text-sm">Loading archived students...</p>
                         </div>
                     </div>
                     <div id="archivedMembersPagination" class="mt-3 flex items-center justify-between gap-3" aria-live="polite"></div>
@@ -2155,7 +2155,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h3 class="text-sm font-semibold text-slate-800 mb-1">ID Card Management</h3>
-                <p class="text-xs text-slate-500">Generate and Print Digital IDs for eligible members.</p>
+                <p class="text-xs text-slate-500">Generate and Print Digital IDs for eligible students.</p>
             </div>
             <button type="button" onclick="loadIdCardMembers()" class="p-2 text-slate-500 hover:text-slate-700">
                 <i class="fa-solid fa-sync"></i>
@@ -2166,7 +2166,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             <input autocomplete="off" type="search" inputmode="search" id="idCardMemberSearch" name="fkss_card_search"
                    data-form-type="other" data-1p-ignore
                    class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                   placeholder="Search eligible members by name, code, or phone">
+                   placeholder="Search eligible students by name, code, or phone">
             <button type="button" onclick="loadIdCardMembers()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold">Refresh</button>
         </div>
 
@@ -2231,14 +2231,14 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <?php include __DIR__ . '/sections/attendance_analytics_hub.php'; ?>
                     </div>
 
-                    <!-- Per-member month view -->
+                    <!-- Per-student month view -->
                     <div class="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-slate-100 pt-4">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                            <h3 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-user-check mr-1 text-slate-400"></i> Member view</h3>
+                            <h3 class="text-sm font-bold text-slate-700"><i class="fa-solid fa-user-check mr-1 text-slate-400"></i> Student view</h3>
                             <input id="hrRepMonth" type="month" class="px-3 py-2 border border-slate-200 rounded-xl text-sm" aria-label="Report month" onchange="HrReports.loadSummary()">
                         </div>
                         <div class="flex flex-col sm:flex-row gap-2 mb-3">
-                            <input id="hrRepSearch" type="text" placeholder="Search a member by name or code…" autocomplete="off"
+                            <input id="hrRepSearch" type="text" placeholder="Search a student by name or code…" autocomplete="off"
                                    class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                    onkeyup="if(event.key==='Enter') HrReports.searchMembers()">
                             <button type="button" onclick="HrReports.searchMembers()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">
@@ -2421,9 +2421,9 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <!-- ===== SYSTEM PREFERENCES ===== -->
                 <div id="stPrefs" class="settings-pane" style="display:none">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <!-- Member Code Settings -->
+                        <!-- Student Code Settings -->
                         <div class="panel p-5">
-                            <h4 class="font-semibold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-barcode text-violet-500"></i> Member Code Format</h4>
+                            <h4 class="font-semibold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-barcode text-violet-500"></i> Student Code Format</h4>
                             <div class="space-y-3">
                                 <div>
                                     <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Code Prefix</label>
@@ -2444,7 +2444,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         <input type="checkbox" id="autoGenCode" class="sr-only peer" checked>
                                         <div class="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-violet-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500"></div>
                                     </label>
-                                    <span class="text-xs text-slate-600">Auto-generate member codes on registration</span>
+                                    <span class="text-xs text-slate-600">Auto-generate student codes on registration</span>
                                 </div>
                             </div>
                         </div>
@@ -2498,7 +2498,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <div class="panel p-5 flex items-center justify-between">
                             <div>
                                 <h4 class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-floppy-disk text-emerald-500"></i> Save All Preferences</h4>
-                                <p class="text-[10px] text-slate-400 mt-1">Click to save member code format, defaults, and validation rules</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Click to save student code format, defaults, and validation rules</p>
                             </div>
                             <button onclick="savePreferences()" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition flex items-center gap-2">
                                 <i class="fa-solid fa-save"></i> Save Preferences
@@ -2524,7 +2524,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <div class="space-y-3">
                                 <a href="/admin/export_pdf.php?format=csv&filter=all" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-file-csv text-emerald-600"></i></div>
-                                    <div><div class="text-sm font-medium text-slate-700">Export All Members (CSV)</div><div class="text-[10px] text-slate-400">Download complete member database</div></div>
+                                    <div><div class="text-sm font-medium text-slate-700">Export All Students (CSV)</div><div class="text-[10px] text-slate-400">Download complete student database</div></div>
                                 </a>
                                 <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-500"></i></div>
@@ -2621,7 +2621,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
     <div class="bg-white rounded-2xl shadow-lg px-6 py-4 flex items-center gap-3">
         <div class="animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
         <div class="text-sm font-medium text-emerald-700">
-            Saving member, please wait…
+            Saving student, please wait…
         </div>
     </div>
 </div>
@@ -2749,7 +2749,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const cleanUrl = new URL(window.location); cleanUrl.searchParams.delete('member'); history.replaceState(null, '', cleanUrl);
     }
 
-    // --- Member registration UI helpers ---
+    // --- Student registration UI helpers ---
 
     function toggleMemberRegistrationForm(show, tier = 'permanent', title = null) {
         const wrapper = document.getElementById('memberRegistrationWrapper');
@@ -2781,7 +2781,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             }
             
             if (tier === 'temporary') {
-                if (formTitleText) formTitleText.textContent = 'Register Temporary Member';
+                if (formTitleText) formTitleText.textContent = 'Register Temporary Student';
                 
                 // Apply Temporary (Amber) Theme
                 wrapper.classList.add('theme-temporary', 'border-2', 'shadow-lg');
@@ -2791,7 +2791,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 if (btnTemp) btnTemp.className = "mobile-touch-target inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-amber-700 bg-white shadow-sm border border-amber-200 text-xs sm:text-sm font-bold transition-all transform scale-105 ring-2 ring-amber-100 ring-offset-1";
                 
                 document.querySelectorAll('.permanent-only').forEach(el => el.classList.add('hidden'));
-                // Temporary members are always 'waiting' registration type.
+                // Temporary students are always 'waiting' registration type.
                 const rtField = document.getElementById('registrationTypeField');
                 if (rtField) rtField.value = 'waiting';
                 // Clear upgrade ID
@@ -2850,7 +2850,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         // Combined full name (required field) — SSOT: members.student_name + father_name + grandfather_name
         var fullName = [m.student_name, m.father_name, m.grandfather_name].filter(function (x) { return x != null && String(x).trim() !== ''; }).join(' ').trim();
         if (fullName) setFormField(f, 'full_name_am', fullName);
-        // Direct 1:1 mappings (member column -> form field)
+        // Direct 1:1 mappings (student column -> form field)
         var direct = [
             ['baptismal_name','baptismal_name'],
             ['gender','gender'],
@@ -2881,7 +2881,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         });
         // membership_tier forced to permanent on promotion
         setFormField(f, 'membership_tier', 'permanent');
-        // Sync member-type button UI + conditional sections
+        // Sync student-type button UI + conditional sections
         var mt = (m && m.member_type) ? String(m.member_type) : '';
         if (mt) {
             var btn = document.querySelector('.member-type-btn[data-member-type="' + mt + '"]');
@@ -2896,7 +2896,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
     function openUpgradeModal(memberId, memberData, eligible, overrideReason) {
         eligible = (eligible !== false);
         // Open the form immediately (never block promotion on data loading)
-        toggleMemberRegistrationForm(true, 'permanent', 'Upgrade to Permanent Member');
+        toggleMemberRegistrationForm(true, 'permanent', 'Upgrade to Permanent Student');
         var upgradeIdInput = document.getElementById('upgradeMemberIdField');
         if (upgradeIdInput) upgradeIdInput.value = memberId;
 
@@ -2915,7 +2915,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             if (f) f.appendChild(hidden);
         }
 
-        // 1) Prefer the already-loaded member object (SSOT cache) — no network round-trip
+        // 1) Prefer the already-loaded student object (SSOT cache) — no network round-trip
         var m = (memberData && typeof memberData === 'object') ? memberData : null;
         if (m) {
             if (prefillForm(m)) {
@@ -3039,7 +3039,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
         if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
-        // Default member type: regular
+        // Default student type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
         if (defaultTypeBtn) selectMemberTypeFull('regular', defaultTypeBtn);
 
@@ -3256,7 +3256,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
         if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
-        // Default member type: regular
+        // Default student type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
         if (defaultTypeBtn) selectMemberTypeFull('regular', defaultTypeBtn);
 
@@ -3350,12 +3350,12 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 content.innerHTML = html;
                 if (window.MemberNav) MemberNav.afterLoad(id);
                 if (window.DeptStatus) DeptStatus.mount(content);
-                if (title) title.textContent = 'Member #' + id;
+                if (title) title.textContent = 'Student #' + id;
                 // Default to Preview tab
                 switchManageTab('preview');
             })
             .catch(() => {
-                content.innerHTML = '<div class="text-red-600 text-sm">Failed to load member.</div>';
+                content.innerHTML = '<div class="text-red-600 text-sm">Failed to load student.</div>';
             });
     }
 
@@ -3371,7 +3371,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
     
     function archiveMember(id, name) {
         archiveMemberId = id;
-        archiveMemberName = name || 'this member';
+        archiveMemberName = name || 'this student';
         
         // Update modal content
         document.getElementById('archiveMemberName').textContent = archiveMemberName;
@@ -3425,10 +3425,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const rsel = document.getElementById('archiveReason');
         const rtxt = rsel && rsel.selectedIndex >= 0 ? rsel.options[rsel.selectedIndex].text : reason;
         const dc = await dcAsk({tier:'medium', title:'Archive ' + archiveMemberName + '?', object: archiveMemberName,
-            summary:'The member is moved out of the active lists. Reason: ' + rtxt + '.', intent:'I want to archive this member',
-            consequences:['The member disappears from active member lists, class rosters, attendance sheets and new reports.','Teachers and the mobile app no longer show this member.','Family links stay but the member is no longer counted as active.'],
-            keeps:['All history (attendance, marks, documents) is kept.','You can restore the member from the Archive list.'],
-            phrase:'ARCHIVE MEMBER', confirmLabel:'Archive member'});
+            summary:'The student is moved out of the active lists. Reason: ' + rtxt + '.', intent:'I want to archive this student',
+            consequences:['The student disappears from active student lists, class rosters, attendance sheets and new reports.','Teachers and the mobile app no longer show this student.','Family links stay but the student is no longer counted as active.'],
+            keeps:['All history (attendance, marks, documents) is kept.','You can restore the student from the Archive list.'],
+            phrase:'ARCHIVE STUDENT', confirmLabel:'Archive student'});
         if (!dc) return;
         
         btn.disabled = true;
@@ -3451,18 +3451,18 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             } else {
                 showToast(data.message || 'Archive failed.', 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-box-archive mr-2"></i> Archive Member';
+                btn.innerHTML = '<i class="fa-solid fa-box-archive mr-2"></i> Archive Student';
             }
         }).catch(()=>{
             showToast('Network error. Please try again.', 'error');
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-box-archive mr-2"></i> Archive Member';
+            btn.innerHTML = '<i class="fa-solid fa-box-archive mr-2"></i> Archive Student';
         });
     }
     
-    // Restore member from archive
+    // Restore student from archive
     async function restoreMember(id, name) {
-        if (!(await dcAsk({tier:'low', title:'Restore ' + name + ' to active members?', summary:'The member appears again in active lists, rosters and attendance.', confirmLabel:'Restore member'}))) return;
+        if (!(await dcAsk({tier:'low', title:'Restore ' + name + ' to active students?', summary:'The student appears again in active lists, rosters and attendance.', confirmLabel:'Restore student'}))) return;
         
         fetch('/admin/info_restore_member.php', {
             method: 'POST',
@@ -3662,7 +3662,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     alertBox.innerHTML = '<i class="fas fa-check-circle"></i> ' + (data.message || 'Saved successfully.');
                     alertBox.style.display = 'flex';
                 }
-                // Re-open the same member to refresh data (preserves nav history)
+                // Re-open the same student to refresh data (preserves nav history)
                 const id = parseInt(form.querySelector('input[name="id"]').value, 10);
                 setTimeout(() => {
                     if (id && typeof openManageSheet === 'function') openManageSheet(id);
@@ -3706,8 +3706,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <i class="fa-solid fa-box-archive text-white text-xl"></i>
                 </div>
                 <div class="text-white">
-                    <h3 class="font-bold text-lg">Archive Member</h3>
-                    <p class="text-white/80 text-sm">Move to old members</p>
+                    <h3 class="font-bold text-lg">Archive Student</h3>
+                    <p class="text-white/80 text-sm">Move to old students</p>
                 </div>
             </div>
         </div>
@@ -3771,7 +3771,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             </button>
             <button id="confirmArchiveBtn" onclick="confirmArchive()" disabled
                     class="flex-1 px-4 py-3 bg-slate-300 text-white font-semibold rounded-xl cursor-not-allowed transition">
-                <i class="fa-solid fa-box-archive mr-2"></i> Archive Member
+                <i class="fa-solid fa-box-archive mr-2"></i> Archive Student
             </button>
         </div>
     </div>
@@ -3787,8 +3787,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <i class="fa-solid fa-user-group text-white text-xl"></i>
                 </div>
                 <div class="text-white">
-                    <h3 class="font-bold text-lg">Duplicate Member Found!</h3>
-                    <p class="text-white/80 text-sm">This member may already exist</p>
+                    <h3 class="font-bold text-lg">Duplicate Student Found!</h3>
+                    <p class="text-white/80 text-sm">This student may already exist</p>
                 </div>
             </div>
         </div>
@@ -3800,13 +3800,13 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <div class="flex gap-3">
                     <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg mt-0.5"></i>
                     <div>
-                        <p class="text-red-800 font-semibold text-sm">A similar member already exists in the system!</p>
-                        <p class="text-red-600 text-xs mt-1">Please review the existing member(s) below before registering.</p>
+                        <p class="text-red-800 font-semibold text-sm">A similar student already exists in the system!</p>
+                        <p class="text-red-600 text-xs mt-1">Please review the existing student(s) below before registering.</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Duplicate Member Cards -->
+            <!-- Duplicate Student Cards -->
             <div id="duplicateMembersList" class="space-y-3">
                 <!-- Dynamically populated -->
             </div>
@@ -4023,7 +4023,7 @@ function restoreAndClose(id, name) {
     resetMemberForm();
     toggleMemberRegistrationForm(false);
     
-    // Restore the member
+    // Restore the student
     restoreMember(id, name);
 }
 
@@ -4330,7 +4330,7 @@ const HrReports = (function () {
         return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
     }
 
-    // The month selector drives the per-member view only; department-level
+    // The month selector drives the per-student view only; department-level
     // analytics come from the shared Attendance Analytics Hub above.
     let openMemberId = 0;
     function loadSummary() {
@@ -4351,7 +4351,7 @@ const HrReports = (function () {
         if (results) results.innerHTML = '<p class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Searching…</p>';
         apiGet('action=member_search&q=' + encodeURIComponent(q)).then(d => {
             if (d.status !== 'success' || !(d.items || []).length) {
-                if (results) results.innerHTML = '<p class="text-xs text-slate-400">No members found.</p>';
+                if (results) results.innerHTML = '<p class="text-xs text-slate-400">No students found.</p>';
                 return;
             }
             if (results) results.innerHTML = '<div class="flex flex-wrap gap-2">' + d.items.filter(m => Number.isSafeInteger(Number(m.id)) && Number(m.id) > 0).map(m =>
@@ -4380,7 +4380,7 @@ const HrReports = (function () {
         const month = currentMonth();
         const box = $('hrRepMemberDetail');
         if (!box) return;
-        box.innerHTML = '<p class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading member attendance…</p>';
+        box.innerHTML = '<p class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading student attendance…</p>';
         apiGet('action=member_detail&member_id=' + encodeURIComponent(memberId) + '&month=' + encodeURIComponent(month)).then(d => {
             if (d.status !== 'success' || !d.member) {
                 box.innerHTML = '<p class="text-xs text-slate-400">' + esc(d.message || 'Student not found.') + '</p>';
@@ -4397,7 +4397,7 @@ const HrReports = (function () {
                 (m.current_section ? '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold">' + esc(m.current_section) + '</span>' : '') +
                 '<span class="text-xs text-slate-400">· ' + esc(month) + '</span></div>';
             if (!rows.length) {
-                html += '<p class="text-xs text-slate-400">No attendance recorded for this member in ' + esc(month) + '.</p>';
+                html += '<p class="text-xs text-slate-400">No attendance recorded for this student in ' + esc(month) + '.</p>';
             } else {
                 html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100">' +
                     '<th class="py-2 pr-3">Date</th><th class="py-2 pr-3">Source</th><th class="py-2 pr-3">Class / Section</th><th class="py-2">Status</th></tr></thead><tbody>' +
@@ -4481,7 +4481,7 @@ const HrReports = (function () {
                     <i class="fa-solid fa-file-excel"></i>
                     Excel Sync
                 </h3>
-                <p class="text-xs text-emerald-100 mt-0.5">Download members, edit in Excel, then upload to apply changes.</p>
+                <p class="text-xs text-emerald-100 mt-0.5">Download students, edit in Excel, then upload to apply changes.</p>
             </div>
             <button type="button" onclick="closeDataSyncModal()" class="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center transition" aria-label="Close">
                 <i class="fa-solid fa-xmark"></i>
@@ -4490,61 +4490,28 @@ const HrReports = (function () {
         
         <!-- Body -->
         <div class="p-6 overflow-y-auto space-y-6">
-            <p class="text-sm text-slate-600">Filled cells update the member. Blank cells are left unchanged. Member codes cannot be edited. Use the <span class="font-medium text-slate-800">Class</span> dropdown to assign an Education class (leave it empty to add the member without a class). Date of Birth is the Ethiopian date (dd/mm/yyyy); age section is calculated from it. Editable workbooks are limited to 2,000 rows to match the safe import transaction limit; complete CSV downloads stream the full roster.</p>
+            <p class="text-sm text-slate-600">Filled cells update the student. Blank cells are left unchanged. Student codes cannot be edited. Use the <span class="font-medium text-slate-800">Class</span> dropdown to assign an Education class (leave it empty to add the student without a class). Date of Birth is the Ethiopian date (dd/mm/yyyy). Editable workbooks are limited to 2,000 rows to match the safe import transaction limit; complete CSV downloads stream the full roster.</p>
             <p class="text-sm text-slate-600"><span class="font-medium text-slate-800">Check file</span> first: it lists every problem and saves nothing. <span class="font-medium text-slate-800">Start Import</span> saves the whole file only when every row is valid — if any row has a problem, nothing is saved.</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Temporary Members Column -->
-                <div class="border-2 border-amber-200 rounded-2xl p-5 bg-amber-50/30">
-                    <h4 class="font-bold text-amber-800 mb-4 flex items-center gap-2 text-lg">
-                        <i class="fa-solid fa-hourglass-half text-amber-500"></i> Temporary Members
-                    </h4>
-                    
-                    <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
-                        <p class="text-xs text-slate-500 mb-3">Download the template with fields specific to Temporary members.</p>
-                        <a href="/admin/api_export_members.php?tier=temporary" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-semibold hover:bg-amber-200 transition border border-amber-300">
-                            <i class="fa-solid fa-download"></i> Download Editable Template
-                        </a>
-                        <a href="/admin/api_export_members.php?tier=temporary&amp;format=csv" class="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-amber-800 rounded-lg font-semibold hover:bg-amber-50 transition border border-amber-200">
-                            <i class="fa-solid fa-file-csv"></i> Download Complete CSV
-                        </a>
-                    </div>
-                    
-                    <div class="bg-white rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-slate-500 mb-3">Upload updated Temporary member data.</p>
-                        <form id="formSyncTemporary" class="w-full">
-                            <input type="file" id="import_file_temp" accept=".xlsx" class="hidden">
-                            <label for="import_file_temp" class="cursor-pointer w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition mb-2">
-                                <i class="fa-solid fa-folder-open"></i> <span id="fileNameDisplayTemp" class="truncate max-w-[200px]">Select Excel File</span>
-                            </label>
-                            <button type="button" id="btnCheckTemp" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 mb-2 bg-white text-amber-800 rounded-lg font-semibold hover:bg-amber-50 transition border border-amber-300 disabled:opacity-50">
-                                <i class="fa-solid fa-list-check"></i> Check file
-                            </button>
-                            <button type="submit" id="btnSyncTemp" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition disabled:opacity-50">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Start Import
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Permanent Members Column -->
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Students Column -->
                 <div class="border-2 border-emerald-200 rounded-2xl p-5 bg-emerald-50/30">
                     <h4 class="font-bold text-emerald-800 mb-4 flex items-center gap-2 text-lg">
-                        <i class="fa-solid fa-user-check text-emerald-500"></i> Permanent Members
+                        <i class="fa-solid fa-user-check text-emerald-500"></i> Students
                     </h4>
                     
                     <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
-                        <p class="text-xs text-slate-500 mb-3">Download the full template for Permanent members.</p>
-                        <a href="/admin/api_export_members.php?tier=permanent" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-semibold hover:bg-emerald-200 transition border border-emerald-300">
+                        <p class="text-xs text-slate-500 mb-3">Download the full student template.</p>
+                        <a href="/admin/api_export_members.php?tier=all" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-semibold hover:bg-emerald-200 transition border border-emerald-300">
                             <i class="fa-solid fa-download"></i> Download Editable Template
                         </a>
-                        <a href="/admin/api_export_members.php?tier=permanent&amp;format=csv" class="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-emerald-800 rounded-lg font-semibold hover:bg-emerald-50 transition border border-emerald-200">
+                        <a href="/admin/api_export_members.php?tier=all&amp;format=csv" class="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-emerald-800 rounded-lg font-semibold hover:bg-emerald-50 transition border border-emerald-200">
                             <i class="fa-solid fa-file-csv"></i> Download Complete CSV
                         </a>
                     </div>
                     
                     <div class="bg-white rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-slate-500 mb-3">Upload updated Permanent member data.</p>
+                        <p class="text-xs text-slate-500 mb-3">Upload updated student data.</p>
                         <form id="formSyncPermanent" class="w-full">
                             <input type="file" id="import_file_perm" accept=".xlsx" class="hidden">
                             <label for="import_file_perm" class="cursor-pointer w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition mb-2">

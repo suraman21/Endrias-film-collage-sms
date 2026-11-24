@@ -42,7 +42,7 @@
       if (stack.length) {
         btn.style.display = '';
         var label = btn.querySelector('[data-label]');
-        if (label) label.textContent = 'Back to previous member';
+        if (label) label.textContent = 'Back to previous student';
       } else {
         btn.style.display = 'none';
       }

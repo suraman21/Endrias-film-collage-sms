@@ -84,7 +84,7 @@ foreach (MemberCategory::letters() as $idcLetter) {
     <div class="idc-pane active" id="idc-pane-departments">
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-plus"></i> Add / Edit Department</h3>
-            <p class="idc-muted">Department codes become the middle of staff codes (EDH = Education head, ED<span class="mc-min">N</span> = ordinary member). 1–4 letters A–Z.</p>
+            <p class="idc-muted">Department codes become the middle of staff codes (EDH = Education head, ED<span class="mc-min">N</span> = ordinary student). 1–4 letters A–Z.</p>
             <form id="idcDeptForm" class="idc-rowform" autocomplete="off">
                 <input type="hidden" name="id" value="0">
                 <div><label class="form-label">Code *</label><input class="form-input" name="code" maxlength="4" pattern="[A-Za-z]{1,4}" required placeholder="ED" style="text-transform:uppercase"></div>
@@ -144,7 +144,7 @@ foreach (MemberCategory::letters() as $idcLetter) {
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-arrows-rotate"></i> Format v2 renumbering</h3>
             <p style="font-size:.8rem;color:#cbd5e1;margin:.4rem 0 .8rem">
-                Issues the new code shape to every member: students <span class="idc-codechip">A-76392</span>,
+                Issues the new code shape to every student: students <span class="idc-codechip">A-76392</span>,
                 staff <span class="idc-codechip">DEDHT-98798</span> with a fresh random 5-digit tail.
                 Old codes are preserved in <span class="idc-codechip" style="font-size:.68rem">legacy_member_code</span>,
                 QR images regenerated. Already-correct codes are skipped (safe to re-run).
@@ -323,7 +323,7 @@ async function renderDepartments(){
             const ok = (window.DangerConfirm && window.DangerConfirm.ask) ? await window.DangerConfirm.ask({tier:'medium', title:'Deactivate department ' + nm + '?', object: nm,
                 summary:'The department is hidden from new codes and position lists.', intent:'I want to deactivate this department',
                 consequences:['New identity codes and positions can no longer use this department.','It disappears from the department and position pickers.'],
-                keeps:['Existing member codes that contain it keep working.','You can activate it again by editing it.'],
+                keeps:['Existing student codes that contain it keep working.','You can activate it again by editing it.'],
                 phrase:'DEACTIVATE DEPARTMENT', confirmLabel:'Deactivate department'}) : (toast('The confirmation dialog did not load. Reload the page (Ctrl+F5) and try again.', false), false);
             if (!ok) return;
             const r2 = await apiPost('delete_department', {id: d.id});
@@ -439,10 +439,10 @@ async function runMigration(mode, btn){
     await busy(btn, async () => {
         if (mode === 'execute'){
             if (!(window.DangerConfirm && window.DangerConfirm.ask)) { toast('The confirmation dialog did not load. Reload the page (Ctrl+F5) and try again.', false); return; }
-            const dc = await window.DangerConfirm.ask({tier:'high', title:'Renumber every member identity code?', object:'All members',
-                summary:'Every member gets a NEW identity code. Run "Preview" first to see how many change.', intent:'I want to renumber all codes',
-                consequences:['Every member\'s identity code is re-issued with the current numbering rules.','All QR codes are regenerated: printed ID cards show the OLD code and should be re-printed.','People and lists that use the old codes must switch to the new ones.'],
-                keeps:['Old codes are kept as legacy codes, so scanning an old card still finds the member.','Student records themselves are not changed.'],
+            const dc = await window.DangerConfirm.ask({tier:'high', title:'Renumber every student identity code?', object:'All students',
+                summary:'Every student gets a NEW identity code. Run "Preview" first to see how many change.', intent:'I want to renumber all codes',
+                consequences:['Every student\'s identity code is re-issued with the current numbering rules.','All QR codes are regenerated: printed ID cards show the OLD code and should be re-printed.','People and lists that use the old codes must switch to the new ones.'],
+                keeps:['Old codes are kept as legacy codes, so scanning an old card still finds the student.','Student records themselves are not changed.'],
                 irreversible:true, phrase:'RENUMBER CODES', confirmLabel:'Renumber all codes'});
             if (!dc) { msg($('idcMigMsg'), 'Cancelled — nothing was changed.', false); return; }
             window.__idcPhrase = dc.phrase;

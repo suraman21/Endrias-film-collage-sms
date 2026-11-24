@@ -1374,7 +1374,7 @@ $csrfToken = generateCsrfToken();
             }
             // Blank = the student did not take this test (shown on the review and report card).
             const blankNames = [];
-            document.querySelectorAll('.submit-score').forEach(inp => { if (String(inp.value).trim() === '') blankNames.push(inp.dataset.name || ('Member #' + inp.dataset.mid)); });
+            document.querySelectorAll('.submit-score').forEach(inp => { if (String(inp.value).trim() === '') blankNames.push(inp.dataset.name || ('Student #' + inp.dataset.mid)); });
 
             // Danger confirmation (T2, MEDIUM): submitting locks the marks for review.
             if (!(window.DangerConfirm && window.DangerConfirm.ask)) return showToast('The confirmation dialog did not load. Reload the page (Ctrl+F5) and try again.', 'error');

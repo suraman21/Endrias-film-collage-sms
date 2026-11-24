@@ -162,7 +162,7 @@ if ($dept === 'edu') {
 }
 
 if ($total === 0) {
-    qr_roster_fail('No active members in this ' . ($dept === 'edu' ? 'class' : 'section') . '.');
+    qr_roster_fail('No active students in this ' . ($dept === 'edu' ? 'class' : 'section') . '.');
 }
 
 // ── 5. Render the tile grid ──────────────────────────────────
@@ -186,8 +186,8 @@ $pages = (int)ceil($total / QR_ROSTER_PAGE_SIZE);
 $pdf->SetFont('notosansethiopicb', '', 13);
 $pdf->Cell(0, 8, $deptTitle . ' ' . $groupLabel . ' — QR Roster', 0, 1);
 $pdf->SetFont('notosansethiopic', '', 9);
-$pdf->Cell(0, 5, 'Cut the tiles and hand one to each member. Scanned by attendance takers in the mobile app.', 0, 1);
-$pdf->Cell(0, 5, 'Page ' . $page . ' of ' . $pages . ' • ' . $total . ' members • Generated ' . (function_exists('ethio_export_datetime') ? ethio_export_datetime('now') : date('Y-m-d H:i')), 0, 1);
+$pdf->Cell(0, 5, 'Cut the tiles and hand one to each student. Scanned by attendance takers in the mobile app.', 0, 1);
+$pdf->Cell(0, 5, 'Page ' . $page . ' of ' . $pages . ' • ' . $total . ' students • Generated ' . (function_exists('ethio_export_datetime') ? ethio_export_datetime('now') : date('Y-m-d H:i')), 0, 1);
 $pdf->Ln(3);
 
 $tileW = 92; $tileH = 40; $gap = 4;

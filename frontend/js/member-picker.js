@@ -1,10 +1,10 @@
-/* Search-backed member select used by finance forms at large roster sizes.
+/* Search-backed student select used by finance forms at large roster sizes.
  *
- * Phase 3 paging (owner request 2026-10-22): every member is reachable.
+ * Phase 3 paging (owner request 2026-10-22): every student is reachable.
  * - The first 50 load with the form; the list says how many there are.
  * - The last option "Show 50 more… (N left)" appends the next page, so a
- *   member can be picked without typing (was: silently cut at 50 of 440).
- * - Typing in the search box searches all members; results page the same way.
+ *   student can be picked without typing (was: silently cut at 50 of 440).
+ * - Typing in the search box searches all students; results page the same way.
  *
  * Markup (unchanged):
  *   <input type="search" data-member-picker-target="feeMember">
@@ -52,7 +52,7 @@
             var placeholder = document.createElement('option');
             placeholder.value = '';
             var optional = select.dataset.optional === 'true';
-            placeholder.textContent = optional ? '— None —' : 'Select member…';
+            placeholder.textContent = optional ? '— None —' : 'Select student…';
             select.appendChild(placeholder);
             st.shown = 0;
         } else {
@@ -68,8 +68,8 @@
         }
         st.lastValue = select.value;
         select.title = st.total > st.shown
-            ? st.shown + ' of ' + st.total + ' members shown. Type in the search box or choose “Show more”.'
-            : st.total + ' members';
+            ? st.shown + ' of ' + st.total + ' students shown. Type in the search box or choose “Show more”.'
+            : st.total + ' students';
     }
 
     function stateFor(select, input) {

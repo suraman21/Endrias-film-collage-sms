@@ -193,7 +193,7 @@ switch ($action) {
                 $chk->close();
             }
             if (!$inScope) {
-                $fail(403, 'This member is not in one of your classes.');
+                $fail(403, 'This student is not in one of your classes.');
             }
         }
         $ms = $conn->prepare('SELECT id, student_name, father_name, member_code FROM members WHERE id = ? LIMIT 1');

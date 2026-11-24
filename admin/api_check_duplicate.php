@@ -89,5 +89,5 @@ duplicateJson([
     'found' => $matches !== [],
     'count' => count($matches),
     'matches' => $matches,
-    'message' => $matches === [] ? 'No duplicates found' : 'Potential duplicate member(s) found!',
+    'message' => $matches === [] ? 'No duplicates found' : 'Potential duplicate student(s) found!',
 ]);

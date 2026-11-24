@@ -171,7 +171,7 @@
     }
     root.innerHTML =
       '<div class="idc-panel idc-tools">' +
-        '<p class="idc-note">Click a piece of the card, or pick it here. Change only that piece. Save applies to every member card.</p>' +
+        '<p class="idc-note">Click a piece of the card, or pick it here. Change only that piece. Save applies to every student card.</p>' +
         '<div class="idc-list" id="idcList"></div>' +
         '<div class="idc-inspect" id="idcInspect"></div>' +
         '<div class="idc-actions">' +

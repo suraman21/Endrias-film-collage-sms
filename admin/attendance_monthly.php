@@ -6,7 +6,7 @@
  * One report for Education, HR and Information (department-scoped on
  * the server by admin/api_attendance_monthly.php; HR and Information see both
  * departments, School Admin / Super Admin read-only like everyone else).
- * Shows every member's attendance for one ETHIOPIAN month from the derived
+ * Shows every student's attendance for one ETHIOPIAN month from the derived
  * table attendance_month_rollup (shared risk formula: present + excused +
  * 0.5 × late over eligible sessions; bands 90/75/50; policy threshold).
  * Ethiopian calendar only: every month label / date comes from the API.

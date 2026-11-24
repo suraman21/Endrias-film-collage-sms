@@ -134,7 +134,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
         </select>
       </label>
       <label>Search
-        <input type="search" id="af-q" placeholder="member, code or assessment">
+        <input type="search" id="af-q" placeholder="student, code or assessment">
       </label>
       <span class="rc-muted" id="af-total"></span>
     </div>
@@ -149,7 +149,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
         <button class="rc-btn rc-btn-sm" id="af-more" type="button" hidden>Load more</button>
       </div>
     </div>
-    <p class="af-note">A follow-up is opened automatically when a member returns to Education after an inactive period. Nothing is scored automatically: choose <em>make-up required</em>, <em>exempt</em> or <em>not applicable</em>. A make-up result is stored separately — the original assessment row is never changed.</p>
+    <p class="af-note">A follow-up is opened automatically when a student returns to Education after an inactive period. Nothing is scored automatically: choose <em>make-up required</em>, <em>exempt</em> or <em>not applicable</em>. A make-up result is stored separately — the original assessment row is never changed.</p>
   </main>
 </div>
 

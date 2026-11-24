@@ -395,7 +395,7 @@ switch ($action) {
         if ($stmt->execute()) {
             $newTeacherId = $conn->insert_id;
             
-            // If linked to a member, sync teacher flag/position, not manual member type.
+            // If linked to a student, sync teacher flag/position, not manual student type.
             if ($memberId) {
                 syncMemberTeacherFlag($conn, $memberId, true);
             }
@@ -537,7 +537,7 @@ switch ($action) {
             exit;
         }
 
-        // Preserve established member/position convergence after the atomic
+        // Preserve established student/position convergence after the atomic
         // account+credential commit; that subsystem owns its own transaction.
         $oldMemberId = (int)($currentTeacher['member_id'] ?? 0);
         if ($oldMemberId > 0 && $oldMemberId !== (int)$memberId) {
@@ -700,7 +700,7 @@ switch ($action) {
             $teacherId
         );
 
-        // Sync the teacher flag/position; preserve the manually selected member type.
+        // Sync the teacher flag/position; preserve the manually selected student type.
         if ($teacher['member_id']) {
             syncMemberTeacherFlag($conn, (int)$teacher['member_id'], false);
         }
@@ -920,7 +920,7 @@ switch ($action) {
             exit;
         }
         
-        // Get adult members who could be teachers
+        // Get adult students who could be teachers
         $result = $conn->query("
             SELECT id, member_code, student_name, father_name, grandfather_name, phone_number
             FROM members 
@@ -939,7 +939,7 @@ switch ($action) {
         break;
 
     // ============================================================
-    // SEARCH MEMBERS TO LINK (name + code only — no phone/address)
+    // SEARCH STUDENTS TO LINK (name + code only — no phone/address)
     // ============================================================
     case 'search_members_for_teacher':
         if ($isTeacher) {
@@ -1048,7 +1048,7 @@ switch ($action) {
                 $mrow = $mchk->get_result()->fetch_assoc();
                 $mchk->close();
                 if (!$mrow || ($mrow['status'] ?? '') === 'archived') {
-                    echo json_encode(['status' => 'error', 'message' => 'That member was not found.']);
+                    echo json_encode(['status' => 'error', 'message' => 'That student was not found.']);
                     exit;
                 }
                 if ($fullName === '') {
@@ -1170,7 +1170,7 @@ switch ($action) {
             $created = true;
         }
 
-        // Preserve established member/position convergence after the atomic
+        // Preserve established student/position convergence after the atomic
         // existing-account update. Position synchronization may start its own
         // transaction and therefore cannot run inside the credential boundary.
         if (!$created) {

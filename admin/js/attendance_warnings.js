@@ -219,10 +219,10 @@
         '<dt>Threshold</dt><dd>' + esc(w.threshold_value) + (w.kind === 'low_month' ? ' %' : ' consecutive sessions') + '</dd>' +
         absences + other +
         (w.status === 'closed' ? '<dt>Closed</dt><dd>' + esc(w.closed_ec) + ' · ' + esc(w.outcome_label) + (w.closure_note ? ' — ' + esc(w.closure_note) : '') + '</dd>' : '') +
-        (!w.below_threshold && w.status === 'open' ? '<dt>Note</dt><dd>No longer meets the threshold (a day was corrected or the member returned). Please close with an outcome.</dd>' : '') +
+        (!w.below_threshold && w.status === 'open' ? '<dt>Note</dt><dd>No longer meets the threshold (a day was corrected or the student returned). Please close with an outcome.</dd>' : '') +
         '</dl>' +
         '<h3 style="font-size:13px;margin:10px 0 4px">History</h3><ul class="aw-events">' + events + '</ul>' +
-        '<div class="aw-actions"><a class="rc-btn rc-btn-ghost rc-btn-sm" href="' + esc(cfg.memberUrl + w.member_id) + '" target="_blank" rel="noopener">Open member profile</a>' +
+        '<div class="aw-actions"><a class="rc-btn rc-btn-ghost rc-btn-sm" href="' + esc(cfg.memberUrl + w.member_id) + '" target="_blank" rel="noopener">Open student profile</a>' +
         (canClose ? '<button type="button" class="rc-btn rc-btn-primary rc-btn-sm" data-act="close" data-id="' + esc(w.id) + '">Close with outcome…</button>' : '') +
         '<button type="button" class="rc-btn rc-btn-ghost rc-btn-sm" data-close="1">Dismiss</button></div>' +
         '</div></div>';

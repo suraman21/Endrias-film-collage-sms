@@ -105,7 +105,7 @@ class SubmissionService
         }
         $names = self::memberLabels($conn, array_column($bad, 'member_id'));
         foreach ($bad as &$b) {
-            $who = $names[$b['member_id']] ?? ('Member #' . $b['member_id']);
+            $who = $names[$b['member_id']] ?? ('Student #' . $b['member_id']);
             $b['message'] = $b['reason'] === 'over_max'
                 ? "{$who}: {$b['value']} is more than the maximum {$maxLabel}"
                 : "{$who}: \"{$b['value']}\" is not a valid score (use a number from 0 to {$maxLabel})";

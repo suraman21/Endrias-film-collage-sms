@@ -1,6 +1,6 @@
 <?php
 /**
- * Archive Member - Move member to old members archive
+ * Archive Student - Move student to old students archive
  * AJAX endpoint with archive reason support
  */
 
@@ -35,11 +35,11 @@ if (!in_array($reason, $allowedReasons, true) || mb_strlen($notes) > 2000) {
 }
 
 if ($id <= 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid member ID']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid student ID']);
     exit;
 }
 
-// Verify member exists and is not already archived
+// Verify student exists and is not already archived
 $checkStmt = $conn->prepare("SELECT id, student_name, father_name, status FROM members WHERE id = ?");
 $checkStmt->bind_param("i", $id);
 $checkStmt->execute();
@@ -61,9 +61,9 @@ if ($member['status'] === 'archived') {
 $archiveType = ($reason === 'failed_observation') ? 'failed_observation' : 'permanent_archive';
 $archivedBy = (string)$_SESSION['admin_username'];
 
-// Archive the member and preserve a reviewable reason trail.
+// Archive the student and preserve a reviewable reason trail.
 // M7: keep the pre-archive status (migration 095) so restore can put a
-// warning/inactive member back where they were instead of always 'active'.
+// warning/inactive student back where they were instead of always 'active'.
 $priorStatus = (string)($member['status'] ?? '');
 $sql = "UPDATE members
         SET status='archived', status_before_archive=?, archived_at=NOW(), archived_by=?, archive_reason=?,
@@ -90,13 +90,13 @@ if ($stmt) {
             require_once __DIR__ . '/backend/services/SecurityAuditService.php';
             $auditOk = \App\Services\SecurityAuditService::record(
                 $conn,
-                'Member Archived',
+                'Student Archived',
                 ['archive_reason' => $reason, 'archive_type' => $archiveType],
                 'member',
                 $id
             );
             if (!$auditOk) {
-                error_log('Member archive audit recording failed for member ' . $id . '.');
+                error_log('Student archive audit recording failed for student ' . $id . '.');
             }
         } catch (Throwable $auditErr) {
             error_log('Member archive audit error: ' . $auditErr->getMessage());
@@ -108,7 +108,7 @@ if ($stmt) {
         ]);
     } else {
         error_log('Member archive update failed.');
-        echo json_encode(['status' => 'error', 'message' => 'Unable to archive the member.']);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to archive the student.']);
     }
     $stmt->close();
 } else {

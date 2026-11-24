@@ -251,7 +251,7 @@ function handleUpload(int $operatorId): void {
             if ($memberId <= 0 || !is_file($srcPath)) {
                 $results[] = ['seq'=>$seq,'code'=>$memberCode,'status'=>'skipped',
                     'reason'=>$memberId<=0?'member_not_found':'file_missing'];
-                $errors[] = "Seq $seq ($memberCode): ".($memberId<=0?'member not found':'file missing in ZIP');
+                $errors[] = "Seq $seq ($memberCode): ".($memberId<=0?'student not found':'file missing in ZIP');
                 $conn->query("UPDATE photo_import_items SET decision='failed' WHERE id=$itemId");
                 continue;
             }

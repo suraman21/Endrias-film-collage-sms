@@ -125,7 +125,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         if (cached == null) {
           _loading = false;
           _error =
-              'Waiting for network — this member is not saved on this phone';
+              'Waiting for network — this student is not saved on this phone';
         }
       });
       return;
@@ -155,8 +155,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         _loading = false;
         _isOffline = res.isNetworkError;
         _error = res.isNetworkError
-            ? 'Waiting for network — this member is not saved on this phone'
-            : (res.message ?? 'Member not found');
+            ? 'Waiting for network — this student is not saved on this phone'
+            : (res.message ?? 'Student not found');
       });
     }
     // else: fetch failed but a cached row is on screen — keep it and
@@ -229,7 +229,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_member?['student_name'] ?? 'Member Details'),
+        title: Text(_member?['student_name'] ?? 'Student Details'),
         actions: [
           IconButton(
             tooltip: 'Take photo',
@@ -305,8 +305,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                         _field('Date of Birth',
                             _formatEcDate(_member?['date_of_birth'])),
                         _field('Age Group', _member?['age_group']),
-                        _field('Member Code', _member?['member_code']),
-                        _field('Member Type', _member?['member_type']),
+                        _field('Student Code', _member?['member_code']),
+                        _field('Student Type', _member?['member_type']),
                         _field('Registration', _member?['registration_type']),
                       ]),
                       const SizedBox(height: 12),

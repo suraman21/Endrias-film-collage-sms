@@ -429,7 +429,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
                     </div>
                     <div class="mt-2 text-2xl sm:text-3xl font-bold"><?= $kpi['coverage_pct'] ?>%</div>
                     <div class="mt-1 text-[11px] opacity-80">
-                        <?= $kpi['members_with_photo'] ?> / <?= $kpi['total_members'] ?> members
+                        <?= $kpi['members_with_photo'] ?> / <?= $kpi['total_members'] ?> students
                     </div>
                 </div>
 
@@ -495,7 +495,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
                     </div>
                     <div class="flex-1">
                         <h3 class="font-bold text-slate-800">Review &amp; Resolve Conflicts</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Pick the winning shot when multiple photographers captured the same member.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Pick the winning shot when multiple photographers captured the same student.</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-400"></i>
                 </a>
@@ -505,7 +505,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
                     </div>
                     <div class="flex-1">
                         <h3 class="font-bold text-slate-800">View Capture Coverage</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">See which sections and members are missing photos, prioritise the next visit.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">See which sections and students are missing photos, prioritise the next visit.</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-400"></i>
                 </button>
@@ -646,7 +646,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
             <div class="panel p-4 sm:p-5">
                 <h3 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <span class="w-7 h-7 rounded-xl bg-red-100 flex items-center justify-center text-red-600"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                    Members Missing Photos (sample, oldest-first)
+                    Students Missing Photos (sample, oldest-first)
                 </h3>
                 <?php
                 $missing = pd_fetch_all($conn,
@@ -659,7 +659,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
                 ?>
                 <div class="text-center py-8 text-emerald-600">
                     <i class="fa-solid fa-circle-check text-4xl mb-2"></i>
-                    <p class="text-sm font-semibold">Every active member has a photo — coverage is 100%!</p>
+                    <p class="text-sm font-semibold">Every active student has a photo — coverage is 100%!</p>
                 </div>
                 <?php else: ?>
                 <div class="overflow-x-auto">

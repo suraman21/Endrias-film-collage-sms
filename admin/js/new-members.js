@@ -1,5 +1,5 @@
 /*
- * Paginated "New Members" (temporary) directory for HR dashboard.
+ * Paginated "New Students" (temporary) directory for HR dashboard.
  * Reuses the shared PaginatedList engine.
  */
 (function () {
@@ -110,11 +110,11 @@
                 return;
             }
             var m = memberCache.get(id) || {};
-            var nm = [m.student_name, m.father_name].filter(Boolean).join(' ') || 'this member';
+            var nm = [m.student_name, m.father_name].filter(Boolean).join(' ') || 'this student';
             window.DangerConfirm.ask({
                 tier: 'medium', title: 'Promote ' + nm + ' before 6 months?', object: nm,
-                summary: 'This temporary member has not yet reached the 6-month waiting period.', intent: 'I want to promote early',
-                consequences: ['The member becomes a PERMANENT member before the normal 6 months.', 'A permanent member code is issued and the member moves to the permanent lists.'],
+                summary: 'This temporary student has not yet reached the 6-month waiting period.', intent: 'I want to promote early',
+                consequences: ['The student becomes a PERMANENT student before the normal 6 months.', 'A permanent student code is issued and the student moves to the permanent lists.'],
                 keeps: ['The registration form still opens for you to check and upload the document.', 'Your reason is recorded in the audit log.'],
                 reason: { label: 'Reason for early promotion, recorded in the audit', required: false, maxLength: 500 },
                 phrase: 'PROMOTE EARLY', confirmLabel: 'Continue to promotion'

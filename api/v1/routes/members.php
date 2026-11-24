@@ -310,7 +310,7 @@ if ($method === 'PUT' && is_int($id)) {
 
     logApiAction($auth['uid'], $auth['usr'], 'Member Updated', "ID: {$id}");
     if ($__statusChange !== null) {
-        logApiAction($auth['uid'], $auth['usr'], 'Member Status Changed', "ID: {$id} {$__statusChange['from']} -> {$__statusChange['to']} (mobile)");
+        logApiAction($auth['uid'], $auth['usr'], 'Student Status Changed', "ID: {$id} {$__statusChange['from']} -> {$__statusChange['to']} (mobile)");
     }
 
     // Family Link reverse-sync: guardian contact edits from the mobile app

@@ -14,7 +14,7 @@
  *   $navItems = [
  *     [ // group 1 (a divider is auto-inserted between groups)
  *       ['icon'=>'fa-solid fa-gauge-high','label'=>'Home','attrs'=>'data-section="dashboard"','active'=>true],
- *       ['icon'=>'fa-solid fa-users','label'=>'Members','attrs'=>'data-section="members"'],
+ *       ['icon'=>'fa-solid fa-users','label'=>'Students','attrs'=>'data-section="members"'],
  *     ],
  *     [
  *       ['icon'=>'fa-solid fa-right-from-bracket','label'=>'Logout','href'=>'/admin/logout.php','exit'=>true],

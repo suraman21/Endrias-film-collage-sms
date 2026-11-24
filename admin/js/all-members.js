@@ -1,7 +1,7 @@
 /*
- * All Members directory — full-column PaginatedList with search and filters.
+ * All Students directory — full-column PaginatedList with search and filters.
  * Replaces the legacy PHP-rendered 400-row table that couldn't paginate.
- * Used by the "All Members" section in HR and Information dashboards.
+ * Used by the "All Students" section in HR and Information dashboards.
  */
 (function () {
     'use strict';
@@ -10,7 +10,7 @@
     var rowCounter = 0;
 
     // M1: keys must match the <select> ids rendered by hr-dept/info-dept.
-    // 'filterType' matched NO element, so the Reg.Type and Member Type
+    // 'filterType' matched NO element, so the Reg.Type and Student Type
     // dropdowns were silently dead (the API already supports both params).
     var filterMap = {
         memberSearchInput: 'q',

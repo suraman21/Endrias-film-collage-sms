@@ -118,7 +118,7 @@ switch ($action) {
             }
             $r = GuardianService::attachFromLegacy($conn, $mid, $gid, 'hr');
             if ($r['mode'] === 'none') {
-                throw new InvalidArgumentException('This member has no guardian name saved — add it on the member profile first, or pick a guardian.');
+                throw new InvalidArgumentException('This student has no guardian name saved — add it on the student profile first, or pick a guardian.');
             }
             echo json_encode(['status' => 'success', 'message' => 'Student linked.'] + $r);
         } catch (Throwable $e) {
@@ -136,7 +136,7 @@ switch ($action) {
         @set_time_limit(60);
         $r = GuardianService::attachBatch($conn, $cursor, 40, 15.0);
         if ($r['processed'] > 0) {
-            GuardianService::audit($conn, 'Guardian Backfill', "Link-all step: {$r['processed']} member(s) linked ({$r['created']} new guardians, {$r['matched']} matched, {$r['failed']} failed); " . ($r['done'] ? 'complete' : 'continuing') . '.');
+            GuardianService::audit($conn, 'Guardian Backfill', "Link-all step: {$r['processed']} student(s) linked ({$r['created']} new guardians, {$r['matched']} matched, {$r['failed']} failed); " . ($r['done'] ? 'complete' : 'continuing') . '.');
         }
         echo json_encode(['status' => 'success'] + $r);
         exit;
@@ -321,7 +321,7 @@ switch ($action) {
         $mid = (int)($_POST['member_id'] ?? 0);
         if ($gid <= 0 || $mid <= 0) {
             http_response_code(422);
-            echo json_encode(['status' => 'error', 'message' => 'Guardian and member are required.']);
+            echo json_encode(['status' => 'error', 'message' => 'Guardian and student are required.']);
             exit;
         }
         GuardianService::unlinkMember($conn, $gid, $mid);

@@ -2233,7 +2233,7 @@ class ReportCardService
         $sheet->setTitle('Filtered Performance');
 
         $headers = [
-            '#', 'Student Name', 'Father Name', 'Baptismal Name', 'Member Code',
+            '#', 'Student Name', 'Father Name', 'Baptismal Name', 'Student Code',
             'Class', 'Gender', 'Grade Average (%)', 'Letter Grade',
             'Total Obtained', 'Total Max', 'Assessments Count',
             'Attendance Rate (%)', 'Attendance Breakdown', 'Present Days', 'Absent Days', 'Late Days', 'Excused Days', 'Total Sessions'

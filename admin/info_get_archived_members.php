@@ -45,9 +45,9 @@ try {
     ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (InvalidArgumentException $error) {
     http_response_code(403);
-    echo json_encode(['status' => 'error', 'message' => 'Archived members are not available for this role.']);
+    echo json_encode(['status' => 'error', 'message' => 'Archived students are not available for this role.']);
 } catch (Throwable $error) {
-    error_log('Archived member directory failed.');
+    error_log('Archived student directory failed.');
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Unable to load archived members.']);
+    echo json_encode(['status' => 'error', 'message' => 'Unable to load archived students.']);
 }
