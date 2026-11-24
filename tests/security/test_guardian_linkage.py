@@ -135,7 +135,9 @@ class TestP4:
         assert "'run_rematch'" in api and "case 'run_rematch'" in api
         tool = _read("admin/tools/guardian_rematch.php")
         assert "PHP_SAPI !== 'cli'" in tool
-        dash = _read("admin/dashboards/hr-dept.php")
+        # 2026-11-24: HR is a company HR department; Family Link (student
+        # management) lives on the Admission & Registrar dashboard.
+        dash = _read("admin/dashboards/admissions_registrar_dept.php")
         assert "famRematchBtn" in dash and "famQueueBadge" in dash
         assert "function runRematch(" in _read("admin/js/family_link.js")
 
@@ -251,14 +253,16 @@ class TestFamilyLinkUI:
     """Pins for the Family Link UI/UX overhaul (light-theme workspace, member-profile navigation, new API)."""
 
     def _section(self):
-        ui = _read("admin/dashboards/hr-dept.php")
+        # 2026-11-24: Family Link moved to the Admission & Registrar
+        # dashboard with the rest of student management.
+        ui = _read("admin/dashboards/admissions_registrar_dept.php")
         start = ui.index('id="section-family"')
         end = ui.index('id="famDrawer"')
         return ui[start:end]
 
     def test_section_is_light_theme(self):
         sec = self._section()
-        # The HR content area is white: dark-theme utility classes render invisible (user-reported bug).
+        # The dashboard content area is white: dark-theme utility classes render invisible (user-reported bug).
         for bad in ("text-white", "bg-white/5", "bg-white/10", "text-slate-300", "border-white/10"):
             assert bad not in sec, bad
         assert "famStats" in sec and "famSearch" in sec and "famFilters" in sec
@@ -272,7 +276,7 @@ class TestFamilyLinkUI:
         assert "famRematchBtn" in sec and "famLastRematch" in sec and "famLinkAllBtn" in sec
 
     def test_drawer_and_scripts_wired(self):
-        ui = _read("admin/dashboards/hr-dept.php")
+        ui = _read("admin/dashboards/admissions_registrar_dept.php")
         assert 'id="famDrawer"' in ui and "z-index:70" in ui.split('.fam-drawer{')[1].split('}')[0]
         assert "admin/js/family_link.js?v=" in ui and "admin/js/member_nav.js?v=" in ui
         assert "FamilyLink.init()" in ui  # navigateToSection('family') hook
@@ -299,7 +303,9 @@ class TestFamilyLinkUI:
         assert "location.href = '/admin/info_manage_member.php" not in js  # never leave the dashboard
 
     def test_dashboards_embed_profile_and_hook_navigation(self):
-        for rel in ("admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php"):
+        # 2026-11-24: HR is a company HR department; the member sheet +
+        # navigation hooks live on the Admission & Registrar dashboard.
+        for rel in ("admin/dashboards/admissions_registrar_dept.php", "admin/dashboards/info-dept.php"):
             d = _read(rel)
             assert "info_manage_member.php?id=' + encodeURIComponent(id) + '&embed=1" in d, rel
             assert "MemberNav.afterLoad(id)" in d, rel

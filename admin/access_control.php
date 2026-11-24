@@ -172,7 +172,10 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'info_get_archived_members.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
             'print_member.php'  => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept'],
             'info-dept.php'     => ['super_admin', 'school_admin', 'info_dept'],
-            'hr-dept.php'       => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            // HR is a company HR department (2026-11-24): the staff
+            // dashboard is HR-owned. Admission & Registrar keeps its own
+            // dashboard for the member domain — full separation.
+            'hr-dept.php'       => ['super_admin', 'school_admin', 'hr_dept'],
             'admissions_registrar_dept.php' => ['super_admin', 'school_admin', 'admissions_registrar_dept'],
 
             // ---- Groups / associations ----
@@ -262,6 +265,10 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // not in Admission & Registrar — see the separation document).
             'api_hr_attendance.php' => ['super_admin', 'school_admin', 'hr_dept'],
             'api_hr_reports.php' => ['super_admin', 'school_admin', 'hr_dept'],
+            // ---- HR staff domain (2026-11-24, sql/099): employee roster,
+            // staff attendance register, and staff ID cards. HR-owned only. ----
+            'api_hr_staff.php' => ['super_admin', 'school_admin', 'hr_dept'],
+            'api_hr_staff_attendance.php' => ['super_admin', 'school_admin', 'hr_dept'],
             // Shared attendance analytics (Education): Info + HR analyse, admins refresh.
             'api_info_analytics.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
             'api_info_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
@@ -273,6 +280,7 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // ---- ID cards ----
             'view_id_card.php'     => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
             'generate_id_card.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'view_staff_id_card.php' => ['super_admin', 'school_admin', 'hr_dept'],
             'preview.php'          => ['super_admin', 'school_admin'],
 
             // ---- Dashboards (also protected by dashboards/.htaccess) ----

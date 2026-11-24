@@ -8,13 +8,14 @@ import '../../widgets/feature_tile.dart';
 import '../../widgets/notification_bell_button.dart';
 import '../attendance_warnings/attendance_warnings_screen.dart';
 
-/// HR department home — RETIRED ATTENDANCE (2026-10-07).
+/// HR department home — company HR (2026-11-24).
 ///
-/// HR no longer takes or reviews attendance: the department reads
-/// Education attendance reports on the school web
-/// dashboard instead. The mobile review inbox is gone with the
-/// workflow it reviewed; this home stays for login, profile and
-/// notifications.
+/// HR is now a real human-resources department: the employee roster,
+/// the staff attendance register, staff ID cards and staff
+/// registration all live on the school web HR dashboard
+/// (HR → Staff / Attendance / ID Cards). This mobile home stays for
+/// login, profile and notifications, plus the shared Education
+/// attendance warnings the department reads.
 class HrDeptHomeScreen extends StatefulWidget {
   const HrDeptHomeScreen({super.key});
 
@@ -68,20 +69,21 @@ class _HrDeptHomeScreenState extends State<HrDeptHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Icon(Icons.insights_outlined, color: AppTheme.primary),
+                  Icon(Icons.badge_outlined, color: AppTheme.primary),
                   const SizedBox(width: 10),
                   const Expanded(
-                    child: Text('Attendance reports moved to the dashboard',
+                    child: Text('Employee management is on the web HR dashboard',
                         style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700)),
                   ),
                 ]),
                 const SizedBox(height: 10),
                 Text(
-                  'HR no longer takes or reviews attendance. '
-                  'attendance reports from the Education '
-                  'department are on the school web dashboard '
-                  '(HR → Attendance Reports). Everything recorded before '
-                  'the change stays saved and readable there.',
+                  'HR is now a full human-resources department. The '
+                  'employee roster, the staff attendance register, '
+                  'staff ID cards and staff registration live on the '
+                  'school web HR dashboard (HR → Staff, Attendance, '
+                  'ID Cards). Education attendance warnings and reports '
+                  'still show up here and on that dashboard.',
                   style: TextStyle(fontSize: 12.5, height: 1.55, color: AppTheme.textSecondary),
                 ),
               ],

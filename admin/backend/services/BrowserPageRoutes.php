@@ -27,6 +27,7 @@ final class BrowserPageRoutes
         '/admin/users' => '/admin/users.php',
         '/admin/system-health' => '/admin/system_health.php',
         '/admin/id_cards/card' => '/admin/id_cards/view_id_card.php',
+        '/admin/id_cards/staff-card' => '/admin/id_cards/view_staff_id_card.php',
         '/admin/id_cards/preview' => '/admin/id_cards/preview.php',
         '/monitor/dashboard' => '/monitor/index.php',
         '/admin/dashboards/school' => '/admin/dashboards/school_admin.php',

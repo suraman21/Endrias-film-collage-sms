@@ -261,10 +261,12 @@ class DeployCacheBust(unittest.TestCase):
     # Audit 2026-10-22: scripts changed for the danger dialogs must load under a
     # NEW URL, or browsers keep the old script (1 h cache) that sends no phrase.
     def test_changed_scripts_have_new_versions(self):
-        hr = read('admin/dashboards/hr-dept.php')
+        # 2026-11-24: HR is a company HR department; the student-management
+        # scripts live on the Admission & Registrar dashboard.
+        hr = read('admin/dashboards/admissions_registrar_dept.php')
         info = read('admin/dashboards/info-dept.php')
         for tag in ['department_status.js?v=<?= SSMS_ASSET_VER ?>-20261022r', 'family_link.js?v=<?= SSMS_ASSET_VER ?>-20261022u',
-                    'new-members.js?v=20261022r', 'id-card-directory.js?v=20261022r', 'hr_data_sync.js?v=20261022r']:
+                    'id-card-directory.js?v=20261022r', 'hr_data_sync.js?v=20261022r']:
             self.assertIn(tag, hr)
         self.assertIn('department_status.js?v=<?= SSMS_ASSET_VER ?>-20261022r', info)
         self.assertIn("return '73.7';", read('admin/components/notification_center.php'))

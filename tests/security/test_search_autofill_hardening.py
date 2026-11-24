@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DASHBOARDS = [
     "admin/dashboards/edu_dept.php",
     "admin/dashboards/hr-dept.php",
+    "admin/dashboards/admissions_registrar_dept.php",
     "admin/dashboards/info-dept.php",
     "admin/dashboards/school_admin.php",
     "admin/dashboards/super-admin.php",
@@ -62,10 +63,12 @@ class SearchAutofillHardeningTests(unittest.TestCase):
             self.assertNotIn('autocomplete="nope"', source, rel)
 
     def test_id_card_and_attaker_search_use_search_type(self):
-        hr = self.sources["admin/dashboards/hr-dept.php"]
+        # 2026-11-24: HR is a company HR department; the student ID-card
+        # search lives on the Admission & Registrar dashboard.
+        hr = self.sources["admin/dashboards/admissions_registrar_dept.php"]
         info = self.sources["admin/dashboards/info-dept.php"]
         self.assertIn('type="search" inputmode="search" id="idCardMemberSearch"', hr)
-        # HR's taker modal was removed entirely with the HR attendance
+        # The taker modal was removed entirely with the HR attendance
         # retirement (2026-10-07); the ID-card search is the only
         # search-type input left on the page.
         self.assertEqual(1, hr.count('type="search" inputmode="search"'))
