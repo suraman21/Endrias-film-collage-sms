@@ -7,7 +7,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/backend/services/MemberFileService.php';
 
 requireAuth();
-if (!hasRole(['super_admin', 'school_admin', 'info_dept', 'hr_dept'])) {
+if (!hasRole(['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'])) {
     http_response_code(403);
     exit('Access denied.');
 }

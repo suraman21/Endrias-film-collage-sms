@@ -16,7 +16,7 @@ if (session_status() === PHP_SESSION_NONE) @session_start();
 // case the file is reached through a misnamed path.
 $userName = $_SESSION['admin_full_name'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $role = (string)($_SESSION['admin_role'] ?? '');
-$canImport = in_array($role, ['super_admin','school_admin','info_dept','hr_dept','photo_importer'], true);
+$canImport = in_array($role, ['super_admin','school_admin','info_dept','hr_dept','admissions_registrar_dept','photo_importer'], true);
 if (!$canImport) { http_response_code(403); exit('Access denied.'); }
 
 $schoolName = defined('SCHOOL_NAME_SHORT') ? SCHOOL_NAME_SHORT : 'FKSS';

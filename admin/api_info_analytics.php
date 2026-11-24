@@ -63,7 +63,7 @@ $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
 // Read-only analytics: Information + HR departments + admins. No other role.
 // (HR analyses Education attendance since 2026-10-18; it never writes.)
-if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
+if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'], true)) {
     http_response_code(403);
     info_an_respond(['status' => 'error', 'message' => 'You do not have permission to view analytics.']);
 }

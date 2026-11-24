@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $role = $_SESSION['admin_role'] ?? '';
-if (empty($_SESSION['admin_id']) || !in_array($role, ['super_admin', 'hr_dept'], true)) {
+if (empty($_SESSION['admin_id']) || !in_array($role, ['super_admin', 'hr_dept', 'admissions_registrar_dept'], true)) {
     import_json(['success' => false, 'message' => 'Access denied.'], 403);
 }
 

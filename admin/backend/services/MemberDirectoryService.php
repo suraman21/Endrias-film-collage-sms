@@ -20,8 +20,8 @@ final class MemberDirectoryService
     public const DEFAULT_PAGE_SIZE = 50;
     public const MAX_PAGE_SIZE = 200;
 
-    private const PRIVILEGED_ROLES = ['super_admin', 'school_admin', 'info_dept', 'hr_dept'];
-    private const ID_CARD_ROLES = ['super_admin', 'school_admin', 'hr_dept'];
+    private const PRIVILEGED_ROLES = ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'];
+    private const ID_CARD_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'];
 
     private const FULL_COLUMNS = [
         'id', 'member_code', 'registration_type', 'member_type', 'status',

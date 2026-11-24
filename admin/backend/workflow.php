@@ -37,8 +37,8 @@ $DEPT_ROLES = \App\Services\NotificationCenterService::ROLE_LABELS;
 $NOTIFICATION_MATRIX = [
     'failure_alert' => ['super_admin'],
     'member_registered' => ['super_admin', 'school_admin', 'edu_dept'],
-    'member_eligible_permanent' => ['hr_dept', 'super_admin', 'school_admin'],
-    'member_promoted' => ['hr_dept', 'super_admin', 'school_admin'],
+    'member_eligible_permanent' => ['hr_dept', 'admissions_registrar_dept', 'super_admin', 'school_admin'],
+    'member_promoted' => ['hr_dept', 'admissions_registrar_dept', 'super_admin', 'school_admin'],
     'member_updated' => ['super_admin', 'school_admin'],
     'member_archived' => ['super_admin', 'school_admin', 'edu_dept', 'finance_dept'],
     'member_restored' => ['super_admin', 'school_admin', 'edu_dept'],
@@ -50,7 +50,7 @@ $NOTIFICATION_MATRIX = [
     // only — never School Admin / Super Admin. Produced by
     // AttendanceWarningService (direct insert, same table); listed here so the
     // matrix stays the single reference of who may receive which type.
-    'attendance_warning' => ['edu_dept', 'hr_dept', 'info_dept'],
+    'attendance_warning' => ['edu_dept', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
     'document_shared' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept'],
     'task_assigned' => [], // Specific to target
 ];

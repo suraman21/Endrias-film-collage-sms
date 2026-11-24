@@ -52,7 +52,7 @@ final class AssessmentFollowupService
     ];
 
     /** Roles that may READ the queue (web + mobile). */
-    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'];
+    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'];
     /** Roles that may decide / record make-up attempts (teachers only inside their assignment). */
     public const WRITE_ROLES = ['edu_dept', 'teacher'];
 

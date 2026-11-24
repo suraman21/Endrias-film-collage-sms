@@ -21,7 +21,7 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 // two analysing departments. Read-only — this endpoint never writes members.
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
-if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
+if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'], true)) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'You do not have permission to view member analytics.']);
     exit;

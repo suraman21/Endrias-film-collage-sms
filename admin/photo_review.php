@@ -14,7 +14,7 @@ if (session_status() === PHP_SESSION_NONE) @session_start();
 // access_control.php auto-runs auth + role gating on include.
 $userName = $_SESSION['admin_full_name'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $role = (string)($_SESSION['admin_role'] ?? '');
-$canDecide = in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_importer'], true);
+$canDecide = in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_importer'], true);
 if (!$canDecide) { http_response_code(403); exit('Access denied.'); }
 
 $schoolName = defined('SCHOOL_NAME_SHORT') ? SCHOOL_NAME_SHORT : 'FKSS';

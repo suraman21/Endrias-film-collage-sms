@@ -29,7 +29,7 @@ class SchoolCalendarService
     /** Writer roles for holidays + Day Offs (owner decision 5). */
     public const WRITE_ROLES = ['edu_dept'];
     /** Roles that see date statuses in attendance UIs. */
-    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'attendance_taker', 'hr_dept', 'info_dept'];
+    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'attendance_taker', 'hr_dept', 'admissions_registrar_dept', 'info_dept'];
 
     private static bool $strictPreparationRead = false;
     private static ?bool $tablesReady = null;

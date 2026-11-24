@@ -26,7 +26,7 @@ use App\Services\PhotoUploadService;
 header('Content-Type: application/json; charset=utf-8');
 
 $role = (string)($_SESSION['admin_role'] ?? '');
-$allowed = ['super_admin','school_admin','info_dept','hr_dept','photo_importer'];
+$allowed = ['super_admin','school_admin','info_dept','hr_dept','admissions_registrar_dept','photo_importer'];
 if (!in_array($role, $allowed, true)) {
     jsonOut(['status'=>'error','message'=>'Access denied.'], 403);
     exit;

@@ -41,8 +41,8 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
 
-const DS_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'];
-const DS_WRITE_ROLES = ['hr_dept', 'info_dept'];
+const DS_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'];
+const DS_WRITE_ROLES = ['hr_dept', 'admissions_registrar_dept', 'info_dept'];
 if (!in_array($role, DS_READ_ROLES, true)) {
     $fail(403, 'You do not have permission to use this page.');
 }
