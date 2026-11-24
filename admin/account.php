@@ -83,7 +83,7 @@ ob_start();
 
             <dl class="account-facts">
                 <div><dt>Email</dt><dd id="summaryEmail">—</dd></div>
-                <div><dt>Member since</dt><dd id="summaryCreated">—</dd></div>
+                <div><dt>Student since</dt><dd id="summaryCreated">—</dd></div>
                 <div><dt>Last login</dt><dd id="summaryLastLogin">—</dd></div>
             </dl>
 

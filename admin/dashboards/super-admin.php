@@ -43,7 +43,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && session_status() === PHP_
 }
 
 // Initialize variables
-$totalUsers = $totalMembers = $activeMembers = $pendingRegistrations = 0;
+$totalUsers = $totalMembers = $activeMembers = 0;
 $dbStatus = 'Unknown';
 $dbSize = '0 KB';
 $phpVersion = phpversion();
@@ -80,12 +80,11 @@ if (isset($conn)) {
     $r = $conn->query("SELECT COUNT(*) as cnt FROM users");
     if ($r) $totalUsers = (int)$r->fetch_assoc()['cnt'];
     
-    $r = $conn->query("SELECT COUNT(*) as total, SUM(status='active') as active, SUM(registration_type='waiting') as pending FROM members WHERE status != 'archived'");
+    $r = $conn->query("SELECT COUNT(*) as total, SUM(status='active') as active FROM members WHERE status != 'archived'");
     if ($r) {
         $row = $r->fetch_assoc();
         $totalMembers = (int)($row['total'] ?? 0);
         $activeMembers = (int)($row['active'] ?? 0);
-        $pendingRegistrations = (int)($row['pending'] ?? 0);
     }
     
     // information_schema on shared hosting can take seconds. Overview
@@ -698,15 +697,14 @@ if (!in_array($activeSection, $saAllowedSections, true)) {
             <!-- OVERVIEW -->
             <section id="section-overview" class="section <?= $activeSection === 'overview' ? 'active' : '' ?>"<?= $activeSection === 'overview' ? '' : ' hidden' ?>>
                 <div class="sec-header"><h2 class="sec-title"><i class="fa-solid fa-gauge-high"></i> Overview</h2><p class="sec-desc">System statistics and quick actions</p></div>
-                <div class="grid-4" style="margin-bottom:1rem">
+                <div class="grid-3" style="margin-bottom:1rem">
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Users</div><div class="stat-icon" style="background:rgba(34,197,94,.15);color:#4ade80"><i class="fa-solid fa-user-shield"></i></div></div><div class="stat-value"><?= $totalUsers ?></div><div class="stat-label">Admin accounts</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Members</div><div class="stat-icon" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-users"></i></div></div><div class="stat-value"><?= $totalMembers ?></div><div class="stat-label">Students</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Students</div><div class="stat-icon" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-users"></i></div></div><div class="stat-value"><?= $totalMembers ?></div><div class="stat-label">Enrolled</div></div>
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Active</div><div class="stat-icon" style="background:rgba(16,185,129,.15);color:#34d399"><i class="fa-solid fa-user-check"></i></div></div><div class="stat-value"><?= $activeMembers ?></div><div class="stat-label">Active now</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Pending</div><div class="stat-icon" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fa-solid fa-hourglass-half"></i></div></div><div class="stat-value"><?= $pendingRegistrations ?></div><div class="stat-label">Waiting</div></div>
                 </div>
                 <?php if ($testSeedEnabled): ?>
                 <div class="card" id="testSeedCard" style="margin-bottom:1rem;border:1px solid rgba(240,192,0,.35);background:rgba(96,0,0,.18)">
-                    <h3 class="card-title"><i class="fa-solid fa-vial" style="color:#F0C000"></i> Practice members (full system test)</h3>
+                    <h3 class="card-title"><i class="fa-solid fa-vial" style="color:#F0C000"></i> Practice students (full system test)</h3>
                     <p style="font-size:.8rem;color:#cbd5e1;margin:.35rem 0 .75rem">
                         <?= (int)($testSeedInfo['loaded'] ?? 0) ?> of <?= (int)($testSeedInfo['expected'] ?? 224) ?> practice children are on the website.
                         They are marked <strong>TEST-FKSS</strong> so we can delete only them when you finish.

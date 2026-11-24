@@ -39,7 +39,7 @@
         var heading = node('div', 'flex items-start justify-between gap-2');
         var identity = node('div');
         identity.appendChild(node('h4', 'font-bold text-slate-800 text-sm truncate', [member.student_name, member.father_name].filter(Boolean).join(' ') || 'Unnamed'));
-        identity.appendChild(node('p', 'text-xs text-slate-500 mt-0.5', (member.member_code || 'No ID') + ' • ' + (member.current_section || member.age_group || '—')));
+        identity.appendChild(node('p', 'text-xs text-slate-500 mt-0.5', (member.member_code || 'No ID')));
         heading.appendChild(identity);
         heading.appendChild(node('span', 'px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-bold flex-shrink-0', 'ARCHIVED'));
         content.appendChild(heading);

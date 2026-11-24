@@ -15,10 +15,8 @@
     var filterMap = {
         memberSearchInput: 'q',
         filterRegistrationType: 'registration_type',
-        filterMemberType: 'member_type',
         filterStatus: 'status',
-        filterGender: 'gender',
-        filterAgeGroup: 'age_group'
+        filterGender: 'gender'
     };
 
     function text(v) { return v == null ? '' : String(v); }
@@ -52,14 +50,14 @@
         // #
         row.appendChild(td(String(rowCounter), 'px-3 py-2 text-slate-400'));
 
-        // Member name + tier
+        // Student name + tier
         var name = [text(member.student_name), text(member.father_name)].filter(Boolean).join(' ');
         var tier = member.membership_tier === 'temporary' ?
             '<span class="text-[9px] text-amber-600 font-semibold">Temporary</span>' :
             '<span class="text-[9px] text-emerald-600 font-semibold">Permanent</span>';
         row.appendChild(td(
             '<div class="font-semibold text-slate-800">' + esc(name) + '</div>' +
-            '<div class="text-[10px] text-slate-500">' + esc(member.age_group ? sectionLabel(member.age_group) : '') + ' · ' + tier + '</div>'
+            '<div class="text-[10px] text-slate-500">' + tier + '</div>'
         ));
 
         // Code
@@ -68,16 +66,10 @@
         // Reg type
         row.appendChild(td('<span class="capitalize text-[10px]">' + esc(text(member.registration_type)) + '</span>'));
 
-        // Member type
-        row.appendChild(td('<span class="capitalize text-[10px]">' + esc(text(member.member_type)) + '</span>'));
-
         // Gender
         var gender = member.gender === 'male' ? '♂' : member.gender === 'female' ? '♀' : '—';
         var genderColor = member.gender === 'male' ? 'text-blue-500' : 'text-pink-500';
         row.appendChild(td('<span class="' + genderColor + ' text-xs">' + gender + '</span>'));
-
-        // Section
-        row.appendChild(td('<span class="text-[10px]">' + esc(sectionLabel(member.age_group)) + '</span>'));
 
         // Status
         // P1: canonical status chip (shared with manage/new-members lists + PHP badges).
@@ -98,7 +90,7 @@
         editBtn.type = 'button';
         // P6: emerald = primary row action (icon-only dense variant for the 11-column table).
         editBtn.className = 'p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition';
-        editBtn.title = 'Edit member';
+        editBtn.title = 'Edit student';
         editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square text-xs"></i>';
         editBtn.addEventListener('click', function () {
             if (typeof window.openManageSheet === 'function') window.openManageSheet(id);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Universal Sidebar Profile & Account Component
- * Sunday School Management System (FKSS / WBWS)
+ * School Management System
  *
  * Provides standardized, rock-solid profile navigation across all 12 web dashboards
  * in both Desktop sidebar and Mobile responsive layouts.

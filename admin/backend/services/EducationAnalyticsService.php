@@ -3,7 +3,7 @@
  * ============================================================================
  * Education Analytics, Reporting & Intelligence Service (Production-Grade)
  * ============================================================================
- * Centralized business intelligence engine for Sunday School Education Dept.
+ * Centralized business intelligence engine for the Education Dept.
  *
  * Responsibilities:
  * - Aggregates school-wide academic & attendance metrics across all classes.
@@ -13,7 +13,7 @@
  * - Compiles student triage rosters for pastoral & academic intervention.
  * - Generates publication-ready 5-page Executive PDF briefs and 4-sheet Excel workbooks.
  *
- * @author Sunday School Management System (FKSS / WBWS)
+ * @author School Management System
  * @version 1.0.0 (2026 Production Build)
  * ============================================================================
  */
@@ -666,7 +666,7 @@ table.rpt-tbl tr:nth-child(even){background:#fafafa}
     <span style="font-size:10px;font-weight:normal;color:#64748b">Directorial Overview</span>
   </div>
   <p style="margin:0 0 12px;font-size:11px;line-height:1.5;color:#334155">
-    This executive intelligence packet synthesizes the academic progression, attendance regularities, and curriculum delivery status across all registered classes in the Sunday School.
+    This executive intelligence packet synthesizes the academic progression, attendance regularities, and curriculum delivery status across all registered classes in the school.
     The student body maintains a collective grade mean of <strong><?= number_format((float)($stats['avg_grade'] ?? 0), 1) ?>%</strong> with <strong><?= $stats['high_achievers'] ?? 0 ?></strong> students meeting high achievement criteria ($\ge 85\%$ score and $\ge 80\%$ attendance).
     Faculty assessment governance demonstrates a <strong><?= $governance['delivery_rate'] ?? 0 ?>%</strong> exam delivery rate, with <strong><?= $governance['missing_count'] ?? 0 ?></strong> planned assessment submissions currently pending completion from assigned teachers.
   </p>
@@ -996,7 +996,7 @@ table.rpt-tbl tr:nth-child(even){background:#fafafa}
         $s3 = $spreadsheet->createSheet();
         $s3->setTitle('Student Performance');
 
-        $headers3 = ['#', 'Student Name', 'Father Name', 'Christian Name', 'Member Code', 'Class', 'Gender', 'Grade Average (%)', 'Letter Grade', 'Total Obtained', 'Total Max', 'Attendance Rate (%)', 'Present', 'Absent', 'Late', 'Excused', 'Total Days'];
+        $headers3 = ['#', 'Student Name', 'Father Name', 'Christian Name', 'Student Code', 'Class', 'Gender', 'Grade Average (%)', 'Letter Grade', 'Total Obtained', 'Total Max', 'Attendance Rate (%)', 'Present', 'Absent', 'Late', 'Excused', 'Total Days'];
         foreach ($headers3 as $idx => $h) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($idx + 1);
             $s3->setCellValue($colLetter . '1', $h);
@@ -1034,7 +1034,7 @@ table.rpt-tbl tr:nth-child(even){background:#fafafa}
         $s4 = $spreadsheet->createSheet();
         $s4->setTitle('Priority Triage Roster');
 
-        $headers4 = ['#', 'Student Name', 'Father Name', 'Member Code', 'Class', 'Gender', 'Grade Average (%)', 'Attendance Rate (%)', 'Severity Level', 'Identified Risk Factors'];
+        $headers4 = ['#', 'Student Name', 'Father Name', 'Student Code', 'Class', 'Gender', 'Grade Average (%)', 'Attendance Rate (%)', 'Severity Level', 'Identified Risk Factors'];
         foreach ($headers4 as $idx => $h) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($idx + 1);
             $s4->setCellValue($colLetter . '1', $h);

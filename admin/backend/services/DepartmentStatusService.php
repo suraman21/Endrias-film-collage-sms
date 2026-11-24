@@ -320,14 +320,14 @@ final class DepartmentStatusService
         try {
             $lock = $conn->prepare('SELECT id, status FROM members WHERE id = ? FOR UPDATE');
             if (!$lock) {
-                throw new \RuntimeException('Member lookup failed.');
+                throw new \RuntimeException('Student lookup failed.');
             }
             $lock->bind_param('i', $memberId);
             $lock->execute();
             $member = $lock->get_result()->fetch_assoc();
             $lock->close();
             if (!$member) {
-                throw new \DomainException('Member not found.');
+                throw new \DomainException('Student not found.');
             }
             if ((string)$member['status'] === 'archived') {
                 throw new \DomainException('Archived members cannot change department status.');

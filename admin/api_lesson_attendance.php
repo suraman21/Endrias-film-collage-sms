@@ -174,7 +174,7 @@ switch ($action) {
     case 'member':
         $memberId = (int)($_GET['member_id'] ?? 0);
         if ($memberId <= 0) {
-            $fail(400, 'Member is required.');
+            $fail(400, 'Student is required.');
         }
         if (!$available) {
             $ok($meta + ['items' => [], 'total' => 0]);
@@ -202,7 +202,7 @@ switch ($action) {
         $member = $ms->get_result()->fetch_assoc();
         $ms->close();
         if (!$member) {
-            $fail(404, 'Member not found.');
+            $fail(404, 'Student not found.');
         }
         $ok($meta + ['member' => ['id' => (int)$member['id'], 'name' => trim((string)$member['student_name'] . ' ' . (string)$member['father_name']), 'member_code' => (string)$member['member_code']]]
             + LessonAttendanceService::memberHistory($conn, $memberId, (int)($_GET['limit'] ?? 100), (int)($_GET['offset'] ?? 0), $scopeIds));

@@ -1,6 +1,6 @@
-# FKSS — Sunday School Management System
+# Endrias Film College — School Management System
 
-FKSS is the management system of the Felege Kidusan Sunday School. It replaces spreadsheets and paper records for member registration, education (classes, assessments, report cards, timetable, attendance), communications and reporting. Staff use a PHP web application; teachers and department staff also use an Android app built with Flutter that works offline and synchronises with the server.
+Endrias Film College (EFC) is the management system of Endrias Film College, an Ethiopian film college in Addis Ababa. It replaces spreadsheets and paper records for member registration, education (classes, assessments, report cards, timetable, attendance), communications and reporting. Staff use a PHP web application; teachers and department staff also use an Android app built with Flutter that works offline and synchronises with the server.
 
 > **Source baseline (reviewed 2026-10-28):** development main `7209278`. All eight baseline checks passed; the earlier 79-skip failure is resolved. A later change needs its own checks. See [Testing and CI](docs/DEVELOPMENT_AND_TESTING.md#3-current-ci-status).
 > - Delivery is development main → development-server update → owner acceptance → separately authorized production promotion. A merge does not prove deployment. See [Operations](docs/OPERATIONS.md).

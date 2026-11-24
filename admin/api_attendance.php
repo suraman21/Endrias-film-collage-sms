@@ -311,7 +311,7 @@ switch ($action) {
         $memberResult = $stmt->get_result()->fetch_assoc();
         
         if (!$memberResult) {
-            echo json_encode(['status' => 'error', 'message' => "Member code '$memberCode' not found or not enrolled in this class."]);
+            echo json_encode(['status' => 'error', 'message' => "Student code '$memberCode' not found or not enrolled in this class."]);
             exit;
         }
         

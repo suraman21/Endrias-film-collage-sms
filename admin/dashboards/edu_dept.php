@@ -331,7 +331,7 @@ main{padding:0!important;background:#fff!important;color:#1a0a0a!important}
     /* Teachers (7 cols) */
     body.page-edu #teacherBody td:nth-child(2)::before { content: 'Username'; }
     body.page-edu #teacherBody td:nth-child(3)::before { content: 'Email'; }
-    body.page-edu #teacherBody td:nth-child(4)::before { content: 'Member Link'; }
+    body.page-edu #teacherBody td:nth-child(4)::before { content: 'Student Link'; }
     body.page-edu #teacherBody td:nth-child(5)::before { content: 'Assignments'; }
     body.page-edu #teacherBody td:nth-child(6)::before { content: 'Status'; }
     /* Classes (8 cols — P71 merged Section+Age Group) — Order is a corner
@@ -610,7 +610,7 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <select id="teacherSort" class="inp" style="max-width:160px" onchange="_teacherPager?loadTeachers():renderTeachers()"><option value="name">Sort: Name</option><option value="username">Sort: Username</option><option value="classes">Sort: Most classes</option></select>
 <button class="btn btn-o btn-xs" onclick="exportTeachers()"><i class="fa-solid fa-download"></i> Excel</button>
 </div></div>
-<div class="crd" style="margin-top:.75rem"><div class="tw"><table class="dt"><thead><tr><th>Teacher</th><th>Username</th><th>Email</th><th>Member Link</th><th>Assignments</th><th>Status</th><th class="text-center">Actions</th></tr></thead><tbody id="teacherBody"><tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div><div id="teacherPager" style="padding:0 .75rem"></div></div>
+<div class="crd" style="margin-top:.75rem"><div class="tw"><table class="dt"><thead><tr><th>Teacher</th><th>Username</th><th>Email</th><th>Student Link</th><th>Assignments</th><th>Status</th><th class="text-center">Actions</th></tr></thead><tbody id="teacherBody"><tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div><div id="teacherPager" style="padding:0 .75rem"></div></div>
 </div>
 
 <!-- ═══ CLASSES ═══ -->
@@ -697,8 +697,6 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div><label class="lbl">Search</label><input type="text" id="rosterQ" class="inp" placeholder="Name or code…" autocomplete="off" oninput="debounceRoster()"></div>
 <div><label class="lbl">Class</label><select id="rosterClass" class="inp" onchange="loadRoster(1)"><option value="">All classes</option><option value="unassigned">Unassigned</option><?php foreach ($classes as $c): ?><option value="<?= (int)$c['id'] ?>"><?= e($c['class_name']) ?></option><?php endforeach; ?></select></div>
 <div><label class="lbl">Gender</label><select id="rosterGender" class="inp" onchange="loadRoster(1)"><option value="">All</option><option value="male">Male</option><option value="female">Female</option></select></div>
-<div><label class="lbl">Type</label><select id="rosterType" class="inp" onchange="loadRoster(1)"><option value="">All types</option><option value="regular">Regular</option><option value="special_regular">Special</option><option value="honorary">Honorary</option></select></div>
-<div><label class="lbl">Age</label><select id="rosterAge" class="inp" onchange="loadRoster(1)"><option value="">All</option><?php foreach (\App\Services\MemberCategory::sections() as $eduCode => $eduSec): ?><option value="<?= $eduCode ?>"><?= e($eduSec['am']) ?> (<?= e($eduSec['ages']) ?>)</option><?php endforeach; ?></select></div>
 <div><label class="lbl">Sort</label><select id="rosterSort" class="inp" onchange="loadRoster(1)"><option value="name">Name</option><option value="code">Code</option><option value="class">Class</option></select></div>
 </div>
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:end;margin-top:.65rem">
@@ -715,10 +713,8 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div class="crd" style="padding:1rem">
 <div id="unassignedFormAlert" class="form-alert" role="alert"></div>
 <div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:.5rem;align-items:end;flex-wrap:wrap">
-<div><label class="lbl">Search Members</label><input autocomplete="off" type="text" id="unassignedSearch" class="inp" placeholder="Search by name or code..." oninput="debounceUnassigned()"></div>
+<div><label class="lbl">Search Students</label><input autocomplete="off" type="text" id="unassignedSearch" class="inp" placeholder="Search by name or code..." oninput="debounceUnassigned()"></div>
 <div><label class="lbl">Gender</label><select id="unassignedGender" class="inp" onchange="loadUnassigned()"><option value="">All</option><option value="male">Male ♂</option><option value="female">Female ♀</option></select></div>
-<div><label class="lbl">Type</label><select id="unassignedMType" class="inp" onchange="loadUnassigned()"><option value="">All Types</option><option value="regular">Regular</option><option value="special_regular">Special</option><option value="honorary">Honorary</option></select></div>
-<div><label class="lbl">Age Group</label><select id="unassignedAge" class="inp" onchange="loadUnassigned()"><option value="">All</option><?php foreach (\App\Services\MemberCategory::sections() as $eduCode => $eduSec): ?><option value="<?= $eduCode ?>"><?= e($eduSec['am']) ?> (<?= e($eduSec['ages']) ?>)</option><?php endforeach; ?></select></div>
 <div><label class="lbl">Enroll To</label><select id="unassignedTargetClass" class="inp"><option value="">— Class —</option><?php foreach ($classes as $c): ?><option value="<?= $c['id'] ?>"><?= e($c['class_name']) ?></option><?php endforeach; ?></select></div>
 <button class="btn btn-s" onclick="bulkEnrollSelected()"><i class="fa-solid fa-users"></i> Enroll Selected</button>
 </div>
@@ -1221,8 +1217,8 @@ Classes with low curriculum recorded percentages indicate pending exam score sub
 <!-- ═══ REPORT CARDS ═══ -->
 <div id="sec-reportcards" class="sec">
 <div class="rc-print-banner" id="rcPrintBanner">
-<div class="am">ፈለገ ቅዱሳን ሰንበት ትምህርት ቤት</div>
-<div class="en">Felege Kidusan Sunday School · Class report</div>
+<div class="am"><?= SCHOOL_NAME_AMHARIC ?></div>
+<div class="en"><?= SCHOOL_NAME ?> · Class report</div>
 <div class="en" id="rcPrintBannerMeta"></div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
@@ -1560,7 +1556,7 @@ renderProfileTabSection('sec-profile', 'sec');
 <label style="font-size:.75rem;color:#64748b"><input type="checkbox" id="bulkSelectAll" onchange="toggleBulkAll()"> Select all on this list</label>
 <span id="bulkCount" style="font-size:.7rem;color:#7c3aed;font-weight:600">0 selected</span>
 </div>
-<div id="bulkCandidateList" style="max-height:280px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;padding:.5rem"><div style="padding:1rem;text-align:center;color:#94a3b8">Open this window to load unassigned members.</div></div>
+<div id="bulkCandidateList" style="max-height:280px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;padding:.5rem"><div style="padding:1rem;text-align:center;color:#94a3b8">Open this window to load unassigned students.</div></div>
 <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem">
 <button type="button" class="btn btn-o" onclick="closeModal('bulkEnrollModal')">Cancel</button>
 <button type="button" class="btn btn-p" id="bulkEnrollBtn" onclick="executeBulkEnroll()"><i class="fa-solid fa-check-double"></i> Enroll selected</button>
@@ -1996,7 +1992,7 @@ function searchTeacherMembers(q){
         try{
             const d=await getAPI('/admin/api_teachers.php?action=search_members_for_teacher&q='+encodeURIComponent(q.trim()));
             const m=d.members||[];
-            if(!m.length){box.innerHTML='<div class="t-hit" style="cursor:default;color:#94a3b8">No matching members</div>';box.style.display='block';return;}
+            if(!m.length){box.innerHTML='<div class="t-hit" style="cursor:default;color:#94a3b8">No matching students</div>';box.style.display='block';return;}
             box.innerHTML=m.map(x=>{
                 const nm=((x.student_name||'')+' '+(x.father_name||'')).trim();
                 const safeNm=nm.replace(/['"\\]/g,'');
@@ -2238,11 +2234,6 @@ document.getElementById('subjectForm')?.addEventListener('submit',async function
 });
 
 // ═══ MEMBER TYPE HELPERS ═══
-function mtBadge(type) {
-    if(type==='special_regular') return '<span class="ch" style="background:#fef3c7;color:#92400e;font-size:.5rem;padding:1px 5px">ልዩ Special</span>';
-    if(type==='honorary') return '<span class="ch" style="background:#ede9fe;color:#5b21b6;font-size:.5rem;padding:1px 5px">ክብር Honorary</span>';
-    return '<span class="ch" style="background:#ecfdf5;color:#065f46;font-size:.5rem;padding:1px 5px">መደበኛ Regular</span>';
-}
 function roleTags(m) {
     let t='';
     if(m.is_teacher==1) t+='<span class="ch ch-w" style="font-size:.45rem;padding:0 4px">Teacher</span> ';
@@ -2275,16 +2266,12 @@ function _rosterUrl(page, perPage){
     const q=document.getElementById('rosterQ')?.value||'';
     const cls=document.getElementById('rosterClass')?.value||'';
     const gender=document.getElementById('rosterGender')?.value||'';
-    const type=document.getElementById('rosterType')?.value||'';
-    const age=document.getElementById('rosterAge')?.value||'';
     const sort=document.getElementById('rosterSort')?.value||'name';
     let url=`/admin/api_education.php?action=roster&page=${page}&per_page=${perPage||25}&sort=${encodeURIComponent(sort)}`;
     if(q) url+=`&q=${encodeURIComponent(q)}`;
     if(cls==='unassigned') url+='&unassigned=1';
     else if(cls) url+=`&class_id=${encodeURIComponent(cls)}`;
     if(gender) url+=`&gender=${encodeURIComponent(gender)}`;
-    if(type) url+=`&member_type=${encodeURIComponent(type)}`;
-    if(age) url+=`&age_group=${encodeURIComponent(age)}`;
     return url;
 }
 function _rosterRow(x){
@@ -2293,9 +2280,7 @@ function _rosterRow(x){
                 <td><div style="font-weight:600">${esc(x.student_name||'')} ${x.baptismal_name?'<span style="font-size:.65rem;color:#94a3b8">('+esc(x.baptismal_name)+')</span>':''}</div><div style="font-size:.65rem;color:#64748b">${esc(x.father_name||'')} ${esc(x.grandfather_name||'')}</div></td>
                 <td><span class="ch ch-i">${esc(x.member_code||'—')}</span></td>
                 <td class="amharic">${x.class_name?esc(x.class_name)+' <span style="font-size:.6rem;color:#94a3b8">'+esc(x.class_code||'')+'</span>':'<span style="color:#f59e0b">Unassigned</span>'}</td>
-                <td>${mtBadge(x.member_type)}</td>
                 <td>${x.gender==='male'?'♂':'♀'}</td>
-                <td>${esc(x.age||x.age_group||'—')}</td>
             </tr>`;
 }
 async function _rosterFetch(page, perPage){
@@ -2322,7 +2307,7 @@ function _rosterRender(rows, append){
             </div>
             ${rows.length?`<div class="tw"><table class="dt"><thead><tr>
                 <th><input type="checkbox" aria-label="Select all shown" onchange="document.querySelectorAll('.roster-cb').forEach(c=>c.checked=this.checked)"></th>
-                <th>Student</th><th>Code</th><th>Class</th><th>Type</th><th>Gender</th><th>Age</th>
+                <th>Student</th><th>Code</th><th>Class</th><th>Gender</th>
             </tr></thead><tbody id="rosterBody">${rows.map(_rosterRow).join('')}</tbody></table></div>`:'<div style="padding:1.5rem;text-align:center;color:#94a3b8">No matching students</div>'}
         </div>`;
 }
@@ -2397,11 +2382,11 @@ function liveSearchEnroll(q) {
         try { const d=await getAPI(url);
         if(d.status==='success' && d.members.length) {
             res.innerHTML=d.members.map(m=>`<div style="padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:.8rem;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background='#faf5ff'" onmouseout="this.style.background=''" onclick="selectEnrollMember(${m.id},'${esc(m.student_name)} ${esc(m.father_name)}','${esc(m.member_code||'')}')">
-                <div><strong>${esc(m.student_name)}</strong> <span style="color:#64748b">${esc(m.father_name)}</span> ${mtBadge(m.member_type)} ${m.is_teacher?'<span class="ch ch-w" style="font-size:.45rem">Teacher</span>':''}</div>
+                <div><strong>${esc(m.student_name)}</strong> <span style="color:#64748b">${esc(m.father_name)}</span> ${m.is_teacher?'<span class="ch ch-w" style="font-size:.45rem">Teacher</span>':''}</div>
                 <div style="display:flex;gap:.3rem;align-items:center"><span class="ch ch-i" style="font-size:.55rem">${esc(m.member_code||'')}</span><span style="color:${m.gender==='male'?'#2563eb':'#ec4899'};font-size:.7rem">${m.gender==='male'?'♂':'♀'}</span></div>
             </div>`).join('');
             res.style.display='block';
-        } else { res.innerHTML='<div style="padding:.75rem;text-align:center;color:#94a3b8;font-size:.8rem">No matching members found</div>'; res.style.display='block'; }
+        } else { res.innerHTML='<div style="padding:.75rem;text-align:center;color:#94a3b8;font-size:.8rem">No matching students found</div>'; res.style.display='block'; }
         } catch(e){ res.style.display='none'; }
     }, 300);
 }
@@ -2430,12 +2415,10 @@ async function loadEnrolled() {
     if(area) area.innerHTML='<div class="crd" style="padding:1.75rem;text-align:center;color:#64748b"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed"></i><div style="margin-top:.55rem;font-size:.8rem">Loading students…</div></div>';
     const search=document.getElementById('enrollFilterSearch')?.value||'';
     const gender=document.getElementById('enrollFilterGender')?.value||'';
-    const memberType=document.getElementById('enrollFilterMType')?.value||'';
     const sort=document.getElementById('enrollFilterSort')?.value||'name';
     let url=`/admin/api_education.php?action=get_enrolled_students&class_id=${cid}`;
     if(search) url+=`&search=${encodeURIComponent(search)}`;
     if(gender) url+=`&gender=${gender}`;
-    if(memberType) url+=`&member_type=${memberType}`;
     if(sort) url+=`&sort=${sort}`;
     try {
         const d=await getAPI(url);
@@ -2463,19 +2446,16 @@ async function loadEnrolled() {
                 <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                     <input autocomplete="off" type="text" id="enrollFilterSearch" class="inp" style="max-width:140px;padding:.35rem .6rem;font-size:.75rem" placeholder="Filter..." value="${esc(search)}" oninput="loadEnrolled()">
                     <select id="enrollFilterGender" class="inp" style="max-width:85px;padding:.35rem .5rem;font-size:.75rem" onchange="loadEnrolled()"><option value="">Gender</option><option value="male" ${gender==='male'?'selected':''}>Male</option><option value="female" ${gender==='female'?'selected':''}>Female</option></select>
-                    <select id="enrollFilterMType" class="inp" style="max-width:110px;padding:.35rem .5rem;font-size:.75rem" onchange="loadEnrolled()"><option value="">All Types</option><option value="regular" ${memberType==='regular'?'selected':''}>Regular</option><option value="special_regular" ${memberType==='special_regular'?'selected':''}>Special</option><option value="honorary" ${memberType==='honorary'?'selected':''}>Honorary</option></select>
                     <select id="enrollFilterSort" class="inp" style="max-width:100px;padding:.35rem .5rem;font-size:.75rem" onchange="loadEnrolled()"><option value="name" ${sort==='name'?'selected':''}>Name</option><option value="code" ${sort==='code'?'selected':''}>Code</option><option value="date" ${sort==='date'?'selected':''}>Date</option><option value="gender" ${sort==='gender'?'selected':''}>Gender</option></select>
                     <button class="btn btn-o btn-xs" onclick="exportEnrolled()"><i class="fa-solid fa-download"></i></button>
                 </div>
             </div>
             ${yearNote}
-            ${s.length?`<div class="tw"><table class="dt"><thead><tr><th>#</th><th>Student Name</th><th>Code</th><th>Type</th><th>Gender</th><th>Age</th><th>Enrolled</th><th style="text-align:center">Actions</th></tr></thead><tbody>${s.map((x,i)=>`<tr>
+            ${s.length?`<div class="tw"><table class="dt"><thead><tr><th>#</th><th>Student Name</th><th>Code</th><th>Gender</th><th>Enrolled</th><th style="text-align:center">Actions</th></tr></thead><tbody>${s.map((x,i)=>`<tr>
                 <td>${i+1}</td>
                 <td><div style="font-weight:600">${esc(x.student_name)}${x.baptismal_name?' <span style="font-size:.6rem;color:#94a3b8">('+esc(x.baptismal_name)+')</span>':''}</div><div style="font-size:.65rem;color:#64748b">${esc(x.father_name||'')} ${esc(x.grandfather_name||'')}</div><div style="margin-top:2px">${roleTags(x)}</div></td>
                 <td><span class="ch ch-i">${esc(x.member_code||'')}</span></td>
-                <td>${mtBadge(x.member_type)}</td>
                 <td>${x.gender==='male'?'<span style="color:#2563eb">♂</span>':'<span style="color:#ec4899">♀</span>'}</td>
-                <td style="font-size:.75rem">${x.age||'—'}</td>
                 <td style="font-size:.7rem;color:#64748b">${fD(x.enrolled_at)}</td>
                 <td style="text-align:center;white-space:nowrap">
                     <button class="ab" style="background:#dbeafe;color:#2563eb" onclick="openTransfer(${x.enrollment_id},'${esc(x.student_name)} ${esc(x.father_name)}','${esc(x.member_code||'')}')" title="Transfer"><i class="fa-solid fa-exchange-alt"></i></button>
@@ -2521,17 +2501,13 @@ async function loadUnassigned(page=1) {
     const area=document.getElementById('unassignedArea');
     if(!area) return;
     _unassignedPage=Math.max(1,page|0);
-    area.innerHTML='<div class="crd" style="padding:1.5rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading unassigned members...</div>';
+    area.innerHTML='<div class="crd" style="padding:1.5rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading unassigned students...</div>';
     const search=document.getElementById('unassignedSearch').value;
     const gender=document.getElementById('unassignedGender').value;
-    const memberType=document.getElementById('unassignedMType').value;
-    const age=document.getElementById('unassignedAge').value;
     const offset=(_unassignedPage-1)*_unassignedLimit;
     let url=`/admin/api_education.php?action=get_unassigned_members&offset=${offset}&limit=${_unassignedLimit}`;
     if(search) url+=`&search=${encodeURIComponent(search)}`;
     if(gender) url+=`&gender=${gender}`;
-    if(memberType) url+=`&member_type=${memberType}`;
-    if(age) url+=`&age_group=${age}`;
     try { const d=await getAPI(url);
     if(d.status==='success') {
         const m=d.members||[], total=d.total||0, pages=Math.max(1,Math.ceil(total/_unassignedLimit));
@@ -2544,19 +2520,17 @@ async function loadUnassigned(page=1) {
         area.innerHTML=`
         <div class="crd">
             <div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-weight:700;font-size:.9rem"><i class="fa-solid fa-user-xmark" style="color:#ef4444"></i> ${total} unassigned member${total!==1?'s':''}</span>
+                <span style="font-weight:700;font-size:.9rem"><i class="fa-solid fa-user-xmark" style="color:#ef4444"></i> ${total} unassigned student${total!==1?'s':''}</span>
                 <span style="font-size:.7rem;color:#64748b">Not enrolled in any class this year</span>
             </div>
             ${selBar}
-            ${m.length?`<div class="tw"><table class="dt"><thead><tr><th><input type="checkbox" ${allOnPage?'checked':''} onchange="toggleBulkPage(this.checked)"></th><th>Name</th><th>Code</th><th>Type</th><th>Gender</th><th>Age Group</th><th>Phone</th></tr></thead><tbody>${m.map(x=>`<tr>
+            ${m.length?`<div class="tw"><table class="dt"><thead><tr><th><input type="checkbox" ${allOnPage?'checked':''} onchange="toggleBulkPage(this.checked)"></th><th>Name</th><th>Code</th><th>Gender</th><th>Phone</th></tr></thead><tbody>${m.map(x=>`<tr>
                 <td><input type="checkbox" class="unassigned-cb" value="${x.id}" ${_bulkSelected.has(parseInt(x.id,10))?'checked':''} onchange="unassignedToggle(this)"></td>
                 <td><div style="font-weight:600">${esc(x.student_name)} <span style="color:#64748b;font-weight:400">${esc(x.father_name)}</span></div><div style="margin-top:1px">${roleTags(x)}</div></td>
                 <td><span class="ch ch-i">${esc(x.member_code||'—')}</span></td>
-                <td>${mtBadge(x.member_type)}</td>
                 <td>${x.gender==='male'?'<span style="color:#2563eb">♂ Male</span>':'<span style="color:#ec4899">♀ Female</span>'}</td>
-                <td style="font-size:.75rem">${esc(eduSecLabel(x.age_group))}</td>
                 <td style="font-size:.75rem">${esc(x.phone_number||x.phone_primary||'—')}</td>
-            </tr>`).join('')}</tbody></table></div>`:'<div style="padding:2rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-check-circle" style="font-size:2rem;color:#059669;display:block;margin-bottom:.5rem"></i>All members are enrolled!</div>'}
+            </tr>`).join('')}</tbody></table></div>`:'<div style="padding:2rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-check-circle" style="font-size:2rem;color:#059669;display:block;margin-bottom:.5rem"></i>All students are enrolled!</div>'}
             ${unassignedFooter(from,to,total,pages)}
         </div>`;
         updateBulkCount();
@@ -2625,7 +2599,7 @@ async function loadBulkCandidates(page=1) {
     const list=document.getElementById('bulkCandidateList');
     if(!list) return;
     _bulkModalPage=Math.max(1,page|0);
-    list.innerHTML='<div style="padding:1rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading unassigned members…</div>';
+    list.innerHTML='<div style="padding:1rem;text-align:center;color:#94a3b8"><i class="fa-solid fa-spinner fa-spin"></i> Loading unassigned students…</div>';
     const search=document.getElementById('bulkSearch')?.value||'';
     const filter=document.getElementById('bulkFilter')?.value||'';
     const limit=50, offset=(_bulkModalPage-1)*limit;
@@ -2646,7 +2620,7 @@ async function loadBulkCandidates(page=1) {
         const allOn=m.length>0&&m.every(x=>_bulkModalSelected.has(parseInt(x.id,10)));
         list.innerHTML=(m.length?m.map(x=>`<label style="display:flex;align-items:center;gap:.6rem;padding:.4rem .5rem;border-bottom:1px solid #f8fafc;cursor:pointer;font-size:.8rem" onmouseover="this.style.background='#faf5ff'" onmouseout="this.style.background=''">
             <input type="checkbox" class="bulk-cb" value="${x.id}" ${_bulkModalSelected.has(parseInt(x.id,10))?'checked':''} onchange="bulkModalToggle(this)">
-            <div style="flex:1"><strong>${esc(x.student_name)}</strong> ${esc(x.father_name||'')} <span class="ch ch-i" style="font-size:.5rem">${esc(x.member_code||'')}</span> ${mtBadge(x.member_type)} ${roleTags(x)}</div>
+            <div style="flex:1"><strong>${esc(x.student_name)}</strong> ${esc(x.father_name||'')} <span class="ch ch-i" style="font-size:.5rem">${esc(x.member_code||'')}</span> ${roleTags(x)}</div>
             <span style="color:${x.gender==='male'?'#2563eb':'#ec4899'};font-size:.7rem">${x.gender==='male'?'♂':'♀'}</span>
         </label>`).join(''):'<div style="padding:1rem;text-align:center;color:#94a3b8">No unassigned members match this search.</div>')
         +(total>0?`<div style="padding:.45rem .5rem;font-size:.68rem;color:#94a3b8">Showing ${from}–${to} of ${total} unassigned member(s).</div>`:'')

@@ -127,7 +127,7 @@
           options: [['active', 'Active'], ['inactive', 'Inactive'], ['graduated', 'Graduated']]
         }
       ],
-      sorts: [['name', 'Name'], ['code', 'Member code'], ['class', 'Class']],
+      sorts: [['name', 'Name'], ['code', 'Student code'], ['class', 'Class']],
       defaultSort: 'name',
       columns: [
         {
@@ -189,7 +189,7 @@
           }
         },
         {
-          head: 'Member record',
+          head: 'Student record',
           // A login without a members row is legal, so say so plainly rather
           // than rendering an empty cell that looks like a loading failure.
           cell: function (r) {

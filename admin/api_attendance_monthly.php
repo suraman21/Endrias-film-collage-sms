@@ -190,7 +190,7 @@ switch ($action) {
 
         $format = (string)($_GET['format'] ?? 'xlsx') === 'csv' ? 'csv' : 'xlsx';
         $groupLabel = $department === 'edu' ? 'Class' : 'Section';
-        $headers = ['#', 'Member code', 'Name', 'Gender', $groupLabel, 'Dept. status', 'Sessions', 'Present', 'Late', 'Excused', 'Absent',
+        $headers = ['#', 'Student code', 'Name', 'Gender', $groupLabel, 'Dept. status', 'Sessions', 'Present', 'Late', 'Excused', 'Absent',
             'Present (weighted)', 'Rate %', 'Band', 'Below ' . rtrim(rtrim(number_format((float)$summary['threshold'], 2, '.', ''), '0'), '.') . '%', 'Open warnings'];
         $bandLabels = ['excellent' => 'Excellent', 'good' => 'Good', 'fair' => 'Fair', 'low' => 'Low', 'no_data' => 'No data'];
         $lines = [];

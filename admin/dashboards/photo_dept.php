@@ -530,7 +530,7 @@ $DEPT_SUB_AM  = 'የአባላት ፎቶ ማስተዳደሪያ · ከስልክ �
                     <?php else: ?>
                     <div class="overflow-x-auto">
                     <table class="pd-table">
-                        <thead><tr><th>Member</th><th>Field</th><th>Operator</th><th>When</th></tr></thead>
+                        <thead><tr><th>Student</th><th>Field</th><th>Operator</th><th>When</th></tr></thead>
                         <tbody>
                         <?php foreach ($pendingCandidates as $c): ?>
                             <tr>

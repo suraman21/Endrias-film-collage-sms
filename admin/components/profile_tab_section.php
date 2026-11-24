@@ -1,6 +1,6 @@
 <?php
 /**
- * Universal Profile Tab Component — Sunday School Management System (FKSS / WBWS)
+ * Universal Profile Tab Component — School Management System
  *
  * Renders an in-dashboard profile view & editor styled strictly with the official
  * SSMS Brand Design System: Clean background, Deep Maroon accents (#800000), and Warm Gold/Yellow (#f59e0b).
@@ -113,7 +113,7 @@ if (!function_exists('renderProfileTabSection')) {
 
                     <div style="border-top:1px solid var(--pt-border);border-bottom:1px solid var(--pt-border);padding:.75rem 0;margin-bottom:1.25rem;text-align:left;font-size:.78rem">
                         <div style="display:flex;justify-content:space-between;padding:.35rem 0"><span style="color:var(--pt-muted)">Email</span><span id="tabProfileFactEmail" style="font-weight:600;color:var(--pt-text)">—</span></div>
-                        <div style="display:flex;justify-content:space-between;padding:.35rem 0"><span style="color:var(--pt-muted)">Member Since</span><span id="tabProfileFactCreated" style="font-weight:600;color:var(--pt-text)">—</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:.35rem 0"><span style="color:var(--pt-muted)">Student Since</span><span id="tabProfileFactCreated" style="font-weight:600;color:var(--pt-text)">—</span></div>
                         <div style="display:flex;justify-content:space-between;padding:.35rem 0"><span style="color:var(--pt-muted)">Last Login</span><span id="tabProfileFactLogin" style="font-weight:600;color:var(--pt-text)">—</span></div>
                     </div>
 

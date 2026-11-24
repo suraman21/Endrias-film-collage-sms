@@ -58,14 +58,14 @@ final class MemberRegistrationPolicy
         $registrationType = ($tierEarly === 'temporary')
             ? 'waiting'
             : self::enum(
-                trim((string)($input['registration_type'] ?? 'waiting')),
+                trim((string)($input['registration_type'] ?? 'direct')),
                 self::REGISTRATION_TYPES,
                 'registration type'
             );
         // PROMOTION CONSISTENCY (2026-11-18, mirror of M8 above): a
         // permanent tier is never waiting type. permanent+waiting can only
-        // arrive from a legacy row, the HR form's untouched default, or a
-        // crafted POST — coerce to direct. Transfer keeps its background.
+        // arrive from a legacy row or a crafted POST — coerce to direct.
+        // The waiting-list UI was removed 2026-11-24; default type is direct.
         if ($tierEarly === 'permanent' && $registrationType === 'waiting') {
             $registrationType = 'direct';
         }

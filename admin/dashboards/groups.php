@@ -1,6 +1,6 @@
 <?php
 /**
- * Groups/Associations Management - School Sunday School
+ * Groups/Associations Management
  * Comprehensive group registration, leadership, and membership management
  */
 require_once __DIR__ . '/../config.php';
@@ -216,7 +216,7 @@ if (isset($conn)) {
                     <h3 class="card-title"><i class="fa-solid fa-layer-group text-emerald-600"></i> Registered Groups</h3>
                     <div class="flex gap-2">
                         <button class="tab-btn active" onclick="filterGroups('all')">All</button>
-                        <button class="tab-btn" onclick="filterGroups('ss')">Sunday School</button>
+                        <button class="tab-btn" onclick="filterGroups('ss')">Film College</button>
                         <button class="tab-btn" onclick="filterGroups('parish')">Parish</button>
                     </div>
                 </div>
@@ -244,7 +244,7 @@ if (isset($conn)) {
                                 <td><strong><?= e($g['group_name']) ?></strong></td>
                                 <td>
                                     <?php if ($g['is_under_sunday_school']): ?>
-                                    <span class="badge badge-green"><i class="fa-solid fa-church mr-1"></i> Sunday School</span>
+                                    <span class="badge badge-green"><i class="fa-solid fa-clapperboard mr-1"></i> Film College</span>
                                     <?php else: ?>
                                     <span class="badge badge-purple"><i class="fa-solid fa-building-columns mr-1"></i> Parish</span>
                                     <?php endif; ?>
@@ -576,7 +576,7 @@ if (isset($conn)) {
             
             let html = `
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Category</div><div class="font-semibold">${g.is_under_sunday_school ? 'Sunday School' : 'Parish'}</div></div>
+                    <div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Category</div><div class="font-semibold">${g.is_under_sunday_school ? 'Film College' : 'Parish'}</div></div>
                     <div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Est. Year</div><div class="font-semibold">${g.established_year || '-'}</div></div>
                     <div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Initial (M/F)</div><div class="font-semibold">${g.founding_male} / ${g.founding_female}</div></div>
                     <div class="p-3 bg-emerald-50 rounded-lg"><div class="text-xs text-emerald-600">Current (M/F)</div><div class="font-semibold text-emerald-700">${g.current_male} / ${g.current_female}</div></div>

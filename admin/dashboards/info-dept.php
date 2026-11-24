@@ -512,7 +512,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                     <i class="fa-solid fa-pen-to-square text-sm"></i>
                 </span>
-                <span class="font-semibold">Manage Members</span>
+                <span class="font-semibold">Manage Students</span>
             </button>
 
             <button data-section="archive"
@@ -520,7 +520,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                     <i class="fa-regular fa-folder-open text-sm"></i>
                 </span>
-                <span class="font-semibold">Old Members Archive</span>
+                <span class="font-semibold">Old Students Archive</span>
             </button>
 
                 
@@ -692,7 +692,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                     <div class="stat-card p-3 sm:p-4 flex flex-col justify-between" style="background:linear-gradient(135deg, <?= THEME_PRIMARY_DARK ?>, <?= THEME_PRIMARY ?>, <?= THEME_PRIMARY_LIGHT ?>)">
                         <div class="flex items-center justify-between">
-                            <div class="text-xs uppercase tracking-wide">Total Members</div>
+                            <div class="text-xs uppercase tracking-wide">Total Students</div>
                             <div class="w-8 h-8 rounded-2xl bg-white/15 flex items-center justify-center">
                                 <i class="fa-solid fa-users text-sm"></i>
                             </div>
@@ -701,30 +701,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <?= $totalMembers ?>
                         </div>
                         <div class="mt-1 text-[11px] sm:text-xs opacity-80">
-                            Active (non-archived) members
-                        </div>
-                    </div>
-
-                    <div class="stat-card p-3 sm:p-4 flex flex-col justify-between" style="background:linear-gradient(135deg, <?= THEME_ACCENT ?>, <?= THEME_ACCENT_2 ?>)">
-                        <div class="flex items-center justify-between">
-                            <div class="text-xs uppercase tracking-wide">By Member Type</div>
-                            <div class="w-8 h-8 rounded-2xl bg-white/15 flex items-center justify-center">
-                                <i class="fa-solid fa-tags text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-2 text-[11px] sm:text-xs space-y-0.5">
-                            <div class="flex justify-between">
-                                <span>መደበኛ</span>
-                                <span class="font-semibold"><?= $memberTypeRegular ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>ልዩ መደበኛ</span>
-                                <span class="font-semibold"><?= $memberTypeSpecial ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>የክብር አባላት</span>
-                                <span class="font-semibold"><?= $memberTypeHonor ?></span>
-                            </div>
+                            Active (non-archived) students
                         </div>
                     </div>
 
@@ -803,51 +780,13 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         <div class="flex items-center justify-between mb-2">
                             <div>
                                 <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                                    <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                        <i class="fa-solid fa-child"></i>
-                                    </span>
-                                    <span>Section Distribution (by current section)</span>
-                                </h3>
-                                <p class="text-[11px] text-slate-500">
-                                    Live numbers from members table
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-3 mt-3">
-                            <div class="p-3 rounded-2xl bg-sky-50 border border-sky-100">
-                                <div class="text-[11px] text-sky-700 amharic-text">ህጻናት (A)</div>
-                                <div class="text-xl font-bold text-sky-900 mt-1"><?= $sectionCounts['7_13'] ?></div>
-                                <div class="text-[11px] text-sky-500">Section</div>
-                            </div>
-                            <div class="p-3 rounded-2xl bg-amber-50 border border-amber-100">
-                                <div class="text-[11px] text-amber-700 amharic-text">ማዕከላዊያን (B)</div>
-                                <div class="text-xl font-bold text-amber-900 mt-1"><?= $sectionCounts['14_17'] ?></div>
-                                <div class="text-[11px] text-amber-500">Section</div>
-                            </div>
-                            <div class="p-3 rounded-2xl bg-rose-50 border border-rose-100">
-                                <div class="text-[11px] text-rose-700 amharic-text">ወጣቶች (C)</div>
-                                <div class="text-xl font-bold text-rose-900 mt-1"><?= $sectionCounts['18_plus'] ?></div>
-                                <div class="text-[11px] text-rose-500">Section</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 h-28">
-                            <canvas id="sectionChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="panel p-4 mobile-card">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
                                     <span class="w-7 h-7 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600">
                                         <i class="fa-solid fa-venus-mars"></i>
                                     </span>
                                     <span>Gender Distribution</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500">
-                                    Visual balance of male vs female members
+                                    Visual balance of male vs female students
                                 </p>
                             </div>
                         </div>
@@ -878,7 +817,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                                     <i class="fa-solid fa-clock-rotate-left"></i>
                                 </span>
-                                <span>Recent Members</span>
+                                <span>Recent Students</span>
                             </h3>
                             <p class="text-[11px] text-slate-500">
                                 Latest registrations handled by the Information Department
@@ -894,9 +833,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <thead>
                             <tr class="text-left text-slate-500 border-b border-slate-200">
                                 <th class="py-2 px-2 sm:px-3">Name</th>
-                                <th class="py-2 px-2 sm:px-3">Type</th>
                                 <th class="py-2 px-2 sm:px-3">Status</th>
-                                <th class="py-2 px-2 sm:px-3">Section</th>
                                 <th class="py-2 px-2 sm:px-3">Registered</th>
                             </tr>
                             </thead>
@@ -904,9 +841,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <?php foreach ($recentMembers as $row): ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="py-2 px-2 sm:px-3 amharic-text"><?= e($row['name']) ?></td>
-                                    <td class="py-2 px-2 sm:px-3 amharic-text">
-                                        <?= e($row['type']) ?>
-                                    </td>
                                     <td class="py-2 px-2 sm:px-3">
                                         <?php
                                         $statusChip = 'badge-active';
@@ -914,9 +848,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                         if (stripos($row['status'], 'Inactive') !== false) $statusChip = 'badge-inactive';
                                         ?>
                                         <span class="chip <?= $statusChip ?>"><?= e($row['status']) ?></span>
-                                    </td>
-                                    <td class="py-2 px-2 sm:px-3 amharic-text">
-                                        <?= esc($row['section'], '—') ?>
                                     </td>
                                     <td class="py-2 px-2 sm:px-3">
                                         <?= e($row['date'] ?? '') ?>
@@ -937,7 +868,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                                 <i class="fa-solid fa-users"></i>
                             </span>
-                            <span>All Members</span>
+                            <span>All Students</span>
                         </h3>
                         <p class="text-[11px] text-slate-500">
                             Full registration and management for Information Department members.
@@ -952,10 +883,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <div>
                             <h2 class="text-base md:text-lg font-semibold text-slate-900 amharic-text">
- ሁሉም አባላት (All Members)
+ ሁሉም ተማሪዎዽ (All Students)
                             </h2>
                             <p class="text-xs text-slate-500">
-                                Showing latest <?php echo count($membersList); ?> members. Use search and filters to narrow down.
+                                Showing latest <?php echo count($membersList); ?> students. Use search and filters to narrow down.
                             </p>
                         </div>
 
@@ -972,18 +903,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <select id="filterRegistrationType"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">Reg. Type (All)</option>
-                                    <option value="waiting">Waiting</option>
                                     <option value="transfer">Transfer</option>
                                     <option value="direct">Direct</option>
                                 </select>
 
-                                <select id="filterMemberType"
-                                        class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                    <option value="">Member Type (All)</option>
-                                    <option value="regular">Regular</option>
-                                    <option value="special_regular">Special Regular</option>
-                                    <option value="honorary">Honorary</option>
-                                </select>
 
                                 <select id="filterStatus"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -1001,11 +924,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <option value="female">Female</option>
                                 </select>
 
-                                <select id="filterAgeGroup"
-                                        class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                    <option value="">Section (All)</option>
-                                    <?php foreach (\App\Services\MemberCategory::sections() as $infoCode => $infoSec): ?><option value="<?= $infoCode ?>"><?= e($infoSec['am']) ?> (<?= e($infoSec['letter']) ?>)</option><?php endforeach; ?>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -1016,12 +934,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <thead class="bg-slate-50 border-b border-slate-100">
                                 <tr class="text-[11px] text-slate-500">
                                     <th class="px-3 py-2 text-left">#</th>
-                                    <th class="px-3 py-2 text-left">Member</th>
+                                    <th class="px-3 py-2 text-left">Student</th>
                                     <th class="px-3 py-2 text-left">Code</th>
                                     <th class="px-3 py-2 text-left">Reg. Type</th>
-                                    <th class="px-3 py-2 text-left">Member Type</th>
                                     <th class="px-3 py-2 text-left">Gender</th>
-                                    <th class="px-3 py-2 text-left">Section</th>
                                     <th class="px-3 py-2 text-left">Status</th>
                                     <th class="px-3 py-2 text-left">Phone</th>
                                     <th class="px-3 py-2 text-left">Location</th>
@@ -1052,10 +968,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                                         <i class="fa-solid fa-user-pen text-xs"></i>
                                     </span>
-                                    <span>Register New Member</span>
+                                    <span>Register New Student</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500">
-                                    Live logic: Waiting has pending ID; Direct/Transfer auto-assign ID + card-ready.
+                                    Direct and Transfer registrations are assigned an ID and ID card immediately.
                                 </p>
                             </div>
                             <button type="button"
@@ -1072,15 +988,12 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <span class="w-6 h-6 rounded-lg bg-slate-200 flex items-center justify-center">
                                         <i class="fa-solid fa-barcode text-[10px]"></i>
                                     </span>
-                                    <span>Auto Member ID</span>
+                                    <span>Auto Student ID</span>
                                 </h4>
 
                                 <p class="text-[11px] text-slate-500 mb-1">
-                                    Next Member ID:
+                                    Next Student ID:
                                     <span id="nextMemberIdDisplay" class="font-semibold text-slate-800"><?= e($nextMemberCode) ?></span>
-                                </p>
-                                <p class="text-[10px] text-slate-400">
-                                    Waiting-list members will not get an ID until they complete 3 months.
                                 </p>
 
                                 <input type="hidden" name="student_id" id="studentIdField" value="">
@@ -1095,13 +1008,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 </h4>
 
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    <button type="button"
-                                            class="registration-type-btn w-full text-left px-3 py-2 rounded-xl border border-emerald-300 bg-white text-[11px] sm:text-xs"
-                                            data-registration-type="waiting"
-                                            onclick="selectRegistrationType('waiting', this)">
-                                        <div class="amharic-text text-[13px]">አዲስ ተመዝጋቢ</div>
-                                        <div class="text-[10px] text-slate-500">Waiting (list)</div>
-                                    </button>
 
                                     <button type="button"
                                             class="registration-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
@@ -1120,45 +1026,12 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     </button>
                                 </div>
 
-                                <input type="hidden" name="registration_type" id="registrationTypeField" value="waiting">
+                                <input type="hidden" name="registration_type" id="registrationTypeField" value="direct">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4">
-                                <h4 class="text-xs font-semibold text-emerald-900 mb-2 flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
-                                        <i class="fa-solid fa-user-tag text-[10px]"></i>
-                                    </span>
-                                    <span>Member Type *</span>
-                                </h4>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-emerald-300 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="regular"
-                                            onclick="selectMemberTypeFull('regular', this)">
-                                        <div class="amharic-text text-[13px]">መደበኛ</div>
-                                        <div class="text-[10px] text-slate-500">Regular</div>
-                                    </button>
-
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="special_regular"
-                                            onclick="selectMemberTypeFull('special_regular', this)">
-                                        <div class="amharic-text text-[13px]">ልዩ መደበኛ</div>
-                                        <div class="text-[10px] text-slate-500">Student + role</div>
-                                    </button>
-
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="honorary"
-                                            onclick="selectMemberTypeFull('honorary', this)">
-                                        <div class="amharic-text text-[13px]">የክብር አባላት</div>
-                                        <div class="text-[10px] text-slate-500">Honorary</div>
-                                    </button>
-                                </div>
-
                                 <input type="hidden" name="member_type" id="memberTypeFieldFull" value="regular">
                             </div>
 
@@ -1173,7 +1046,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Member Status
+                                            Student Status
                                         </label>
                                         <select name="status"
                                                 class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-emerald-200 focus:border-emerald-400">
@@ -1184,7 +1057,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     </div>
 
                                     <div class="text-[10px] text-slate-500 flex items-center">
-                                        <span>Section equals age group (auto from DOB).</span>
+                                        <span>Age group is derived automatically from date of birth.</span>
                                     </div>
                                 </div>
                             </div>
@@ -1196,7 +1069,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <span class="w-6 h-6 rounded-lg bg-blue-200 flex items-center justify-center">
                                     <i class="fa-solid fa-calendar-plus text-[10px]"></i>
                                 </span>
-                                <span>Original Registration Date (For Existing Members)</span>
+                                <span>Original Registration Date (Existing Students)</span>
                             </h4>
                             <p class="text-[10px] text-blue-700 mb-3">
                                 <i class="fa-solid fa-info-circle mr-1"></i>
@@ -1309,7 +1182,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     </div>
                                     <label class="text-[11px] text-emerald-700 cursor-pointer">
                                         <span class="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100">
-                                            Upload Member Photo
+                                            Upload Student Photo
                                         </span>
                                         <input type="file" name="student_photo" accept="image/*" class="hidden"
                                                onchange="previewImage(this, 'studentPhotoPreview', 'studentPhotoPlaceholder')">
@@ -1374,13 +1247,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Section (Auto)
-                                        </label>
-                                        <input type="text" id="sectionDisplay" readonly
-                                               class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 text-slate-700">
-                                        <input type="hidden" name="current_section" id="currentSectionField">
-                                        <input type="hidden" name="age_group" id="ageGroupField">
                                     </div>
 
                                     <div>
@@ -1450,7 +1316,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <span class="w-6 h-6 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
                                     <i class="fa-solid fa-location-dot"></i>
                                 </span>
-                                <span>Member Address</span>
+                                <span>Student Address</span>
                             </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
@@ -1727,7 +1593,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                         Signed Form
                                         <span class="text-red-500">*</span>
                                         <span class="block text-[10px] text-slate-400">
-                                            Required for all registration types except Waiting list.
+                                            Required for all registration types.
                                         </span>
                                     </label>
                                     <input type="file" name="doc_signed_form" id="docSignedFormField"
@@ -1739,7 +1605,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
 
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <p class="text-[11px] text-slate-500">
-                                *Required. Waiting-list: signed form optional; full ID + card only after 3 months (backend logic later).
+                                *Required fields.
                             </p>
                             <div class="flex gap-2 justify-end">
                                 <button type="button"
@@ -1749,7 +1615,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 </button>
                                 <button type="submit"
                                         class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow hover:bg-emerald-700 active:scale-95">
-                                    Save Member
+                                    Save Student
                                 </button>
                             </div>
                         </div>
@@ -1784,7 +1650,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             </div>
                             <select id="manageFilterType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                                 <option value="">All Registration Types</option>
-                                <option value="waiting">Waiting</option>
                                 <option value="direct">Direct</option>
                                 <option value="transfer">Transfer</option>
                             </select>
@@ -1794,12 +1659,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <option value="warning">Warning</option>
                                 <option value="inactive">Inactive</option>
                                 <option value="archived">Archived</option>
-                            </select>
-                            <select id="manageFilterMemberType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Member Types</option>
-                                <option value="regular">Regular</option>
-                                <option value="honorary">Honorary</option>
-                                <option value="special_regular">Special Regular</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1812,10 +1671,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 <option value="">All Cities</option>
                                 <option value="addis_ababa">Addis Ababa</option>
                                 <option value="oromia">Oromia</option>
-                            </select>
-                            <select id="manageFilterAgeGroup" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Age Groups</option>
-                                <?php foreach (\App\Services\MemberCategory::sections() as $infoCode => $infoSec): ?><option value="<?= $infoCode ?>"><?= e($infoSec['am']) ?> (<?= e($infoSec['letter']) ?>)</option><?php endforeach; ?>
                             </select>
                             <select id="manageFilterEducation" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                                 <option value="">All Education Levels</option>
@@ -1840,7 +1695,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-4 py-3 font-semibold">Member</th>
+                                    <th class="px-4 py-3 font-semibold">Student</th>
                                     <th class="px-4 py-3 font-semibold">Type</th>
                                     <th class="px-4 py-3 font-semibold">Status</th>
                                     <th class="px-4 py-3 font-semibold text-right">Actions</th>
@@ -1955,7 +1810,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <div class="flex gap-2 mb-5 overflow-x-auto hide-scrollbar pb-1">
                     <button onclick="showAttTab(this,'attOverview')" class="atab atab-on"><i class="fa-solid fa-chart-pie mr-1"></i>Overview</button>
                     <button onclick="showAttTab(this,'attDaily')" class="atab"><i class="fa-solid fa-calendar-day mr-1"></i>Daily Report</button>
-                    <button onclick="showAttTab(this,'attMember')" class="atab"><i class="fa-solid fa-user-clock mr-1"></i>Member Lookup</button>
+                    <button onclick="showAttTab(this,'attMember')" class="atab"><i class="fa-solid fa-user-clock mr-1"></i>Student Lookup</button>
                     <button onclick="showAttTab(this,'attRisk')" class="atab"><i class="fa-solid fa-triangle-exclamation mr-1"></i>At-Risk</button>
                     <button onclick="showAttTab(this,'attStatus')" class="atab"><i class="fa-solid fa-user-pen mr-1"></i>Status Mgmt</button>
                 </div>
@@ -2037,7 +1892,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <!-- ===== STATUS MANAGEMENT ===== -->
                 <div id="attStatus" class="att-pane" style="display:none">
                     <div class="panel p-4 mb-4">
-                        <h4 class="text-sm font-semibold text-slate-700 mb-1"><i class="fa-solid fa-user-pen mr-1 text-violet-500"></i>Update Member Status</h4>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1"><i class="fa-solid fa-user-pen mr-1 text-violet-500"></i>Update Student Status</h4>
                         <p class="text-[10px] text-slate-400 mb-3">Search for a member and update their status based on attendance patterns</p>
                         <div class="flex gap-2 mb-4">
                             <input autocomplete="off" type="text" id="attStatusSearch" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="Search member name, code, or phone..." onkeyup="if(event.key==='Enter')searchForStatus()">
@@ -2113,7 +1968,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 <option value="general">General (all departments)</option>
                                 <option value="classes">Class-based (Education)</option>
-                                <option value="member">Member-based (one member)</option>
+                                <option value="member">Student-based (one student)</option>
                                 <option value="full">Full analysis (combined)</option>
                             </select>
                         </div>
@@ -2125,7 +1980,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             </select>
                         </div>
                         <div id="pdfMemberWrap" style="display:none">
-                            <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Member</label>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Student</label>
                             <input autocomplete="off" type="search" inputmode="search" id="pdfMemberSearch"
                                    data-member-picker-target="pdfMemberId" data-member-picker-status="active"
                                    class="w-full px-3 py-2 mb-1 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
@@ -2159,8 +2014,8 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-users text-emerald-600 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">All Members</div>
-                                <div class="text-[10px] text-slate-500">Export full member list as CSV</div>
+                                <div class="font-semibold text-slate-800 text-sm">All Students</div>
+                                <div class="text-[10px] text-slate-500">Export full student list as CSV</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
@@ -2169,8 +2024,8 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-user-check text-blue-600 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">Active Members Only</div>
-                                <div class="text-[10px] text-slate-500">Active status members</div>
+                                <div class="font-semibold text-slate-800 text-sm">Active Students Only</div>
+                                <div class="text-[10px] text-slate-500">Active status students</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-blue-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
@@ -2180,26 +2035,16 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-500 text-lg"></i></div>
                             <div>
                                 <div class="font-semibold text-slate-800 text-sm">PDF Report</div>
-                                <div class="text-[10px] text-slate-500">Print-ready member list</div>
+                                <div class="text-[10px] text-slate-500">Print-ready student list</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-red-500 font-medium"><i class="fa-solid fa-print mr-1"></i>Open & Print</span></div>
-                    </a>
-                    <a href="/admin/export_pdf.php?format=csv&filter=waiting" class="panel p-4 hover:shadow-md transition block">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-amber-600 text-lg"></i></div>
-                            <div>
-                                <div class="font-semibold text-slate-800 text-sm">Waiting Members</div>
-                                <div class="text-[10px] text-slate-500">Registration type = waiting</div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-right"><span class="text-xs text-amber-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
                     </a>
                     <a href="/admin/export_pdf.php?format=csv&filter=no_id" class="panel p-4 hover:shadow-md transition block">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-id-card text-red-500 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">Members Without ID Card</div>
+                                <div class="font-semibold text-slate-800 text-sm">Students Without ID Card</div>
                                 <div class="text-[10px] text-slate-500">ID card not generated yet</div>
                             </div>
                         </div>
@@ -2210,7 +2055,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-word text-indigo-600 text-lg"></i></div>
                             <div>
                                 <div class="font-semibold text-slate-800 text-sm">Word Document</div>
-                                <div class="text-[10px] text-slate-500">All members as Word doc</div>
+                                <div class="text-[10px] text-slate-500">All students as Word doc</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-indigo-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download DOC</span></div>
@@ -2220,16 +2065,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 <!-- Summary Stats Report -->
                 <div class="panel p-4">
                     <h4 class="text-sm font-semibold text-slate-700 mb-3"><i class="fa-solid fa-chart-bar mr-1 text-blue-500"></i> Quick Summary Stats</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-center mb-4">
                         <div class="bg-emerald-50 p-3 rounded-xl"><div class="text-lg font-bold text-emerald-700"><?= $totalMembers ?></div><div class="text-[10px] text-emerald-600">Total Active</div></div>
                         <div class="bg-blue-50 p-3 rounded-xl"><div class="text-lg font-bold text-blue-700"><?= $genderCounts['male'] ?></div><div class="text-[10px] text-blue-600">Male</div></div>
                         <div class="bg-pink-50 p-3 rounded-xl"><div class="text-lg font-bold text-pink-700"><?= $genderCounts['female'] ?></div><div class="text-[10px] text-pink-600">Female</div></div>
-                        <div class="bg-amber-50 p-3 rounded-xl"><div class="text-lg font-bold text-amber-700"><?= $memberTypeWaiting ?></div><div class="text-[10px] text-amber-600">Waiting</div></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3 text-center">
-                        <div class="bg-sky-50 p-3 rounded-xl"><div class="text-lg font-bold text-sky-700"><?= $sectionCounts['7_13'] ?></div><div class="text-[10px] text-sky-600 amharic-text">ህጻናት (A)</div></div>
-                        <div class="bg-amber-50 p-3 rounded-xl"><div class="text-lg font-bold text-amber-700"><?= $sectionCounts['14_17'] ?></div><div class="text-[10px] text-amber-600 amharic-text">ማዕከላዊያን (B)</div></div>
-                        <div class="bg-rose-50 p-3 rounded-xl"><div class="text-lg font-bold text-rose-700"><?= $sectionCounts['18_plus'] ?></div><div class="text-[10px] text-rose-600 amharic-text">ወጣቶች (C)</div></div>
                     </div>
                 </div>
             </section>
@@ -2340,25 +2179,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                             <h4 class="font-semibold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-teal-500"></i> Registration Defaults</h4>
                             <div class="space-y-3">
                                 <div>
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Age Group</label>
-                                    <select id="defAgeGroup" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
-                                        <option value="">None (manual selection)</option>
-                                        <?php foreach (\App\Services\MemberCategory::sections() as $infoCode => $infoSec): ?><option value="<?= $infoCode ?>"><?= e($infoSec['am']) ?> (<?= e($infoSec['ages']) ?>)</option><?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Member Type</label>
-                                    <select id="defMemType" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
-                                        <option value="regular">Regular</option>
-                                        <option value="honorary">Honorary</option>
-                                    </select>
-                                </div>
-                                <div>
                                     <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Registration Type</label>
                                     <select id="defRegType" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
                                         <option value="direct">Direct</option>
                                         <option value="transfer">Transfer</option>
-                                        <option value="waiting">Waiting</option>
                                     </select>
                                 </div>
                             </div>
@@ -2429,7 +2253,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                 </a>
                                 <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-500"></i></div>
-                                    <div><div class="text-sm font-medium text-slate-700">Full PDF Report</div><div class="text-[10px] text-slate-400">Print-ready member list</div></div>
+                                    <div><div class="text-sm font-medium text-slate-700">Full PDF Report</div><div class="text-[10px] text-slate-400">Print-ready student list</div></div>
                                 </a>
                                 <div onclick="clearCache()" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-amber-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-broom text-amber-600"></i></div>
@@ -2544,7 +2368,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 text-[15px] font-semibold flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <span class="text-xl">✅</span>
-                <span id="memberSuccessToastText">Member registered successfully.</span>
+                <span id="memberSuccessToastText">Student registered successfully.</span>
             </div>
             <button type="button"
                     onclick="document.getElementById('memberSuccessToast').classList.add('hidden')"
@@ -2562,7 +2386,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         <div class="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-10">
             <div>
                 <div class="label-soft">Manage Member</div>
-                <div class="text-lg font-bold text-slate-800" id="manageSheetTitle">Member Details</div>
+                <div class="text-lg font-bold text-slate-800" id="manageSheetTitle">Student Details</div>
             </div>
             <button class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition" onclick="closeManageSheet()">
                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -2656,77 +2480,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         openManageSheet(memberParam);
         const cleanUrl = new URL(window.location); cleanUrl.searchParams.delete('member'); history.replaceState(null, '', cleanUrl);
     }
-
-    // Charts
-    document.addEventListener('DOMContentLoaded', () => {
-        const sectionCtx = document.getElementById('sectionChart').getContext('2d');
-        new Chart(sectionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['ህጻናት (A)', 'ማዕከላዊያን (B)', 'ወጣቶች (C)'],
-                datasets: [{
-                    data: [
-                        <?= (int)$sectionCounts['7_13'] ?>,
-                        <?= (int)$sectionCounts['14_17'] ?>,
-                        <?= (int)$sectionCounts['18_plus'] ?>
-                    ],
-                    backgroundColor: [
-                        'rgba(22,163,74,0.9)',
-                        'rgba(34,197,94,0.9)',
-                        'rgba(250,204,21,0.9)',
-                        'rgba(248,113,113,0.9)'
-                    ],
-                    borderRadius: 12,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {legend: {display: false}},
-                scales: {
-                    x: {
-                        grid: {display: false},
-                        ticks: {color: '#64748b', font: {size: 10}}
-                    },
-                    y: {
-                        grid: {color: '#e2e8f0'},
-                        ticks: {color: '#64748b', font: {size: 10}, precision: 0}
-                    }
-                }
-            }
-        });
-
-        const genderCtx = document.getElementById('genderChart').getContext('2d');
-        new Chart(genderCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Male', 'Female'],
-                datasets: [{
-                    data: [<?= (int)$genderCounts['male'] ?>, <?= (int)$genderCounts['female'] ?>],
-                    backgroundColor: ['rgba(59,130,246,0.9)', 'rgba(244,63,94,0.9)'],
-                    borderRadius: 12,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {legend: {display: false}},
-                scales: {
-                    x: {
-                        grid: {color: '#e2e8f0'},
-                        ticks: {color: '#64748b', font: {size: 10}, precision: 0}
-                    },
-                    y: {
-                        grid: {display: false},
-                        ticks: {color: '#64748b', font: {size: 10}}
-                    }
-                }
-            }
-        });
-    });
 
     // --- Member registration UI helpers ---
 
@@ -2836,9 +2589,9 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         if (!form) return;
         form.reset();
 
-        // Default registration type: waiting
-        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="waiting"]');
-        if (defaultRegBtn) selectRegistrationType('waiting', defaultRegBtn);
+        // Default registration type: direct
+        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
+        if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
         // Default member type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
@@ -2901,8 +2654,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         let age = currentYearEC - year;
         if (age < 0) age = 0;
 
-        // Age is informational only. Category (ህጻናት/ማዕከላዊያን/ወጣቶች) and
-        // section are assigned manually by staff — no automatic assignment.
+        // Age is informational only; the age group is derived server-side from the birth date.
         if (document.getElementById('ageDisplay')) document.getElementById('ageDisplay').value = age.toString();
         if (document.getElementById('ageField')) document.getElementById('ageField').value = age.toString();
     }
@@ -3054,9 +2806,9 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
 
     // Init defaults on load
     document.addEventListener('DOMContentLoaded', () => {
-        // Default registration type: waiting
-        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="waiting"]');
-        if (defaultRegBtn) selectRegistrationType('waiting', defaultRegBtn);
+        // Default registration type: direct
+        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
+        if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
         // Default member type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
@@ -3112,7 +2864,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
 
                 if (data && data.status === 'success') {
                     resetMemberForm();
-                    showMemberSuccessToast(data.message || 'Member registered successfully.');
+                    showMemberSuccessToast(data.message || 'Student registered successfully.');
                     const wrapper = document.getElementById('memberRegistrationWrapper');
                     if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
@@ -3589,7 +3341,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg mt-0.5"></i>
                     <div>
                         <p class="text-amber-800 font-semibold text-sm mb-1">You are about to archive:</p>
-                        <p id="archiveMemberName" class="text-amber-900 font-bold text-base">Member Name</p>
+                        <p id="archiveMemberName" class="text-amber-900 font-bold text-base">Student Name</p>
                     </div>
                 </div>
             </div>
@@ -3797,11 +3549,11 @@ function showDuplicateWarning(matches) {
                             ${isArchived 
                                 ? `<button onclick="restoreAndClose(${m.id}, '${fullName.replace(/'/g, "\\'")}')" 
                                         class="flex-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i> Restore This Member
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Restore This Student
                                    </button>`
                                 : `<button onclick="viewExistingMember(${m.id})" 
                                         class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition">
-                                    <i class="fa-solid fa-eye mr-1"></i> View Member
+                                    <i class="fa-solid fa-eye mr-1"></i> View Student
                                    </button>`
                             }
                         </div>
@@ -3964,7 +3716,7 @@ function submitRegistrationForm(formData) {
         // ── Handle success ──
         if (data.status === 'success') {
             resetMemberForm();
-            showMemberSuccessToast(data.message || 'Member registered successfully.');
+            showMemberSuccessToast(data.message || 'Student registered successfully.');
             const wrapper = document.getElementById('memberRegistrationWrapper');
             if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
@@ -4319,8 +4071,6 @@ function loadPreferences() {
         document.getElementById('codePrefix').value = s.member_code_prefix || '';
         document.getElementById('codeDigits').value = s.member_code_digits || '4';
         document.getElementById('autoGenCode').checked = s.auto_generate_code === '1';
-        document.getElementById('defAgeGroup').value = s.default_age_group || '';
-        document.getElementById('defMemType').value = s.default_member_type || 'regular';
         document.getElementById('defRegType').value = s.default_registration_type || 'direct';
         document.getElementById('phoneRequired').checked = s.phone_required === '1';
         document.getElementById('idAutoGen').checked = s.id_card_auto_generate === '1';
@@ -4339,8 +4089,8 @@ function updateCodePreview() {
 function savePreferences() {
     sApiPost('dept_save', {
         member_code_prefix: document.getElementById('codePrefix').value, member_code_digits: document.getElementById('codeDigits').value,
-        auto_generate_code: document.getElementById('autoGenCode').checked ? '1' : '0', default_age_group: document.getElementById('defAgeGroup').value,
-        default_member_type: document.getElementById('defMemType').value, default_registration_type: document.getElementById('defRegType').value,
+        auto_generate_code: document.getElementById('autoGenCode').checked ? '1' : '0',
+        default_registration_type: document.getElementById('defRegType').value,
         phone_required: document.getElementById('phoneRequired').checked ? '1' : '0', id_card_auto_generate: document.getElementById('idAutoGen').checked ? '1' : '0',
         guardian_required_under: document.getElementById('guardianAge').value
     }).then(d => settingsToast(d.message, d.status === 'success')).catch(() => settingsToast('Network error', false));
@@ -4352,8 +4102,8 @@ function loadSystemInfo() {
         if (d.status !== 'success') return;
         const i = d.info, m = i.members, u = i.users, db = i.database, c = i.cache;
         document.getElementById('sysStats').innerHTML =
-            '<div class="sys-row"><span class="sys-label">Total Members</span><span class="sys-val">' + (m.total || 0) + '</span></div>' +
-            '<div class="sys-row"><span class="sys-label">Active Members</span><span class="sys-val" style="color:#16a34a">' + (m.active || 0) + '</span></div>' +
+            '<div class="sys-row"><span class="sys-label">Total Students</span><span class="sys-val">' + (m.total || 0) + '</span></div>' +
+            '<div class="sys-row"><span class="sys-label">Active Students</span><span class="sys-val" style="color:#16a34a">' + (m.active || 0) + '</span></div>' +
             '<div class="sys-row"><span class="sys-label">Archived</span><span class="sys-val" style="color:#94a3b8">' + (m.archived || 0) + '</span></div>' +
             '<div class="sys-row"><span class="sys-label">User Accounts</span><span class="sys-val">' + (u.total || 0) + ' (' + (u.active || 0) + ' active)</span></div>' +
             '<div class="sys-row"><span class="sys-label">Database Size</span><span class="sys-val">' + (db.size_mb || '?') + ' MB</span></div>' +

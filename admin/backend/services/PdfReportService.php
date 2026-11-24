@@ -37,7 +37,7 @@ class PdfReportService
         'general' => 'General Attendance Report',
         'sections' => 'Section-Based Attendance Report',
         'classes' => 'Class-Based Attendance Report',
-        'member' => 'Member Attendance Report',
+        'member' => 'Student Attendance Report',
         'full' => 'Full Attendance Analysis',
     ];
 
@@ -58,7 +58,7 @@ class PdfReportService
         if ($type === 'member') {
             $memberId = (int)($opts['member_id'] ?? 0);
             if ($memberId <= 0) {
-                return ['ok' => false, 'message' => 'Member ID is required for member reports.'];
+                return ['ok' => false, 'message' => 'Student ID is required for student reports.'];
             }
         }
 
@@ -204,7 +204,7 @@ class PdfReportService
         $stmt->close();
         if (!$member) {
             $pdf->SetFont(self::FONT, '', 10);
-            $pdf->Cell(0, 8, 'Member not found.', 0, 1);
+            $pdf->Cell(0, 8, 'Student not found.', 0, 1);
             return;
         }
 

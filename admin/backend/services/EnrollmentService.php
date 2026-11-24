@@ -67,12 +67,12 @@ class EnrollmentService
         $stmt = $conn->prepare('SELECT id, status FROM members WHERE id=? FOR UPDATE');
         $stmt->bind_param('i', $memberId); $stmt->execute();
         $member = $stmt->get_result()->fetch_assoc(); $stmt->close();
-        if (!$member || $member['status'] === 'archived') throw new \DomainException('Member not found or archived.');
+        if (!$member || $member['status'] === 'archived') throw new \DomainException('Student not found or archived.');
     }
 
     public static function enroll(\mysqli $conn, int $memberId, int $classId, ?int $yearId = null, ?int $enrolledBy = null, bool $withinTransaction = false): array
     {
-        if ($memberId <= 0 || $classId <= 0) return ['status'=>'error','message'=>'Member and class are required.'];
+        if ($memberId <= 0 || $classId <= 0) return ['status'=>'error','message'=>'Student and class are required.'];
         return self::transactionScope($conn, $withinTransaction, static function () use ($conn, $memberId, $classId, $yearId, $enrolledBy): array {
             self::lockMember($conn, $memberId);
             return self::enrollInScope($conn, $memberId, $classId, $yearId, $enrolledBy);
@@ -235,7 +235,7 @@ class EnrollmentService
     private static function enrollInScope(\mysqli $conn, int $memberId, int $classId, ?int $yearId = null, ?int $enrolledBy = null): array
     {
         if ($memberId <= 0 || $classId <= 0) {
-            return ['status' => 'error', 'message' => 'Member and class are required.'];
+            return ['status' => 'error', 'message' => 'Student and class are required.'];
         }
 
         $class = self::resolveClass($conn, $classId);

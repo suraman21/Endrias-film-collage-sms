@@ -70,8 +70,8 @@ acm_chrome_open('queue', 'Activation queue', 'Manual review: verify identity, th
         <?php endforeach; ?>
     </select>
     <select class="inp" name="account_type" aria-label="Account type">
-        <option value="">Member + Parent</option>
-        <option value="member"<?= $fType === 'member' ? ' selected' : '' ?>>Member</option>
+        <option value="">Student + Parent</option>
+        <option value="member"<?= $fType === 'member' ? ' selected' : '' ?>Student</option>
         <option value="parent"<?= $fType === 'parent' ? ' selected' : '' ?>>Parent</option>
     </select>
     <input class="inp" type="search" name="q" value="<?= e($fQ) ?>" placeholder="Ticket, name, phone…" aria-label="Search">

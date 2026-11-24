@@ -32,7 +32,7 @@
         btn.type = 'submit'; btn.className = className; btn.textContent = label;
         // Danger confirmation (MEDIUM, plan U6) via the shared dialog.
         if (action === 'renew' && window.DangerConfirm && window.DangerConfirm.guardForm) {
-            window.DangerConfirm.guardForm(form, { tier: 'medium', title: 'Renew this ID card?', summary: 'A renewed card replaces the current one.', intent: 'I want to renew this card', consequences: ['The issue date is reset to TODAY and a new expiry date is calculated.', 'The card that was printed before shows old dates; print and hand out the new card.'], keeps: ['The member code and QR code stay the same.', 'Member data is not changed.'], phrase: 'RENEW CARD', confirmLabel: 'Renew card' });
+            window.DangerConfirm.guardForm(form, { tier: 'medium', title: 'Renew this ID card?', summary: 'A renewed card replaces the current one.', intent: 'I want to renew this card', consequences: ['The issue date is reset to TODAY and a new expiry date is calculated.', 'The card that was printed before shows old dates; print and hand out the new card.'], keeps: ['The member code and QR code stay the same.', 'Student data is not changed.'], phrase: 'RENEW CARD', confirmLabel: 'Renew card' });
         } else if (action === 'renew') {
             form.addEventListener('submit', function (e) { e.preventDefault(); });
         }
@@ -55,7 +55,6 @@
 
         row.appendChild(cell([text(member.student_name), text(member.father_name)].filter(Boolean).join(' '), 'px-4 py-3 font-medium'));
         row.appendChild(cell(text(member.member_code) || 'Pending', 'px-4 py-3 text-xs font-mono'));
-        row.appendChild(cell(text(member.member_type === 'honorary' ? 'Honorary' : text(member.registration_type)), 'px-4 py-3 text-xs font-semibold text-slate-600'));
 
         var generated = member.id_card_status === 'generated';
         var expired = generated && isExpired(member.id_card_generated_at);

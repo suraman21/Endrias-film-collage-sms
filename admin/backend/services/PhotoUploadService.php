@@ -57,7 +57,7 @@ final class PhotoUploadService
 
         // ---------- Validation ----------
         if ($memberId <= 0) {
-            return self::err(400, 'invalid_member', 'Member id is required.');
+            return self::err(400, 'invalid_member', 'Student id is required.');
         }
         if ($operatorId <= 0) {
             return self::err(401, 'auth_required', 'You must be logged in.');
@@ -94,10 +94,10 @@ final class PhotoUploadService
         $member = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$member) {
-            return self::err(404, 'member_not_found', 'Member does not exist.');
+            return self::err(404, 'member_not_found', 'Student does not exist.');
         }
         if (($member['status'] ?? '') === 'archived') {
-            return self::err(410, 'member_archived', 'Member is archived; photos cannot be updated.');
+            return self::err(410, 'member_archived', 'Student is archived; photos cannot be updated.');
         }
 
         // ---------- Idempotency: exact client_op_id replay ----------
@@ -319,7 +319,7 @@ final class PhotoUploadService
         $height       = (int)($opts['height'] ?? 0);
         $srcPath      = (string)($opts['source_path'] ?? '');
 
-        if ($memberId <= 0) return self::err(400,'invalid_member','Member id is required.');
+        if ($memberId <= 0) return self::err(400,'invalid_member','Student id is required.');
         if ($operatorId <= 0) return self::err(401,'auth_required','You must be logged in.');
         if ($field !== 'student_photo' && $field !== 'guardian_photo') {
             return self::err(400,'invalid_field','Field must be student_photo or guardian_photo.');
@@ -346,9 +346,9 @@ final class PhotoUploadService
         $stmt->execute();
         $member = $stmt->get_result()->fetch_assoc();
         $stmt->close();
-        if (!$member) return self::err(404,'member_not_found','Member does not exist.');
+        if (!$member) return self::err(404,'member_not_found','Student does not exist.');
         if (($member['status'] ?? '') === 'archived') {
-            return self::err(410,'member_archived','Member is archived; photos cannot be updated.');
+            return self::err(410,'member_archived','Student is archived; photos cannot be updated.');
         }
 
         // Idempotency: same client_op_id (when present) → replay.

@@ -705,7 +705,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                     <i class="fa-solid fa-users text-sm"></i>
                 </span>
-                <span class="font-semibold">All Members</span>
+                <span class="font-semibold">All Students</span>
             </a>
 
             <a href="#" data-section="family"
@@ -717,23 +717,13 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <span id="famQueueBadge" class="ml-auto hidden text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-900"></span>
             </a>
 
-            <a href="#" data-section="newmembers"
-               class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
-                <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
-                    <i class="fa-solid fa-user-plus text-sm"></i>
-                </span>
-                <span class="font-semibold">New Members</span>
-                <?php if (!empty($eligibleNewMembersCount)): ?>
-                <span class="ml-auto px-2 py-0.5 rounded-full bg-emerald-400 text-emerald-900 text-[10px] font-bold"><?= (int)$eligibleNewMembersCount ?></span>
-                <?php endif; ?>
-            </a>
 
             <button data-section="manage"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                     <i class="fa-solid fa-pen-to-square text-sm"></i>
                 </span>
-                <span class="font-semibold">Manage Members</span>
+                <span class="font-semibold">Manage Students</span>
             </button>
 
             <button data-section="archive"
@@ -741,7 +731,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                     <i class="fa-regular fa-folder-open text-sm"></i>
                 </span>
-                <span class="font-semibold">Old Members Archive</span>
+                <span class="font-semibold">Old Students Archive</span>
             </button>
 
                 <button data-section="idcards"
@@ -926,7 +916,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                     <div class="stat-card p-3 sm:p-4 flex flex-col justify-between" style="background:linear-gradient(135deg, <?= THEME_PRIMARY_DARK ?>, <?= THEME_PRIMARY ?>, <?= THEME_PRIMARY_LIGHT ?>)">
                         <div class="flex items-center justify-between">
-                            <div class="text-xs uppercase tracking-wide">Total Members</div>
+                            <div class="text-xs uppercase tracking-wide">Total Students</div>
                             <div class="w-8 h-8 rounded-2xl bg-white/15 flex items-center justify-center">
                                 <i class="fa-solid fa-users text-sm"></i>
                             </div>
@@ -935,30 +925,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <?= $totalMembers ?>
                         </div>
                         <div class="mt-1 text-[11px] sm:text-xs opacity-80">
-                            Active (non-archived) members
-                        </div>
-                    </div>
-
-                    <div class="stat-card p-3 sm:p-4 flex flex-col justify-between" style="background:linear-gradient(135deg, <?= THEME_ACCENT ?>, <?= THEME_ACCENT_2 ?>)">
-                        <div class="flex items-center justify-between">
-                            <div class="text-xs uppercase tracking-wide">By Member Type</div>
-                            <div class="w-8 h-8 rounded-2xl bg-white/15 flex items-center justify-center">
-                                <i class="fa-solid fa-tags text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-2 text-[11px] sm:text-xs space-y-0.5">
-                            <div class="flex justify-between">
-                                <span>መደበኛ</span>
-                                <span class="font-semibold"><?= $memberTypeRegular ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>ልዩ መደበኛ</span>
-                                <span class="font-semibold"><?= $memberTypeSpecial ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>የክብር አባላት</span>
-                                <span class="font-semibold"><?= $memberTypeHonor ?></span>
-                            </div>
+                            Active (non-archived) students
                         </div>
                     </div>
 
@@ -1032,88 +999,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     </a>
                 </div>
 
-                <!-- Eligible Upgrades Widget -->
-                <?php if (!empty($eligibleUpgrades)): ?>
-                <div class="mb-4 panel p-4 border-l-4 border-amber-500 bg-amber-50 rounded-2xl">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                            <i class="fa-solid fa-bell text-amber-500"></i>
-                            Eligible for Permanent Upgrade (6+ Months)
-                        </h3>
-                        <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold">
-                            <?= count($eligibleUpgrades) ?> Pending
-                        </span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="text-xs text-amber-700 bg-amber-100/50 uppercase">
-                                <tr>
-                                    <th class="px-3 py-2 font-medium">Name</th>
-                                    <th class="px-3 py-2 font-medium">Registered</th>
-                                    <th class="px-3 py-2 font-medium">Phone</th>
-                                    <th class="px-3 py-2 font-medium text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-amber-200/50">
-                                <?php foreach ($eligibleUpgrades as $m): ?>
-                                <tr class="hover:bg-amber-100/50 transition">
-                                    <td class="px-3 py-2 font-medium text-amber-900">
-                                        <?= htmlspecialchars(trim($m['student_name'].' '.$m['father_name'].' '.$m['grandfather_name'])) ?>
-                                    </td>
-                                    <td class="px-3 py-2 text-amber-800 text-xs">
-                                        <?= date('M j, Y', strtotime($m['registered_at'])) ?>
-                                    </td>
-                                    <td class="px-3 py-2 text-amber-800 text-xs">
-                                        <?= htmlspecialchars($m['phone_number'] ?: 'N/A') ?>
-                                    </td>
-                                    <td class="px-3 py-2 text-right"></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <?php endif; ?>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div class="panel p-4 mobile-card">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                                    <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                        <i class="fa-solid fa-child"></i>
-                                    </span>
-                                    <span>Section Distribution (by current section)</span>
-                                </h3>
-                                <p class="text-[11px] text-slate-500">
-                                    Live numbers from members table
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-3 mt-3">
-                            <div class="p-3 rounded-2xl bg-sky-50 border border-sky-100">
-                                <div class="text-[11px] text-sky-700 amharic-text">ህጻናት (A)</div>
-                                <div class="text-xl font-bold text-sky-900 mt-1"><?= $sectionCounts['7_13'] ?></div>
-                                <div class="text-[11px] text-sky-500">Section</div>
-                            </div>
-                            <div class="p-3 rounded-2xl bg-amber-50 border border-amber-100">
-                                <div class="text-[11px] text-amber-700 amharic-text">ማዕከላዊያን (B)</div>
-                                <div class="text-xl font-bold text-amber-900 mt-1"><?= $sectionCounts['14_17'] ?></div>
-                                <div class="text-[11px] text-amber-500">Section</div>
-                            </div>
-                            <div class="p-3 rounded-2xl bg-rose-50 border border-rose-100">
-                                <div class="text-[11px] text-rose-700 amharic-text">ወጣቶች (C)</div>
-                                <div class="text-xl font-bold text-rose-900 mt-1"><?= $sectionCounts['18_plus'] ?></div>
-                                <div class="text-[11px] text-rose-500">Section</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 h-28">
-                            <canvas id="sectionChart"></canvas>
-                        </div>
-                    </div>
-
                     <div class="panel p-4 mobile-card">
                         <div class="flex items-center justify-between mb-2">
                             <div>
@@ -1124,7 +1010,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <span>Gender Distribution</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500">
-                                    Visual balance of male vs female members
+                                    Visual balance of male vs female students
                                 </p>
                             </div>
                         </div>
@@ -1155,7 +1041,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                                     <i class="fa-solid fa-clock-rotate-left"></i>
                                 </span>
-                                <span>Recent Members</span>
+                                <span>Recent Students</span>
                             </h3>
                             <p class="text-[11px] text-slate-500">
                                 Latest registrations handled by the Admission & Registrar
@@ -1171,9 +1057,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <thead>
                             <tr class="text-left text-slate-500 border-b border-slate-200">
                                 <th class="py-2 px-2 sm:px-3">Name</th>
-                                <th class="py-2 px-2 sm:px-3">Type</th>
                                 <th class="py-2 px-2 sm:px-3">Status</th>
-                                <th class="py-2 px-2 sm:px-3">Section</th>
                                 <th class="py-2 px-2 sm:px-3">Registered</th>
                             </tr>
                             </thead>
@@ -1181,9 +1065,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <?php foreach ($recentMembers as $row): ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="py-2 px-2 sm:px-3 amharic-text"><?= e($row['name']) ?></td>
-                                    <td class="py-2 px-2 sm:px-3 amharic-text">
-                                        <?= e($row['type']) ?>
-                                    </td>
                                     <td class="py-2 px-2 sm:px-3">
                                         <?php
                                         $statusChip = 'badge-active';
@@ -1191,9 +1072,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         if (stripos($row['status'], 'Inactive') !== false) $statusChip = 'badge-inactive';
                                         ?>
                                         <span class="chip <?= $statusChip ?>"><?= e($row['status']) ?></span>
-                                    </td>
-                                    <td class="py-2 px-2 sm:px-3 amharic-text">
-                                        <?= esc($row['section'], '—') ?>
                                     </td>
                                     <td class="py-2 px-2 sm:px-3">
                                         <?= e($row['date'] ?? '') ?>
@@ -1214,7 +1092,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                                 <i class="fa-solid fa-users"></i>
                             </span>
-                            <span>All Members</span>
+                            <span>All Students</span>
                         </h3>
                         <p class="text-[11px] text-slate-500 hidden sm:block">
                             Full registration and management for Admission & Registrar students.
@@ -1229,18 +1107,11 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         </button>
                         <div class="w-px bg-slate-200 my-1"></div>
                         <button type="button"
-                                id="btnRegisterTemporary"
-                                onclick="toggleMemberRegistrationForm(true, 'temporary')"
-                                class="mobile-touch-target inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-slate-600 text-xs sm:text-sm font-semibold transition-all hover:bg-white hover:shadow-sm">
-                            <i class="fa-solid fa-hourglass-half text-xs"></i>
-                            <span>Register Temporary</span>
-                        </button>
-                        <button type="button"
                                 id="btnRegisterPermanent"
                                 onclick="toggleMemberRegistrationForm(true, 'permanent')"
                                 class="mobile-touch-target inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-slate-600 text-xs sm:text-sm font-semibold transition-all hover:bg-white hover:shadow-sm">
                             <i class="fa-solid fa-user-check text-xs"></i>
-                            <span>Register Permanent</span>
+                            <span>Register Student</span>
                         </button>
                     </div>
                 </div>
@@ -1249,10 +1120,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <div>
                             <h2 class="text-base md:text-lg font-semibold text-slate-900 amharic-text">
-                                ሁሉም አባላት (All Members)
+                                ሁሉም ተማሪዎዽ (All Students)
                             </h2>
                             <p class="text-xs text-slate-500">
-                                Use search and filters to find members. All results are paginated.
+                                Use search and filters to find students. All results are paginated.
                             </p>
                         </div>
 
@@ -1269,18 +1140,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <select id="filterRegistrationType"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">Reg. Type (All)</option>
-                                    <option value="waiting">Waiting</option>
                                     <option value="transfer">Transfer</option>
                                     <option value="direct">Direct</option>
                                 </select>
 
-                                <select id="filterMemberType"
-                                        class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                    <option value="">Member Type (All)</option>
-                                    <option value="regular">Regular</option>
-                                    <option value="special_regular">Special Regular</option>
-                                    <option value="honorary">Honorary</option>
-                                </select>
 
                                 <select id="filterStatus"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -1298,11 +1161,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <option value="female">Female</option>
                                 </select>
 
-                                <select id="filterAgeGroup"
-                                        class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                    <option value="">Section (All)</option>
-                                    <?php foreach (\App\Services\MemberCategory::sections() as $hrCode => $hrSec): ?><option value="<?= $hrCode ?>"><?= e($hrSec['am']) ?> (<?= e($hrSec['letter']) ?>)</option><?php endforeach; ?>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -1313,12 +1171,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <thead class="bg-slate-50 border-b border-slate-100">
                                 <tr class="text-[11px] text-slate-500">
                                     <th class="px-3 py-2 text-left">#</th>
-                                    <th class="px-3 py-2 text-left">Member</th>
+                                    <th class="px-3 py-2 text-left">Student</th>
                                     <th class="px-3 py-2 text-left">Code</th>
                                     <th class="px-3 py-2 text-left">Reg. Type</th>
-                                    <th class="px-3 py-2 text-left">Member Type</th>
                                     <th class="px-3 py-2 text-left">Gender</th>
-                                    <th class="px-3 py-2 text-left">Section</th>
                                     <th class="px-3 py-2 text-left">Status</th>
                                     <th class="px-3 py-2 text-left">Phone</th>
                                     <th class="px-3 py-2 text-left">Location</th>
@@ -1349,10 +1205,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <span id="registrationFormIconWrapper" class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 transition-colors duration-300">
                                         <i id="registrationFormIcon" class="fa-solid fa-user-pen text-xs"></i>
                                     </span>
-                                    <span id="registrationFormTitleText">Register New Member</span>
+                                    <span id="registrationFormTitleText">Register New Student</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500">
-                                    Live logic: Waiting has pending ID; Direct/Transfer auto-assign ID + card-ready.
+                                    Direct and Transfer registrations are assigned an ID and ID card immediately.
                                 </p>
                             </div>
                             <button type="button"
@@ -1369,15 +1225,12 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <span class="w-6 h-6 rounded-lg bg-slate-200 flex items-center justify-center">
                                         <i class="fa-solid fa-barcode text-[10px]"></i>
                                     </span>
-                                    <span>Auto Member ID</span>
+                                    <span>Auto Student ID</span>
                                 </h4>
 
                                 <p class="text-[11px] text-slate-500 mb-1">
-                                    Next Member ID:
+                                    Next Student ID:
                                     <span id="nextMemberIdDisplay" class="font-semibold text-slate-800"><?= e($nextMemberCode) ?></span>
-                                </p>
-                                <p class="text-[10px] text-slate-400">
-                                    Waiting-list members will not get an ID until they complete 3 months.
                                 </p>
 
                                 <input type="hidden" name="student_id" id="studentIdField" value="">
@@ -1392,13 +1245,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 </h4>
 
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    <button type="button"
-                                            class="registration-type-btn w-full text-left px-3 py-2 rounded-xl border border-emerald-300 bg-white text-[11px] sm:text-xs"
-                                            data-registration-type="waiting"
-                                            onclick="selectRegistrationType('waiting', this)">
-                                        <div class="amharic-text text-[13px]">አዲስ ተመዝጋቢ</div>
-                                        <div class="text-[10px] text-slate-500">Waiting (list)</div>
-                                    </button>
 
                                     <button type="button"
                                             class="registration-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
@@ -1417,7 +1263,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     </button>
                                 </div>
 
-                                <input type="hidden" name="registration_type" id="registrationTypeField" value="waiting">
+                                <input type="hidden" name="registration_type" id="registrationTypeField" value="direct">
                                 <input type="hidden" name="membership_tier" id="membershipTierField" value="permanent">
                                 <input type="hidden" name="upgrade_member_id" id="upgradeMemberIdField" value="0">
                             </div>
@@ -1425,39 +1271,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4">
-                                <h4 class="text-xs font-semibold text-emerald-900 mb-2 flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
-                                        <i class="fa-solid fa-user-tag text-[10px]"></i>
-                                    </span>
-                                    <span>Member Type *</span>
-                                </h4>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-emerald-300 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="regular"
-                                            onclick="selectMemberTypeFull('regular', this)">
-                                        <div class="amharic-text text-[13px]">መደበኛ</div>
-                                        <div class="text-[10px] text-slate-500">Regular</div>
-                                    </button>
-
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="special_regular"
-                                            onclick="selectMemberTypeFull('special_regular', this)">
-                                        <div class="amharic-text text-[13px]">ልዩ መደበኛ</div>
-                                        <div class="text-[10px] text-slate-500">Student + role</div>
-                                    </button>
-
-                                    <button type="button"
-                                            class="member-type-btn w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs"
-                                            data-member-type="honorary"
-                                            onclick="selectMemberTypeFull('honorary', this)">
-                                        <div class="amharic-text text-[13px]">የክብር አባላት</div>
-                                        <div class="text-[10px] text-slate-500">Honorary</div>
-                                    </button>
-                                </div>
-
                                 <input type="hidden" name="member_type" id="memberTypeFieldFull" value="regular">
                             </div>
 
@@ -1472,7 +1285,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Member Status
+                                            Student Status
                                         </label>
                                         <select name="status"
                                                 class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-emerald-200 focus:border-emerald-400">
@@ -1483,7 +1296,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     </div>
 
                                     <div class="text-[10px] text-slate-500 flex items-center">
-                                        <span>Section equals age group (auto from DOB).</span>
+                                        <span>Age group is derived automatically from date of birth.</span>
                                     </div>
                                 </div>
                             </div>
@@ -1495,7 +1308,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <span class="w-6 h-6 rounded-lg bg-blue-200 flex items-center justify-center">
                                     <i class="fa-solid fa-calendar-plus text-[10px]"></i>
                                 </span>
-                                <span>Original Registration Date (For Existing Members)</span>
+                                <span>Original Registration Date (Existing Students)</span>
                             </h4>
                             <p class="text-[10px] text-blue-700 mb-3">
                                 <i class="fa-solid fa-info-circle mr-1"></i>
@@ -1668,9 +1481,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                                    placeholder="Year (E.C.)"
                                                    oninput="calculateAgeSection()">
                                         </div>
-                                        <p class="mt-1 text-[10px] text-slate-400">
-                                            Section auto-calculated (uses current Ethiopian year).
-                                        </p>
                                     </div>
 
                                     <div>
@@ -1683,13 +1493,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Section (Auto)
-                                        </label>
-                                        <input type="text" id="sectionDisplay" readonly
-                                               class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 text-slate-700">
-                                        <input type="hidden" name="current_section" id="currentSectionField">
-                                        <input type="hidden" name="age_group" id="ageGroupField">
                                     </div>
 
                                     <div>
@@ -1783,7 +1586,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <span class="w-6 h-6 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
                                     <i class="fa-solid fa-location-dot"></i>
                                 </span>
-                                <span>Member Address</span>
+                                <span>Student Address</span>
                             </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
@@ -2072,7 +1875,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         Signed Form
                                         <span class="text-red-500">*</span>
                                         <span class="block text-[10px] text-slate-400">
-                                            Required for all registration types except Waiting list.
+                                            Required for all registration types.
                                         </span>
                                     </label>
                                     <input type="file" name="doc_signed_form" id="docSignedFormField"
@@ -2084,7 +1887,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <p class="text-[11px] text-slate-500">
-                                *Required. Waiting-list: signed form optional; full ID + card only after 3 months (backend logic later).
+                                *Required fields.
                             </p>
                             <div class="flex gap-2 justify-end">
                                 <button type="button"
@@ -2094,7 +1897,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 </button>
                                 <button type="submit"
                                         class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow hover:bg-emerald-700 active:scale-95">
-                                    Save Member
+                                    Save Student
                                 </button>
                             </div>
                         </div>
@@ -2138,7 +1941,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <button type="button" class="fam-chip fam-chip-on" data-filter="all">All</button>
                                 <button type="button" class="fam-chip" data-filter="multi" title="Guardians with two or more linked children">2+ children</button>
                                 <button type="button" class="fam-chip" data-filter="single">1 child</button>
-                                <button type="button" class="fam-chip" data-filter="orphan" title="Guardian records with no linked member">No children</button>
+                                <button type="button" class="fam-chip" data-filter="orphan" title="Guardian records with no linked student">No children</button>
                                 <button type="button" class="fam-chip" data-filter="nophone">Missing phone</button>
                                 <button type="button" class="fam-chip" data-filter="recent">Updated 30 d</button>
                             </div>
@@ -2163,7 +1966,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <!-- Not linked yet -->
                     <div id="famPane-unlinked" style="display:none">
                         <div class="fam-note mb-3">
-                            <div class="flex-1"><b>Members registered before Family Link.</b> They have a guardian name/phone typed on their record but no guardian record yet. <b>Link</b> matches each one to an existing guardian (same phone or near-identical name) or creates a new guardian record; near-misses go to <i>Needs review</i>. Safe to run any time.</div>
+                            <div class="flex-1"><b>Students registered before Family Link.</b> They have a guardian name/phone typed on their record but no guardian record yet. <b>Link</b> matches each one to an existing guardian (same phone or near-identical name) or creates a new guardian record; near-misses go to <i>Needs review</i>. Safe to run any time.</div>
                             <div class="shrink-0"><button type="button" id="famLinkAllBtn" class="fam-btn fam-btn-primary" style="display:none" onclick="FamilyLink.linkAll()"><i class="fa-solid fa-wand-magic-sparkles"></i> Link all</button></div>
                         </div>
                         <div class="flex items-center justify-between mb-2"><div id="famUnlinkedMeta" class="text-[11px] text-slate-400"></div><div id="famUnlinkedPager" class="flex items-center gap-2"></div></div>
@@ -2190,71 +1993,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </div>
             </div>
 
-            <section id="section-newmembers" class="content-section">
-                <div class="panel p-4 mobile-card">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                                <span class="w-7 h-7 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                    <i class="fa-solid fa-user-plus"></i>
-                                </span>
-                                <span>New Members (Temporary)</span>
-                            </h3>
-                            <p class="text-xs text-slate-500">
-                                Track temporary members. Green badge = eligible for promotion (6+ months).
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Filter bar -->
-                    <div class="bg-white border border-slate-200 rounded-xl p-3 mb-4 shadow-sm">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                            <div class="relative">
-                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                <input type="text" id="newMembersSearch" autocomplete="off" placeholder="Search name, code, phone..."
-                                       class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-emerald-200 focus:border-emerald-400">
-                            </div>
-                            <select id="newMembersFilterStatus" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="warning">Warning</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <select id="newMembersFilterAgeGroup" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Age Groups</option>
-                                <?php foreach (\App\Services\MemberCategory::sections() as $hrCode => $hrSec): ?><option value="<?= $hrCode ?>"><?= e($hrSec['am']) ?> (<?= e($hrSec['ages']) ?>)</option><?php endforeach; ?>
-                            </select>
-                            <select id="newMembersFilterEligible" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All</option>
-                                <option value="1">Eligible only (6+ months)</option>
-                            </select>
-                        </div>
-                        <div class="mt-3 flex flex-col sm:flex-row gap-2 justify-end">
-                            <button type="button" onclick="resetNewMembersFilters()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50">Reset</button>
-                            <button onclick="applyNewMembersFilters()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700">Filter</button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider">
-                                <tr>
-                                    <th class="px-4 py-3 font-semibold">Member</th>
-                                    <th class="px-4 py-3 font-semibold">Code</th>
-                                    <th class="px-4 py-3 font-semibold">Registered</th>
-                                    <th class="px-4 py-3 font-semibold">Months</th>
-                                    <th class="px-4 py-3 font-semibold">Status</th>
-                                    <th class="px-4 py-3 font-semibold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="newMembersTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
-                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="newMembersPagination" class="mt-3 flex flex-col sm:flex-row items-center justify-between gap-3" aria-live="polite"></div>
-                </div>
-            </section>
 
             <!-- MANAGE (edit, archive) -->
             <section id="section-manage" class="content-section">
@@ -2265,10 +2003,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <span class="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </span>
-                                <span>Manage Members</span>
+                                <span>Manage Students</span>
                             </h3>
                             <p class="text-xs text-slate-500">
-                                Search, Edit, and Manage all active members.
+                                Search, Edit, and Manage all active students.
                             </p>
                         </div>
                     </div>
@@ -2283,7 +2021,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             </div>
                             <select id="manageFilterType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                                 <option value="">All Registration Types</option>
-                                <option value="waiting">Waiting</option>
                                 <option value="direct">Direct</option>
                                 <option value="transfer">Transfer</option>
                             </select>
@@ -2293,12 +2030,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <option value="warning">Warning</option>
                                 <option value="inactive">Inactive</option>
                                 <option value="archived">Archived</option>
-                            </select>
-                            <select id="manageFilterMemberType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Member Types</option>
-                                <option value="regular">Regular</option>
-                                <option value="honorary">Honorary</option>
-                                <option value="special_regular">Special Regular</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -2311,10 +2042,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 <option value="">All Cities</option>
                                 <option value="addis_ababa">Addis Ababa</option>
                                 <option value="oromia">Oromia</option>
-                            </select>
-                            <select id="manageFilterAgeGroup" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
-                                <option value="">All Age Groups</option>
-                                <?php foreach (\App\Services\MemberCategory::sections() as $hrCode => $hrSec): ?><option value="<?= $hrCode ?>"><?= e($hrSec['am']) ?> (<?= e($hrSec['ages']) ?>)</option><?php endforeach; ?>
                             </select>
                             <select id="manageFilterEducation" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                                 <option value="">All Education Levels</option>
@@ -2334,12 +2061,12 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         </div>
                     </div>
 
-                    <!-- Members List Table -->
+                    <!-- Students List Table -->
                     <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-4 py-3 font-semibold">Member</th>
+                                    <th class="px-4 py-3 font-semibold">Student</th>
                                     <th class="px-4 py-3 font-semibold">Type</th>
                                     <th class="px-4 py-3 font-semibold">Status</th>
                                     <th class="px-4 py-3 font-semibold text-right">Actions</th>
@@ -2347,7 +2074,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             </thead>
                             <tbody id="manageMembersTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
                                 <!-- Populated by JS -->
-                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading members...</td></tr>
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading students...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2364,7 +2091,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 <script src="/admin/js/department_status.js?v=<?= SSMS_ASSET_VER ?>-20261022r"></script>
 <script src="/admin/js/family_link.js?v=<?= SSMS_ASSET_VER ?>-20261022u"></script>
 
-<script src="/admin/js/new-members.js?v=20261022r" defer></script>
 <script src="/frontend/js/member-picker.js?v=20261022p" defer></script>
 <script src="/admin/js/id-card-directory.js?v=20261022r" defer></script>
 <script src="/admin/js/archive-members.js" defer></script>
@@ -2448,15 +2174,14 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
                     <tr>
-                        <th class="px-4 py-3 font-medium">Member Name</th>
+                        <th class="px-4 py-3 font-medium">Student Name</th>
                         <th class="px-4 py-3 font-medium">Code</th>
-                        <th class="px-4 py-3 font-medium">Member Type</th>
                         <th class="px-4 py-3 font-medium">Status</th>
                         <th class="px-4 py-3 font-medium text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody id="idCardMembersBody" class="divide-y divide-slate-100 text-sm text-slate-700">
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">Loading eligible members…</td></tr>
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">Loading eligible students…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -2564,8 +2289,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-users text-emerald-600 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">All Members</div>
-                                <div class="text-[10px] text-slate-500">Export full member list as CSV</div>
+                                <div class="font-semibold text-slate-800 text-sm">All Students</div>
+                                <div class="text-[10px] text-slate-500">Export full student list as CSV</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
@@ -2574,8 +2299,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-user-check text-blue-600 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">Active Members Only</div>
-                                <div class="text-[10px] text-slate-500">Active status members</div>
+                                <div class="font-semibold text-slate-800 text-sm">Active Students Only</div>
+                                <div class="text-[10px] text-slate-500">Active status students</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-blue-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
@@ -2585,26 +2310,16 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-500 text-lg"></i></div>
                             <div>
                                 <div class="font-semibold text-slate-800 text-sm">PDF Report</div>
-                                <div class="text-[10px] text-slate-500">Print-ready member list</div>
+                                <div class="text-[10px] text-slate-500">Print-ready student list</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-red-500 font-medium"><i class="fa-solid fa-print mr-1"></i>Open & Print</span></div>
-                    </a>
-                    <a href="/admin/export_pdf.php?format=csv&filter=waiting" class="panel p-4 hover:shadow-md transition block">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-amber-600 text-lg"></i></div>
-                            <div>
-                                <div class="font-semibold text-slate-800 text-sm">Waiting Members</div>
-                                <div class="text-[10px] text-slate-500">Registration type = waiting</div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-right"><span class="text-xs text-amber-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download CSV</span></div>
                     </a>
                     <a href="/admin/export_pdf.php?format=csv&filter=no_id" class="panel p-4 hover:shadow-md transition block">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-id-card text-red-500 text-lg"></i></div>
                             <div>
-                                <div class="font-semibold text-slate-800 text-sm">Members Without ID Card</div>
+                                <div class="font-semibold text-slate-800 text-sm">Students Without ID Card</div>
                                 <div class="text-[10px] text-slate-500">ID card not generated yet</div>
                             </div>
                         </div>
@@ -2615,7 +2330,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-file-word text-indigo-600 text-lg"></i></div>
                             <div>
                                 <div class="font-semibold text-slate-800 text-sm">Word Document</div>
-                                <div class="text-[10px] text-slate-500">All members as Word doc</div>
+                                <div class="text-[10px] text-slate-500">All students as Word doc</div>
                             </div>
                         </div>
                         <div class="mt-3 text-right"><span class="text-xs text-indigo-600 font-medium"><i class="fa-solid fa-download mr-1"></i>Download DOC</span></div>
@@ -2625,16 +2340,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <!-- Summary Stats Report -->
                 <div class="panel p-4">
                     <h4 class="text-sm font-semibold text-slate-700 mb-3"><i class="fa-solid fa-chart-bar mr-1 text-blue-500"></i> Quick Summary Stats</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-center mb-4">
                         <div class="bg-emerald-50 p-3 rounded-xl"><div class="text-lg font-bold text-emerald-700"><?= $totalMembers ?></div><div class="text-[10px] text-emerald-600">Total Active</div></div>
                         <div class="bg-blue-50 p-3 rounded-xl"><div class="text-lg font-bold text-blue-700"><?= $genderCounts['male'] ?></div><div class="text-[10px] text-blue-600">Male</div></div>
                         <div class="bg-pink-50 p-3 rounded-xl"><div class="text-lg font-bold text-pink-700"><?= $genderCounts['female'] ?></div><div class="text-[10px] text-pink-600">Female</div></div>
-                        <div class="bg-amber-50 p-3 rounded-xl"><div class="text-lg font-bold text-amber-700"><?= $memberTypeWaiting ?></div><div class="text-[10px] text-amber-600">Waiting</div></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3 text-center">
-                        <div class="bg-sky-50 p-3 rounded-xl"><div class="text-lg font-bold text-sky-700"><?= $sectionCounts['7_13'] ?></div><div class="text-[10px] text-sky-600 amharic-text">ህጻናት (A)</div></div>
-                        <div class="bg-amber-50 p-3 rounded-xl"><div class="text-lg font-bold text-amber-700"><?= $sectionCounts['14_17'] ?></div><div class="text-[10px] text-amber-600 amharic-text">ማዕከላዊያን (B)</div></div>
-                        <div class="bg-rose-50 p-3 rounded-xl"><div class="text-lg font-bold text-rose-700"><?= $sectionCounts['18_plus'] ?></div><div class="text-[10px] text-rose-600 amharic-text">ወጣቶች (C)</div></div>
                     </div>
                 </div>
             </section>
@@ -2745,25 +2454,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <h4 class="font-semibold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-teal-500"></i> Registration Defaults</h4>
                             <div class="space-y-3">
                                 <div>
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Age Group</label>
-                                    <select id="defAgeGroup" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
-                                        <option value="">None (manual selection)</option>
-                                        <?php foreach (\App\Services\MemberCategory::sections() as $hrCode => $hrSec): ?><option value="<?= $hrCode ?>"><?= e($hrSec['am']) ?> (<?= e($hrSec['ages']) ?>)</option><?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Member Type</label>
-                                    <select id="defMemType" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
-                                        <option value="regular">Regular</option>
-                                        <option value="honorary">Honorary</option>
-                                    </select>
-                                </div>
-                                <div>
                                     <label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Default Registration Type</label>
                                     <select id="defRegType" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
                                         <option value="direct">Direct</option>
                                         <option value="transfer">Transfer</option>
-                                        <option value="waiting">Waiting</option>
                                     </select>
                                 </div>
                             </div>
@@ -2834,7 +2528,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                 </a>
                                 <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-file-pdf text-red-500"></i></div>
-                                    <div><div class="text-sm font-medium text-slate-700">Full PDF Report</div><div class="text-[10px] text-slate-400">Print-ready member list</div></div>
+                                    <div><div class="text-sm font-medium text-slate-700">Full PDF Report</div><div class="text-[10px] text-slate-400">Print-ready student list</div></div>
                                 </a>
                                 <div onclick="clearCache()" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-amber-50 transition cursor-pointer">
                                     <div class="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center"><i class="fa-solid fa-broom text-amber-600"></i></div>
@@ -2879,7 +2573,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <button data-section="members"
                         class="flex flex-col items-center min-w-[64px] px-2 py-1.5 rounded-xl mobile-touch-target opacity-80">
                     <i class="fa-solid fa-users text-base mb-0.5"></i>
-                    <span class="text-[10px] whitespace-nowrap">Members</span>
+                    <span class="text-[10px] whitespace-nowrap">Students</span>
                 </button>
                 <button data-section="manage"
                         class="flex flex-col items-center min-w-[64px] px-2 py-1.5 rounded-xl mobile-touch-target opacity-80">
@@ -2939,7 +2633,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 text-[15px] font-semibold flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <span class="text-xl">✅</span>
-                <span id="memberSuccessToastText">Member registered successfully.</span>
+                <span id="memberSuccessToastText">Student registered successfully.</span>
             </div>
             <button type="button"
                     onclick="document.getElementById('memberSuccessToast').classList.add('hidden')"
@@ -2956,8 +2650,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-10">
             <div>
-                <div class="label-soft">Manage Member</div>
-                <div class="text-lg font-bold text-slate-800" id="manageSheetTitle">Member Details</div>
+                <div class="label-soft">Manage Student</div>
+                <div class="text-lg font-bold text-slate-800" id="manageSheetTitle">Student Details</div>
             </div>
             <button class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition" onclick="closeManageSheet()">
                 <i class="fa-solid fa-xmark text-lg"></i>
@@ -3055,76 +2749,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const cleanUrl = new URL(window.location); cleanUrl.searchParams.delete('member'); history.replaceState(null, '', cleanUrl);
     }
 
-    // Charts
-    document.addEventListener('DOMContentLoaded', () => {
-        const sectionCtx = document.getElementById('sectionChart').getContext('2d');
-        new Chart(sectionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['ህጻናት (A)', 'ማዕከላዊያን (B)', 'ወጣቶች (C)'],
-                datasets: [{
-                    data: [
-                        <?= (int)$sectionCounts['7_13'] ?>,
-                        <?= (int)$sectionCounts['14_17'] ?>,
-                        <?= (int)$sectionCounts['18_plus'] ?>
-                    ],
-                    backgroundColor: [
-                        'rgba(34,197,94,0.9)',
-                        'rgba(250,204,21,0.9)',
-                        'rgba(248,113,113,0.9)'
-                    ],
-                    borderRadius: 12,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {legend: {display: false}},
-                scales: {
-                    x: {
-                        grid: {display: false},
-                        ticks: {color: '#64748b', font: {size: 10}}
-                    },
-                    y: {
-                        grid: {color: '#e2e8f0'},
-                        ticks: {color: '#64748b', font: {size: 10}, precision: 0}
-                    }
-                }
-            }
-        });
-
-        const genderCtx = document.getElementById('genderChart').getContext('2d');
-        new Chart(genderCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Male', 'Female'],
-                datasets: [{
-                    data: [<?= (int)$genderCounts['male'] ?>, <?= (int)$genderCounts['female'] ?>],
-                    backgroundColor: ['rgba(59,130,246,0.9)', 'rgba(244,63,94,0.9)'],
-                    borderRadius: 12,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {legend: {display: false}},
-                scales: {
-                    x: {
-                        grid: {color: '#e2e8f0'},
-                        ticks: {color: '#64748b', font: {size: 10}, precision: 0}
-                    },
-                    y: {
-                        grid: {display: false},
-                        ticks: {color: '#64748b', font: {size: 10}}
-                    }
-                }
-            }
-        });
-    });
-
     // --- Member registration UI helpers ---
 
     function toggleMemberRegistrationForm(show, tier = 'permanent', title = null) {
@@ -3173,7 +2797,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 // Clear upgrade ID
                 if (upgradeIdInput) upgradeIdInput.value = '0';
             } else if (tier === 'permanent') {
-                if (formTitleText) formTitleText.textContent = title || 'Register Permanent Member';
+                if (formTitleText) formTitleText.textContent = title || 'Register New Student';
                 
                 // Apply Permanent (Emerald) Theme
                 wrapper.classList.add('theme-permanent', 'border-2', 'shadow-lg');
@@ -3295,7 +2919,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         var m = (memberData && typeof memberData === 'object') ? memberData : null;
         if (m) {
             if (prefillForm(m)) {
-                if (typeof showToast === 'function') showToast('Existing member data prefilled. Please verify and upload the signed form.', 'info');
+                if (typeof showToast === 'function') showToast('Existing student data prefilled. Please verify and upload the signed form.', 'info');
             }
             return;
         }
@@ -3306,16 +2930,16 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             .then(function (data) {
                 if (data && data.status === 'success' && data.member) {
                     if (prefillForm(data.member)) {
-                        if (typeof showToast === 'function') showToast('Existing member data prefilled. Please verify and upload the signed form.', 'info');
+                        if (typeof showToast === 'function') showToast('Existing student data prefilled. Please verify and upload the signed form.', 'info');
                     }
                 } else {
-                    console.warn('Member prefill unavailable:', data);
-                    if (typeof showToast === 'function') showToast('Member data could not be prefilled. Please fill the form manually.', 'warning');
+                    console.warn('Student prefill unavailable:', data);
+                    if (typeof showToast === 'function') showToast('Student data could not be prefilled. Please fill the form manually.', 'warning');
                 }
             })
             .catch(function (err) {
                 console.error('openUpgradeModal fetch failed:', err);
-                if (typeof showToast === 'function') showToast('Member data could not be loaded. Please fill the form manually.', 'warning');
+                if (typeof showToast === 'function') showToast('Student data could not be loaded. Please fill the form manually.', 'warning');
             });
     }
 
@@ -3411,9 +3035,9 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         if (!form) return;
         form.reset();
 
-        // Default registration type: waiting
-        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="waiting"]');
-        if (defaultRegBtn) selectRegistrationType('waiting', defaultRegBtn);
+        // Default registration type: direct
+        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
+        if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
         // Default member type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
@@ -3476,8 +3100,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         let age = currentYearEC - year;
         if (age < 0) age = 0;
 
-        // Age is informational only. Category (ህጻናት/ማዕከላዊያን/ወጣቶች) and
-        // section are assigned manually by staff — no automatic assignment.
+        // Age is informational only; the age group is derived server-side from the birth date.
         if (document.getElementById('ageDisplay')) document.getElementById('ageDisplay').value = age.toString();
         if (document.getElementById('ageField')) document.getElementById('ageField').value = age.toString();
     }
@@ -3629,9 +3252,9 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 
     // Init defaults on load
     document.addEventListener('DOMContentLoaded', () => {
-        // Default registration type: waiting
-        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="waiting"]');
-        if (defaultRegBtn) selectRegistrationType('waiting', defaultRegBtn);
+        // Default registration type: direct
+        const defaultRegBtn = document.querySelector('.registration-type-btn[data-registration-type="direct"]');
+        if (defaultRegBtn) selectRegistrationType('direct', defaultRegBtn);
 
         // Default member type: regular
         const defaultTypeBtn = document.querySelector('.member-type-btn[data-member-type="regular"]');
@@ -3688,7 +3311,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
 
                 if (data && data.status === 'success') {
                     resetMemberForm();
-                    showMemberSuccessToast(data.message || 'Member registered successfully.');
+                    showMemberSuccessToast(data.message || 'Student registered successfully.');
                     const wrapper = document.getElementById('memberRegistrationWrapper');
                     if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
@@ -4097,7 +3720,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg mt-0.5"></i>
                     <div>
                         <p class="text-amber-800 font-semibold text-sm mb-1">You are about to archive:</p>
-                        <p id="archiveMemberName" class="text-amber-900 font-bold text-base">Member Name</p>
+                        <p id="archiveMemberName" class="text-amber-900 font-bold text-base">Student Name</p>
                     </div>
                 </div>
             </div>
@@ -4332,7 +3955,6 @@ function showDuplicateWarning(matches) {
                         </div>
                         <div class="space-y-1 text-xs text-slate-600">
                             <p><i class="fa-solid fa-id-card w-4 text-slate-400"></i> ${escapeHtml(m.member_code || 'No ID')}</p>
-                            <p><i class="fa-solid fa-users w-4 text-slate-400"></i> ${escapeHtml(m.current_section || m.age_group || '—')}</p>
                             <p><i class="fa-solid fa-phone w-4 text-slate-400"></i> ${escapeHtml(m.phone_number || '—')}</p>
                             ${m.match_reasons ? `<p class="text-red-500 text-[10px] mt-1"><i class="fa-solid fa-exclamation-circle"></i> ${escapeHtml(m.match_reasons.join(', '))}</p>` : ''}
                         </div>
@@ -4340,11 +3962,11 @@ function showDuplicateWarning(matches) {
                             ${isArchived 
                                 ? `<button onclick="restoreAndClose(${m.id}, '${fullName.replace(/'/g, "\\'")}')" 
                                         class="flex-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i> Restore This Member
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Restore This Student
                                    </button>`
                                 : `<button onclick="viewExistingMember(${m.id})" 
                                         class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition">
-                                    <i class="fa-solid fa-eye mr-1"></i> View Member
+                                    <i class="fa-solid fa-eye mr-1"></i> View Student
                                    </button>`
                             }
                         </div>
@@ -4513,7 +4135,7 @@ function submitRegistrationForm(formData) {
         // ── Handle success ──
         if (data.status === 'success') {
             resetMemberForm();
-            showMemberSuccessToast(data.message || 'Member registered successfully.');
+            showMemberSuccessToast(data.message || 'Student registered successfully.');
             if (typeof window.loadNewMembers === 'function') window.loadNewMembers();
             const wrapper = document.getElementById('memberRegistrationWrapper');
             if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4623,8 +4245,6 @@ function loadPreferences() {
         document.getElementById('codePrefix').value = s.member_code_prefix || '';
         document.getElementById('codeDigits').value = s.member_code_digits || '4';
         document.getElementById('autoGenCode').checked = s.auto_generate_code === '1';
-        document.getElementById('defAgeGroup').value = s.default_age_group || '';
-        document.getElementById('defMemType').value = s.default_member_type || 'regular';
         document.getElementById('defRegType').value = s.default_registration_type || 'direct';
         document.getElementById('phoneRequired').checked = s.phone_required === '1';
         document.getElementById('idAutoGen').checked = s.id_card_auto_generate === '1';
@@ -4643,8 +4263,8 @@ function updateCodePreview() {
 function savePreferences() {
     sApiPost('dept_save', {
         member_code_prefix: document.getElementById('codePrefix').value, member_code_digits: document.getElementById('codeDigits').value,
-        auto_generate_code: document.getElementById('autoGenCode').checked ? '1' : '0', default_age_group: document.getElementById('defAgeGroup').value,
-        default_member_type: document.getElementById('defMemType').value, default_registration_type: document.getElementById('defRegType').value,
+        auto_generate_code: document.getElementById('autoGenCode').checked ? '1' : '0',
+        default_registration_type: document.getElementById('defRegType').value,
         phone_required: document.getElementById('phoneRequired').checked ? '1' : '0', id_card_auto_generate: document.getElementById('idAutoGen').checked ? '1' : '0',
         guardian_required_under: document.getElementById('guardianAge').value
     }).then(d => settingsToast(d.message, d.status === 'success')).catch(() => settingsToast('Network error', false));
@@ -4656,8 +4276,8 @@ function loadSystemInfo() {
         if (d.status !== 'success') return;
         const i = d.info, m = i.members, u = i.users, db = i.database, c = i.cache;
         document.getElementById('sysStats').innerHTML =
-            '<div class="sys-row"><span class="sys-label">Total Members</span><span class="sys-val">' + (m.total || 0) + '</span></div>' +
-            '<div class="sys-row"><span class="sys-label">Active Members</span><span class="sys-val" style="color:#16a34a">' + (m.active || 0) + '</span></div>' +
+            '<div class="sys-row"><span class="sys-label">Total Students</span><span class="sys-val">' + (m.total || 0) + '</span></div>' +
+            '<div class="sys-row"><span class="sys-label">Active Students</span><span class="sys-val" style="color:#16a34a">' + (m.active || 0) + '</span></div>' +
             '<div class="sys-row"><span class="sys-label">Archived</span><span class="sys-val" style="color:#94a3b8">' + (m.archived || 0) + '</span></div>' +
             '<div class="sys-row"><span class="sys-label">User Accounts</span><span class="sys-val">' + (u.total || 0) + ' (' + (u.active || 0) + ' active)</span></div>' +
             '<div class="sys-row"><span class="sys-label">Database Size</span><span class="sys-val">' + (db.size_mb || '?') + ' MB</span></div>' +
@@ -4763,7 +4383,7 @@ const HrReports = (function () {
         box.innerHTML = '<p class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading member attendance…</p>';
         apiGet('action=member_detail&member_id=' + encodeURIComponent(memberId) + '&month=' + encodeURIComponent(month)).then(d => {
             if (d.status !== 'success' || !d.member) {
-                box.innerHTML = '<p class="text-xs text-slate-400">' + esc(d.message || 'Member not found.') + '</p>';
+                box.innerHTML = '<p class="text-xs text-slate-400">' + esc(d.message || 'Student not found.') + '</p>';
                 return;
             }
             const m = d.member;

@@ -61,7 +61,7 @@ try {
     $yearId = $year ? (int)$year['id'] : 0;
     $expectedRows = MemberExportService::count($pdo, $tier);
 } catch (Throwable $error) {
-    reportInternalError('Member export count failed', $error);
+    reportInternalError('Student export count failed', $error);
     http_response_code(500);
     exit('The export could not be prepared.');
 }
@@ -127,7 +127,7 @@ try {
             $classStatement->close();
         }
     } catch (Throwable $error) {
-        reportInternalError('Member export class options unavailable', $error);
+        reportInternalError('Student export class options unavailable', $error);
     }
 
     $data = MemberExportService::collectEditable(
@@ -147,7 +147,7 @@ try {
         $classOptions
     );
 } catch (Throwable $error) {
-    reportInternalError('Member export failed', $error);
+    reportInternalError('Student export failed', $error);
     // M18: the pre-stream audit claims 'started', so a failure must append a
     // 'failed' event — otherwise the trail claims an export nobody received.
     // Best-effort: never break the 500 response itself.
@@ -158,7 +158,7 @@ try {
             'error' => get_class($error),
         ], 'member_export');
     } catch (Throwable $auditError) {
-        reportInternalError('Member export failure audit failed', $auditError);
+        reportInternalError('Student export failure audit failed', $auditError);
     }
     if (!headers_sent()) {
         http_response_code(500);

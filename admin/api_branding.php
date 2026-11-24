@@ -5,7 +5,7 @@
  * Manages:
  * - logo:      School logo (used across landing page, login, QR verification, reports, ID cards)
  * - seal:      Official church/school seal (used on ID cards & certificates)
- * - sig_head:  Head of Sunday School signature (used on ID cards & reports)
+ * - sig_head:  Head of school signature (used on ID cards & reports)
  * - sig_admin: Parish administration signature (used on ID cards & reports)
  * - card_bg:   ID card background artwork
  *

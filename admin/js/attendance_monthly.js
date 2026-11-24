@@ -154,7 +154,7 @@
       return;
     }
     var html = '<table class="am-table"><thead><tr>' +
-      '<th>#</th><th>Member</th><th class="opt">' + (isEdu ? 'Class' : 'Section') + '</th>' +
+      '<th>#</th><th>Student</th><th class="opt">' + (isEdu ? 'Class' : 'Section') + '</th>' +
       '<th class="num">Sessions</th><th class="num opt">Present</th><th class="num opt">Late</th><th class="num opt">Excused</th><th class="num">Absent</th>' +
       '<th class="num">Rate</th><th>Band</th><th class="opt">Flags</th></tr></thead><tbody>';
     state.items.forEach(function (r, i) {
@@ -240,7 +240,7 @@
       }
       html += '<div class="am-actions">' +
         '<a class="rc-btn rc-btn-ghost rc-btn-sm" href="' + esc((cfg.warningsUrl || '/admin/attendance_warnings.php') + '?department=' + dept() + '&member_id=' + id + '&status=all') + '">Warnings</a>' +
-        (cfg.memberUrl && ['info_dept', 'hr_dept', 'super_admin', 'school_admin'].indexOf(cfg.role) >= 0 ? '<a class="rc-btn rc-btn-ghost rc-btn-sm" href="' + esc(cfg.memberUrl + id) + '">Member profile</a>' : '') +
+        (cfg.memberUrl && ['info_dept', 'hr_dept', 'super_admin', 'school_admin'].indexOf(cfg.role) >= 0 ? '<a class="rc-btn rc-btn-ghost rc-btn-sm" href="' + esc(cfg.memberUrl + id) + '">Student profile</a>' : '') +
         '<button class="rc-btn rc-btn-sm" type="button" id="am-close">Close</button></div></div></div>';
       els.modalRoot.innerHTML = html;
       document.getElementById('am-close').addEventListener('click', closeModal);

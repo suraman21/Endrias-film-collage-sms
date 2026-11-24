@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ['unchanged', 'Unchanged'],
         ['to_enroll', 'Class assignments'],
         ['unassigned_new', 'New members without class'],
-        ['codes_to_issue', 'Member codes to issue'],
-        ['codes_pending', 'Member codes pending (no age)'],
+        ['codes_to_issue', 'Student codes to issue'],
+        ['codes_pending', 'Student codes pending (no age)'],
         ['skipped_archived', 'Archived members skipped'],
     ];
 

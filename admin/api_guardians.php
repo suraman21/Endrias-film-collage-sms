@@ -114,16 +114,16 @@ switch ($action) {
         $gid = (int)($_POST['guardian_id'] ?? 0); // optional explicit pick
         try {
             if ($mid <= 0) {
-                throw new InvalidArgumentException('Member is required.');
+                throw new InvalidArgumentException('Student is required.');
             }
             $r = GuardianService::attachFromLegacy($conn, $mid, $gid, 'hr');
             if ($r['mode'] === 'none') {
                 throw new InvalidArgumentException('This member has no guardian name saved — add it on the member profile first, or pick a guardian.');
             }
-            echo json_encode(['status' => 'success', 'message' => 'Member linked.'] + $r);
+            echo json_encode(['status' => 'success', 'message' => 'Student linked.'] + $r);
         } catch (Throwable $e) {
             http_response_code(422);
-            echo json_encode(['status' => 'error', 'message' => guardianSafeError($e, 'Member could not be linked.')]);
+            echo json_encode(['status' => 'error', 'message' => guardianSafeError($e, 'Student could not be linked.')]);
         }
         exit;
     }
@@ -282,10 +282,10 @@ switch ($action) {
         $prim = (int)($_POST['is_primary'] ?? 0) === 1;
         try {
             GuardianService::linkMember($conn, $gid, $mid, $rel, $prio, $prim, true, true);
-            echo json_encode(['status' => 'success', 'message' => 'Member linked to guardian.']);
+            echo json_encode(['status' => 'success', 'message' => 'Student linked to guardian.']);
         } catch (Throwable $e) {
             http_response_code(422);
-            echo json_encode(['status' => 'error', 'message' => guardianSafeError($e, 'Member could not be linked.')]);
+            echo json_encode(['status' => 'error', 'message' => guardianSafeError($e, 'Student could not be linked.')]);
         }
         exit;
     }

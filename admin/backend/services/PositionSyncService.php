@@ -137,7 +137,7 @@ final class PositionSyncService
             $member = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if (!$member) {
-                throw new RuntimeException('Member not found.');
+                throw new RuntimeException('Student not found.');
             }
             $oldCode = (string)($member['member_code'] ?? '');
 
@@ -188,7 +188,7 @@ final class PositionSyncService
 
             SecurityAuditService::record(
                 $conn,
-                'Member Positions Synced',
+                'Student Positions Synced',
                 ['position_ids' => $ids, 'old_code' => $oldCode, 'new_code' => $newCode],
                 'member',
                 $memberId

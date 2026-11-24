@@ -22,7 +22,7 @@
 
 ## 1. Background and purpose
 
-The Felege Kidusan Sunday School (FKSS) runs education, attendance, membership and ministry activities for children, teenagers and youth. Before this system, these were managed on spreadsheets and paper.
+Endrias Film College (EFC) runs education, attendance and membership activities for its students. Before this system, these were managed on spreadsheets and paper.
 
 FKSS is a web and Android system that gives each department its own workspace on one shared member register. It works on low-end phones and unreliable mobile networks.
 

@@ -113,7 +113,7 @@
           '<td><button class="rc-btn rc-btn-ghost rc-btn-sm" type="button" data-open="' + it.id + '">' + (state.canWrite ? 'Decide' : 'View') + '</button></td>' +
           '</tr>';
       }).join('');
-      els.list.innerHTML = '<table class="af-table"><thead><tr><th>Member</th><th>Assessment</th><th class="opt">Due (EC)</th><th class="opt">Inactive period (EC)</th><th>Decision</th><th>Make-up result</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+      els.list.innerHTML = '<table class="af-table"><thead><tr><th>Student</th><th>Assessment</th><th class="opt">Due (EC)</th><th class="opt">Inactive period (EC)</th><th>Decision</th><th>Make-up result</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
       Array.prototype.forEach.call(els.list.querySelectorAll('[data-open]'), function (b) {
         b.addEventListener('click', function () { openDetail(parseInt(b.getAttribute('data-open'), 10)); });
       });
@@ -192,7 +192,7 @@
         '<h2>' + esc(it.assessment_name) + ' · ' + esc(it.member_name) + '</h2>' +
         '<div class="rc-subtitle">' + esc(it.subject_name || it.subject_name_en) + ' · ' + esc(it.class_name) + ' · ' + pill(it.decision, label(it.decision)) + '</div>' +
         '<div class="af-grid">' +
-        '<div><b>Member code</b>' + esc(it.member_code) + '</div>' +
+        '<div><b>Student code</b>' + esc(it.member_code) + '</div>' +
         '<div><b>Due date (EC)</b>' + esc(it.due_date_ec || '—') + '</div>' +
         '<div><b>Inactive period (EC)</b>' + esc((it.inactive_from_ec || '') + ' – ' + (it.inactive_to_ec || '')) + '</div>' +
         '<div><b>Max score</b>' + esc(num(it.assessment_max_score)) + '</div>' +

@@ -189,7 +189,7 @@ switch ($action) {
             $member = null;
         }
         if (!$member) {
-            hr_reports_respond(['status' => 'error', 'message' => 'Member not found.']);
+            hr_reports_respond(['status' => 'error', 'message' => 'Student not found.']);
         }
         $member['id'] = (int)$member['id'];
 

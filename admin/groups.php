@@ -138,7 +138,7 @@ th{background:#f8fafc;color:#64748b;font-weight:600;font-size:.75rem;text-transf
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="stat-card"><div class="stat-icon bg-emerald-100 text-emerald-600"><i class="fa-solid fa-layer-group"></i></div><div><div class="stat-value" id="statTotal"><?=$stats['total_groups']?></div><div class="stat-label">Total Groups</div></div></div>
-        <div class="stat-card"><div class="stat-icon bg-blue-100 text-blue-600"><i class="fa-solid fa-church"></i></div><div><div class="stat-value" id="statSS"><?=$stats['under_ss']?></div><div class="stat-label">Sunday School</div></div></div>
+        <div class="stat-card"><div class="stat-icon bg-blue-100 text-blue-600"><i class="fa-solid fa-clapperboard"></i></div><div><div class="stat-value" id="statSS"><?=$stats['under_ss']?></div><div class="stat-label">Film College</div></div></div>
         <div class="stat-card"><div class="stat-icon bg-purple-100 text-purple-600"><i class="fa-solid fa-building-columns"></i></div><div><div class="stat-value" id="statParish"><?=$stats['parish']?></div><div class="stat-label">Parish</div></div></div>
         <div class="stat-card"><div class="stat-icon bg-amber-100 text-amber-600"><i class="fa-solid fa-user-tie"></i></div><div><div class="stat-value" id="statLeaders"><?=$stats['total_leaders']?></div><div class="stat-label">Leaders</div></div></div>
         <div class="stat-card"><div class="stat-icon bg-rose-100 text-rose-600"><i class="fa-solid fa-users"></i></div><div><div class="stat-value" id="statMembers"><?=$stats['total_members']?></div><div class="stat-label">Members</div></div></div>
@@ -153,7 +153,7 @@ th{background:#f8fafc;color:#64748b;font-weight:600;font-size:.75rem;text-transf
                     <div class="search-box"><i class="fa-solid fa-search"></i><input autocomplete="off" type="text" id="searchInput" placeholder="Search groups..." onkeyup="debounceSearch()"></div>
                     <div class="tabs">
                         <button class="tab-btn active" onclick="filterCat('all',this)">All</button>
-                        <button class="tab-btn" onclick="filterCat('ss',this)">Sunday School</button>
+                        <button class="tab-btn" onclick="filterCat('ss',this)">Film College</button>
                         <button class="tab-btn" onclick="filterCat('parish',this)">Parish</button>
                     </div>
                 </div>
@@ -187,7 +187,7 @@ th{background:#f8fafc;color:#64748b;font-weight:600;font-size:.75rem;text-transf
             <div class="form-group"><label class="form-label">Year Est. (E.C.)</label><input type="text" name="established_year" id="gEstYear" class="form-input" placeholder="2010"></div>
             <div class="form-group"><label class="form-label">Year Est. (G.C.)</label><input type="text" name="established_year_gc" id="gEstYearGc" class="form-input" placeholder="2018"></div>
         </div>
-        <div class="form-group"><div class="checkbox-wrapper mt-2"><input type="checkbox" name="is_under_sunday_school" id="gUnderSS" checked><span class="text-sm">Under Sunday School</span></div></div>
+        <div class="form-group"><div class="checkbox-wrapper mt-2"><input type="checkbox" name="is_under_sunday_school" id="gUnderSS" checked><span class="text-sm">Under Film College</span></div></div>
         <div class="form-section"><div class="form-section-title"><i class="fa-solid fa-users"></i> Initial Membership</div>
             <div class="form-row"><div class="form-group mb-0"><label class="form-label">Male</label><input type="number" name="founding_male" id="gFM" class="form-input" value="0" min="0"></div><div class="form-group mb-0"><label class="form-label">Female</label><input type="number" name="founding_female" id="gFF" class="form-input" value="0" min="0"></div></div>
         </div>
@@ -353,7 +353,7 @@ async function viewGroup(id){
     const tm=ms.filter(m=>m.gender==='M').length,tf=ms.filter(m=>m.gender==='F').length;
     document.getElementById('viewTitle').textContent=g.group_name;
     let h='<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">';
-    h+='<div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Category</div><div class="font-semibold">'+(g.is_under_sunday_school==1?'Sunday School':'Parish')+'</div></div>';
+    h+='<div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Category</div><div class="font-semibold">'+(g.is_under_sunday_school==1?'Film College':'Parish')+'</div></div>';
     h+='<div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Est. Year</div><div class="font-semibold">'+(esc(g.established_year)||'\u2014')+'</div></div>';
     h+='<div class="p-3 bg-slate-50 rounded-lg"><div class="text-xs text-slate-500">Initial (M/F)</div><div class="font-semibold">'+(g.founding_male||0)+' / '+(g.founding_female||0)+'</div></div>';
     h+='<div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200"><div class="text-xs text-emerald-600">Current (M/F)</div><div class="font-semibold text-emerald-700">'+(g.current_male||0)+' / '+(g.current_female||0)+'</div></div></div>';
@@ -427,7 +427,7 @@ async function generatePdf(){
     const r=await api('export_group_pdf','GET',{group_id:curGid,include_members:im?'1':'0',include_leaders:il?'1':'0',include_stats:is?'1':'0'});
     if(!r.success)return;const{jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4');const pw=210;let y=15;const g=r.data.group;
     doc.setFillColor(5,150,105);doc.rect(0,0,pw,35,'F');doc.setTextColor(255);doc.setFontSize(18);doc.text(<?= json_encode(SCHOOL_NAME_SHORT . ' ' . SCHOOL_TYPE) ?>,15,15);doc.setFontSize(10);doc.text('Groups Management Report',15,22);doc.setFontSize(8);doc.text('Generated: '+(typeof WBWSCalendar!=='undefined'?WBWSCalendar.formatDate(new Date(),'medium'):new Date().toLocaleDateString()),15,29);y=45;doc.setTextColor(0);
-    if(ii){doc.setFontSize(14);doc.setFont(undefined,'bold');doc.text(g.group_name||'Group',15,y);y+=7;if(g.group_name_en){doc.setFontSize(10);doc.setFont(undefined,'normal');doc.text(g.group_name_en,15,y);y+=6}doc.setFontSize(9);doc.autoTable({startY:y,head:[['Field','Value']],body:[['Category',g.is_under_sunday_school==1?'Sunday School':'Parish'],['Est. Year',g.established_year||'N/A'],['Initial M/F',(g.founding_male||0)+' / '+(g.founding_female||0)],['Current M/F',(g.current_male||0)+' / '+(g.current_female||0)],['Total',''+(parseInt(g.current_male)||0)+(parseInt(g.current_female)||0)]],theme:'grid',headStyles:{fillColor:[5,150,105]},margin:{left:15,right:15},styles:{fontSize:9}});y=doc.lastAutoTable.finalY+10}
+    if(ii){doc.setFontSize(14);doc.setFont(undefined,'bold');doc.text(g.group_name||'Group',15,y);y+=7;if(g.group_name_en){doc.setFontSize(10);doc.setFont(undefined,'normal');doc.text(g.group_name_en,15,y);y+=6}doc.setFontSize(9);doc.autoTable({startY:y,head:[['Field','Value']],body:[['Category',g.is_under_sunday_school==1?'Film College':'Parish'],['Est. Year',g.established_year||'N/A'],['Initial M/F',(g.founding_male||0)+' / '+(g.founding_female||0)],['Current M/F',(g.current_male||0)+' / '+(g.current_female||0)],['Total',''+(parseInt(g.current_male)||0)+(parseInt(g.current_female)||0)]],theme:'grid',headStyles:{fillColor:[5,150,105]},margin:{left:15,right:15},styles:{fontSize:9}});y=doc.lastAutoTable.finalY+10}
     if(il&&r.data.leaders&&r.data.leaders.length>0){if(y>250){doc.addPage();y=15}doc.setFontSize(12);doc.setFont(undefined,'bold');doc.text('Leaders ('+r.data.leaders.length+')',15,y);y+=5;doc.autoTable({startY:y,head:[['#','Name','Gender','Phone','Responsibility']],body:r.data.leaders.map((l,i)=>[i+1,l.leader_full_name||'',l.sex==='M'?'Male':'Female',l.phone||'',l.responsibility||'']),theme:'striped',headStyles:{fillColor:[217,119,6]},margin:{left:15,right:15},styles:{fontSize:8}});y=doc.lastAutoTable.finalY+10}
     if(im&&r.data.members&&r.data.members.length>0){if(y>250){doc.addPage();y=15}doc.setFontSize(12);doc.setFont(undefined,'bold');doc.text('Members ('+r.data.members.length+')',15,y);y+=5;doc.autoTable({startY:y,head:[['#','Full Name','Christian Name','Gender','Phone','City']],body:r.data.members.map((m,i)=>[i+1,m.full_name||'',m.baptismal_name||'',m.gender==='M'?'M':'F',m.phone||'',m.city||'']),theme:'striped',headStyles:{fillColor:[5,150,105]},margin:{left:15,right:15},styles:{fontSize:8}});y=doc.lastAutoTable.finalY+10}
     if(is&&r.data.member_stats){if(y>250){doc.addPage();y=15}const s=r.data.member_stats;doc.setFontSize(12);doc.setFont(undefined,'bold');doc.text('Statistics',15,y);y+=5;doc.autoTable({startY:y,head:[['Metric','Value']],body:[['Total',s.total],['Male',s.male],['Female',s.female],['Male %',s.total>0?Math.round(s.male/s.total*100)+'%':'0%'],['Female %',s.total>0?Math.round(s.female/s.total*100)+'%':'0%']],theme:'grid',headStyles:{fillColor:[99,102,241]},margin:{left:15,right:15},styles:{fontSize:9}})}

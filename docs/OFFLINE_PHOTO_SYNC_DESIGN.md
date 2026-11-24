@@ -1,6 +1,6 @@
 # Offline Member Photo Capture & Sync — Deep Analysis & Specification
 
-**System:** FKSS Sunday School Management System (Flutter mobile app + PHP/MySQL backend)
+**System:** Endrias Film College — School Management System (Flutter mobile app + PHP/MySQL backend)
 **Use case:** Field HR/Info staff photograph 300–400+ member profile/ID pictures in areas with unstable/absent internet. Photos must reach the server reliably — no corruption, no loss, no duplicates, no silent discard, and the queue must survive app kills, device reboots, storage pressure, and very slow 2G/EDGE when connectivity does return.
 
 ---

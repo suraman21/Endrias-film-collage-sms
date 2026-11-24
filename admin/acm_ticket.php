@@ -198,7 +198,7 @@ acm_chrome_open('queue', (string)($ticket['ticket_no'] ?? 'Ticket'), 'Activation
         <?php $member = $ticket['member'] ?? null; $guardian = $ticket['guardian'] ?? null; ?>
         <?php if (is_array($member)): ?>
         <dl class="acm-kv">
-            <dt>Member</dt><dd><span class="amharic"><?= e((string)($member['full_name_am'] ?? '')) ?></span> (<?= e((string)($member['student_name'] ?? '')) ?>)</dd>
+            <dt>Student</dt><dd><span class="amharic"><?= e((string)($member['full_name_am'] ?? '')) ?></span> (<?= e((string)($member['student_name'] ?? '')) ?>)</dd>
             <dt>Code</dt><dd><?= e((string)($member['member_code'] ?? '—')) ?> · <?= e((string)($member['registration_type'] ?? '')) ?></dd>
             <dt>Section</dt><dd><?= e((string)($member['current_section'] ?? '—')) ?> · <?= e((string)($member['education_level'] ?? '')) ?></dd>
             <dt>Baptismal</dt><dd><?= e((string)($member['baptismal_name'] ?? '—')) ?></dd>
