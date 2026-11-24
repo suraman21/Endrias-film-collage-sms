@@ -91,6 +91,10 @@ switch ($role) {
         require __DIR__ . '/dashboards/hr-dept.php';
         break;
 
+    case 'admissions_registrar_dept':
+        require __DIR__ . '/dashboards/admissions_registrar_dept.php';
+        break;
+
     case 'info_dept':
         require __DIR__ . '/dashboards/info-dept.php';
         break;

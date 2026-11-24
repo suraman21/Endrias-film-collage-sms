@@ -54,10 +54,10 @@ final class AttendanceWarningService
     ];
     public const NOTIFICATION_TYPE = 'attendance_warning';
     /** Roles that receive the bell per department (§8: never admins). */
-    public const BELL_ROLES = ['edu' => 'edu_dept,hr_dept,info_dept'];
+    public const BELL_ROLES = ['edu' => 'edu_dept,hr_dept,admissions_registrar_dept,info_dept'];
     /** Roles allowed to close, per department. Admins are read-only (§8). */
-    public const CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'info_dept']];
-    public const READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'];
+    public const CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'admissions_registrar_dept', 'info_dept']];
+    public const READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'];
     private const DEPT_AM = ['edu' => 'ትምህርት ክፍል'];
 
     /** @var array<int,bool> */
@@ -105,7 +105,7 @@ final class AttendanceWarningService
     {
         return match ($role) {
             'edu_dept' => ['edu'],
-            'hr_dept', 'info_dept', 'school_admin', 'super_admin' => ['edu'],
+            'hr_dept', 'admissions_registrar_dept', 'info_dept', 'school_admin', 'super_admin' => ['edu'],
             default => [],
         };
     }

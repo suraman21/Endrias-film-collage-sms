@@ -92,6 +92,7 @@ $validRoles = [
     'school_admin',
     'info_dept',
     'hr_dept',
+    'admissions_registrar_dept',
     'photo_importer',
     'photo_dept',
     'edu_dept',

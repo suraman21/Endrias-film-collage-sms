@@ -36,12 +36,12 @@ require_once dirname(__DIR__) . '/services/AttendanceRiskService.php';
 final class ReportRegistry
 {
     /** Roles that may open the centre at all (mirrors access_control.php). */
-    public const READER_ROLES = ['super_admin', 'school_admin', 'info_dept', 'hr_dept'];
+    public const READER_ROLES = ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'];
 
     /** Shorthands used in field definitions. */
-    private const R_ALL   = ['super_admin', 'school_admin', 'info_dept', 'hr_dept'];
+    private const R_ALL   = ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'];
     private const R_ADMIN = ['super_admin', 'school_admin'];
-    private const R_HR    = ['super_admin', 'school_admin', 'hr_dept'];
+    private const R_HR    = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'];
     /**
      * Owner decision 2026‑10‑19 (docs/planning/REPORTING_CENTRE_SCOPE_AND_ROLE_BOUNDARY_2026-10-19.md):
      * future cross‑department / sensitive datasets (Finance, Material records,

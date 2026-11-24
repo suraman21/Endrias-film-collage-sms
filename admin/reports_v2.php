@@ -20,7 +20,7 @@ if (empty($_SESSION['admin_logged_in'])) {
     exit;
 }
 $userRole = (string)($_SESSION['admin_role'] ?? '');
-if (!in_array($userRole, ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
+if (!in_array($userRole, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'], true)) {
     header('Location: dashboard.php?error=access_denied');
     exit;
 }
@@ -29,7 +29,7 @@ $today = new DateTime('now', new DateTimeZone('Africa/Addis_Ababa'));
 $todayFormatted = ethio_date_format($today, 'F j, Y');
 $roleLabels = [
     'super_admin' => 'Super Admin', 'school_admin' => 'School Admin',
-    'info_dept' => 'Information Department', 'hr_dept' => 'HR Department',
+    'info_dept' => 'Information Department', 'hr_dept' => 'HR Department', 'admissions_registrar_dept' => 'Admission & Registrar',
 ];
 $cfg = [
     'api'        => '/admin/api_reports_v2.php',

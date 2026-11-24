@@ -52,7 +52,7 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 }
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
-if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
+if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'], true)) {
     info_rp_fail('You do not have permission to generate reports.', 403);
 }
 

@@ -56,8 +56,9 @@ foreach ($__featureActions as $__feature => $__actions) {
 // grades/attendance, but management is restricted:
 $__role = $_SESSION['admin_role'] ?? '';
 
-// HR may only fetch the live class catalog for the registration dropdown.
-if ($__role === 'hr_dept' && !in_array($action, ['get_classes'], true)) {
+// HR / Admission & Registrar may only fetch the live class catalog for
+// the registration dropdown (Registrar assigns the class at registration only).
+if (in_array($__role, ['hr_dept', 'admissions_registrar_dept'], true) && !in_array($action, ['get_classes'], true)) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'You do not have permission to use this Education action.']);
     exit;

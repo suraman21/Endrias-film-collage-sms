@@ -77,7 +77,7 @@ final class MemberRegistrationPolicy
         return [
             'quick_add' => $quickAdd,
             'allow_uploads' => !$quickAdd,
-            'allow_upgrade' => !$quickAdd && in_array($role, ['super_admin', 'hr_dept'], true),
+            'allow_upgrade' => !$quickAdd && in_array($role, ['super_admin', 'hr_dept', 'admissions_registrar_dept'], true),
             'full_name_am' => $fullName,
             'registration_type' => $registrationType,
             'member_type' => $quickAdd

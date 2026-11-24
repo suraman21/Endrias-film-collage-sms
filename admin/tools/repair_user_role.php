@@ -34,6 +34,7 @@ $CANONICAL_ROLES = [
     'school_admin',
     'info_dept',
     'hr_dept',
+    'admissions_registrar_dept',
     'edu_dept',
     'finance_dept',
     'material_dept',

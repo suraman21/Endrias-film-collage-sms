@@ -28,12 +28,12 @@ $action = is_scalar($_REQUEST['action'] ?? '') ? (string)($_REQUEST['action'] ??
 $__readActions = ['search', 'get', 'get_family', 'list_suggestions', 'score_check', 'stats', 'list_guardians', 'unlinked_members', 'activity'];
 $__writeActions = ['create', 'update', 'link', 'unlink', 'merge', 'merge_suggestion', 'reject_suggestion', 'add_alias', 'run_rematch', 'attach_member', 'attach_batch', 'set_relation', 'remove_alias', 'verify_link', 'unverify_link'];
 
-if (in_array($action, $__writeActions, true) && !in_array($role, ['super_admin', 'school_admin', 'hr_dept'], true)) {
+if (in_array($action, $__writeActions, true) && !in_array($role, ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'], true)) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'Only HR or school/super admins can manage guardians.']);
     exit;
 }
-if (in_array($action, $__readActions, true) && !in_array($role, ['super_admin', 'school_admin', 'hr_dept', 'info_dept'], true)) {
+if (in_array($action, $__readActions, true) && !in_array($role, ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept'], true)) {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'Access denied.']);
     exit;

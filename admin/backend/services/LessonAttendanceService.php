@@ -41,7 +41,7 @@ final class LessonAttendanceService
     public const RECORDS = 'attendance_session_records';
     public const MAX_LESSON_NO = 6;
     /** Roles that may read lesson history (same read matrix as Phases 2–5: admins + Edu + teacher (own classes) + HR / Info read‑only). */
-    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'];
+    public const READ_ROLES = ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'];
     /** Roles that may save lesson sheets (teachers only inside their class + subject assignment). */
     public const WRITE_ROLES = ['teacher', 'edu_dept'];
 

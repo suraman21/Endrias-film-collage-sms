@@ -24,7 +24,7 @@ header('Content-Type: application/json; charset=utf-8');
 $action = (string)($_REQUEST['action'] ?? 'list-pending');
 $canDecide = in_array(
     (string)($_SESSION['admin_role'] ?? ''),
-    ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_importer'],
+    ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_importer'],
     true
 );
 if (!$canDecide) {

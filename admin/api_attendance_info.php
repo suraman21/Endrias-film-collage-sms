@@ -30,7 +30,7 @@ $adminId = (int)($_SESSION['admin_id'] ?? 0);
 // attendance takers keep the read-only monitoring actions of this API; admins
 // do not change member status through the attendance workflow. Enforced here,
 // server-side, independent of which dashboard rendered the button.
-const ATTENDANCE_STATUS_WRITER_ROLES = ['hr_dept', 'info_dept'];
+const ATTENDANCE_STATUS_WRITER_ROLES = ['hr_dept', 'admissions_registrar_dept', 'info_dept'];
 // Manual values allowed through this workflow. 'warning' is no longer set by
 // hand or by automation here; 'archived' has its own archive/restore flow.
 const ATTENDANCE_MANUAL_STATUSES = ['active', 'inactive'];

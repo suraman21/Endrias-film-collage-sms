@@ -17,6 +17,7 @@ $supportedProfileRoles = [
     'finance_dept',
     'material_dept',
     'hr_dept',
+    'admissions_registrar_dept',
     'teacher',
     'attendance_taker',
     'hr_attendance_taker',

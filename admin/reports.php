@@ -18,7 +18,7 @@ if (empty($_SESSION['admin_logged_in'])) {
 }
 // Defense in depth (access_control.php is the primary gate). Read-only page:
 // admins + the Information and HR departments (2026-10-18).
-if (!in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
+if (!in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'], true)) {
     header('Location: dashboard.php?error=access_denied');
     exit;
 }

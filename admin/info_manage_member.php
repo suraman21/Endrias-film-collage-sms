@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Role gating: only roles permitted by access_control may edit members.
         // Info dept is a data-updater (viewer+edit); registration/promotion stay HR-only.
-        $allowedEditRoles = ['super_admin', 'school_admin', 'hr_dept', 'info_dept'];
+        $allowedEditRoles = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept'];
         if (!hasRole($allowedEditRoles)) {
             echo json_encode(['status' => 'error', 'message' => 'You do not have permission to edit members.']);
             http_response_code(403);
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Every other role keeps the stored value regardless of what was posted.
     $status            = (string)($cur['status'] ?? 'active');
     $statusChanged     = false;
-    if (hasRole(['hr_dept', 'info_dept']) && $status !== 'archived') {
+    if (hasRole(['hr_dept', 'admissions_registrar_dept', 'info_dept']) && $status !== 'archived') {
         $postedStatus = field('status', $status);
         if (in_array($postedStatus, ['active', 'inactive'], true) && $postedStatus !== $status) {
             $statusChanged = true;
@@ -903,7 +903,7 @@ try {
     $famGuardians = \App\Services\GuardianService::familyOfMember($conn, (int)$m['id']);
     $famSiblings  = \App\Services\GuardianService::siblingsOf($conn, (int)$m['id']);
 } catch (\Throwable $famError) { $famGuardians = []; $famSiblings = []; }
-$famCanManage = in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin','school_admin','hr_dept'], true);
+$famCanManage = in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin','school_admin','hr_dept','admissions_registrar_dept'], true);
 $famRelLabel = static function(string $r): string { return $r === 'father' ? 'Father' : ($r === 'mother' ? 'Mother' : 'Guardian'); };
 
 // ── Positions/roles ────────────────────────────────────
@@ -1348,7 +1348,7 @@ $mmRoles = [
                             <?php if ($famCanManage && $famGuardians): $g0 = $famGuardians[0]; ?>
                             <a class="mm-fam-btn" style="justify-content:center;padding:10px;color:#6d28d9;background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.2);" href="/admin/dashboard.php?section=family&guardian=<?= (int)$g0['id'] ?>" onclick="return window.MemberNav ? MemberNav.manageFamily(<?= (int)$g0['id'] ?>) : true;"><i class="fas fa-people-roof"></i> Manage Family</a>
                             <?php endif; ?>
-                            <?php if (in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin','school_admin','hr_dept','info_dept'], true)): ?>
+                            <?php if (in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin','school_admin','hr_dept','admissions_registrar_dept','info_dept'], true)): ?>
                             <button type="button" class="mm-fam-btn" style="justify-content:center;padding:10px;color:#7f1d1d;background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.2);" onclick="if(confirm('Archive this member? They will move to Old Members Archive.')){archiveMember(<?= (int)$m['id'] ?>, <?= json_encode($fullName) ?>);}"><i class="fas fa-box-archive"></i> Archive Member</button>
                             <?php endif; ?>
                         </div>
@@ -1363,7 +1363,7 @@ $mmRoles = [
             <form id="editMemberForm" onsubmit="return submitEditForm(event)" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="<?= (int)$m['id'] ?>">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string)(generateCsrfToken() ?? '')) ?>">
-                <?php $canEditStatus = hasRole(['hr_dept','info_dept']) && ($m['status'] ?? '') !== 'archived'; ?>
+                <?php $canEditStatus = hasRole(['hr_dept','admissions_registrar_dept','info_dept']) && ($m['status'] ?? '') !== 'archived'; ?>
 
                 <div class="mm-edit-grid">
                     <div class="edit-main">

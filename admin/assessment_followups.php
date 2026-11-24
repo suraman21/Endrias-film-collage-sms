@@ -32,7 +32,7 @@ if (!in_array($userRole, \App\Services\AssessmentFollowupService::READ_ROLES, tr
 $today = new DateTime('now', new DateTimeZone('Africa/Addis_Ababa'));
 $roleLabels = [
     'super_admin' => 'Super Admin', 'school_admin' => 'School Admin', 'info_dept' => 'Information Department',
-    'hr_dept' => 'HR Department', 'edu_dept' => 'Education Department', 'teacher' => 'Teacher',
+    'hr_dept' => 'HR Department', 'admissions_registrar_dept' => 'Admission & Registrar', 'edu_dept' => 'Education Department', 'teacher' => 'Teacher',
 ];
 $cfg = [
     'api' => '/admin/api_assessment_followups.php',

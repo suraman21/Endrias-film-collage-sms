@@ -4,9 +4,9 @@ declare(strict_types=1);
 require_once __DIR__.'/config.php';
 if(!function_exists('isLoggedIn')||!isLoggedIn()){header('Location: index.php');exit;}
 $role=(string)($_SESSION['admin_role']??'');
-if(!in_array($role,['super_admin','hr_dept'],true)){http_response_code(403);echo 'Access denied.';exit;}
+if(!in_array($role,['super_admin','hr_dept','admissions_registrar_dept'],true)){http_response_code(403);echo 'Access denied.';exit;}
 $isSetup=$role==='super_admin';
-$canManage=$role==='hr_dept';
+$canManage=in_array($role,['hr_dept','admissions_registrar_dept'],true);
 $csrf=generateCsrfToken();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Telegram Registration</title>
 <style>

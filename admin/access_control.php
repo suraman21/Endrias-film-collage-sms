@@ -108,7 +108,7 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // hr_dept is allowed onto the file so it can read get_classes
             // (HR registration class dropdown). Destructive / roster actions
             // are still blocked inside api_education.php for that role.
-            'api_education.php' => ['super_admin', 'school_admin', 'edu_dept', 'hr_dept', 'teacher', 'attendance_taker'],
+            'api_education.php' => ['super_admin', 'school_admin', 'edu_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker'],
             'education.php'     => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'attendance_taker'],
             'api_subjects.php'  => ['super_admin', 'school_admin', 'edu_dept', 'teacher'],
             'subjects.php'      => ['super_admin', 'school_admin', 'edu_dept', 'teacher'],
@@ -133,19 +133,19 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'attendance_taker.php'    => ['super_admin', 'school_admin', 'attendance_taker'],
             // Attendance alerting v2 (Phase 1): department status + policy.
             // Writes are restricted further inside each API (HR/Info; School Admin).
-            'api_department_status.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
-            'api_attendance_policy.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
-            'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
-            'attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'api_department_status.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
+            'api_attendance_policy.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
+            'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
+            'attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
             // Phase 4: shared monthly attendance report (read-only, department-scoped inside the API).
-            'api_attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
-            'attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'api_attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
+            'attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept', 'edu_dept'],
             // Phase 5: assessment follow-ups / make-up queue. Teachers are scoped to
             // their class + subject assignments and HR / Info / admins are read-only INSIDE the API.
-            'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'],
-            'assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'],
-            'api_lesson_attendance.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'],
-            'lesson_attendance.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'],
+            'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
+            'assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
+            'api_lesson_attendance.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
+            'lesson_attendance.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'admissions_registrar_dept', 'info_dept'],
 
             // ---- Marklists / report cards ----
             'api_communication.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher'],
@@ -158,29 +158,30 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // ---- Member management (Information department) ----
             // finance_dept included: the finance dashboard fetches the student
             // roster to assign fees (frontend/js/finance.js → members.php).
-            'hr_register_member.php'  => ['super_admin', 'hr_dept'],
-            'api_list_members.php'    => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'edu_dept', 'finance_dept'],
-            'api_search.php'            => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'edu_dept', 'finance_dept'],
-            'members.php'             => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'edu_dept', 'finance_dept'],
-            'api_check_duplicate.php' => ['super_admin', 'school_admin', 'hr_dept'],
-            'members_check.php'       => ['super_admin', 'school_admin', 'hr_dept'],
-            'info_manage_member.php'        => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'member_file.php'               => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
+            'hr_register_member.php'  => ['super_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'api_list_members.php'    => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
+            'api_search.php'            => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
+            'members.php'             => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept', 'finance_dept'],
+            'api_check_duplicate.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'members_check.php'       => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'info_manage_member.php'        => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'member_file.php'               => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
             // Photo department: ZIP airlock import and multi-photographer
             // conflict resolution. photo_dept is the primary role;
             // photo_importer is kept as a legacy alias for accounts
             // created before the role was promoted to a full department.
-            'api_photo_candidates.php'      => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_dept', 'photo_importer'],
-            'api_photo_zip_import.php'      => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_dept', 'photo_importer'],
-            'photo_review.php'              => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_dept', 'photo_importer'],
-            'photo_import.php'              => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_dept', 'photo_importer'],
-            'photo_dept.php'                => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'photo_dept', 'photo_importer'],
-            'info_archive_member.php'       => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'info_restore_member.php'       => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'info_get_archived_members.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'print_member.php'  => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'edu_dept'],
+            'api_photo_candidates.php'      => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_dept', 'photo_importer'],
+            'api_photo_zip_import.php'      => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_dept', 'photo_importer'],
+            'photo_review.php'              => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_dept', 'photo_importer'],
+            'photo_import.php'              => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_dept', 'photo_importer'],
+            'photo_dept.php'                => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'photo_dept', 'photo_importer'],
+            'info_archive_member.php'       => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'info_restore_member.php'       => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'info_get_archived_members.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'print_member.php'  => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'edu_dept'],
             'info-dept.php'     => ['super_admin', 'school_admin', 'info_dept'],
-            'hr-dept.php'       => ['super_admin', 'school_admin', 'hr_dept'],
+            'hr-dept.php'       => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'admissions_registrar_dept.php' => ['super_admin', 'school_admin', 'admissions_registrar_dept'],
 
             // ---- Material department ----
             'api_material.php'      => ['super_admin', 'school_admin', 'material_dept'],
@@ -188,30 +189,30 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'material_department.php' => ['super_admin', 'school_admin', 'material_dept'],
 
             // ---- Groups / associations ----
-            'groups.php'     => ['super_admin', 'school_admin', 'hr_dept'],
+            'groups.php'     => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- P72 Communication Center: every staff role ----
-            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
-            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
-            'groups_api.php' => ['super_admin', 'school_admin', 'hr_dept'],
+            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'admissions_registrar_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'groups_api.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- Reports & exports (contain all-member data) ----
             // Member analytics & export centre: Info + HR analyse and export
             // member demographics (2026-10-18). Both roles already had every
             // export below; the page itself is read-only.
-            'api_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-    'api_reports_v2.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-    'reports_v2.php'     => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-    'api_report_views.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'reports.php'     => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'export_pdf.php'  => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'api_export_members.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'api_import_members.php' => ['super_admin', 'hr_dept'],
+            'api_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+    'api_reports_v2.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+    'reports_v2.php'     => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+    'api_report_views.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'reports.php'     => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'export_pdf.php'  => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'api_export_members.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'api_import_members.php' => ['super_admin', 'hr_dept', 'admissions_registrar_dept'],
             'api_test_seed.php'      => ['super_admin'],
             'api_search_backfill.php'  => ['super_admin'],
 
             // ---- CMS (public website content) ----
-            'api_cms.php'        => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'content_editor'],
+            'api_cms.php'        => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept', 'content_editor'],
             'content_editor.php' => ['super_admin', 'school_admin', 'content_editor'],
 
             // ---- Branding / settings / health ----
@@ -270,19 +271,21 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // service layer re-enforces the attribution server-side.
 
             // ---- HR attendance review console (HR data only) ----
+            // HR-owned consoles stay HR-only (employee lifecycle lives in HR,
+            // not in Admission & Registrar — see the separation document).
             'api_hr_attendance.php' => ['super_admin', 'school_admin', 'hr_dept'],
             'api_hr_reports.php' => ['super_admin', 'school_admin', 'hr_dept'],
             // Shared attendance analytics (Education): Info + HR analyse, admins refresh.
-            'api_info_analytics.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
-            'api_info_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
+            'api_info_analytics.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
+            'api_info_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- QR roster printing (Phase 8): each department prints
             // ONLY its own carrier; ownership re-checked in the endpoint.
-            'api_qr_roster.php' => ['super_admin', 'school_admin', 'edu_dept', 'hr_dept'],
+            'api_qr_roster.php' => ['super_admin', 'school_admin', 'edu_dept', 'hr_dept', 'admissions_registrar_dept'],
 
             // ---- ID cards ----
-            'view_id_card.php'     => ['super_admin', 'school_admin', 'hr_dept'],
-            'generate_id_card.php' => ['super_admin', 'school_admin', 'hr_dept'],
+            'view_id_card.php'     => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
+            'generate_id_card.php' => ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept'],
             'preview.php'          => ['super_admin', 'school_admin'],
 
             // ---- Dashboards (also protected by dashboards/.htaccess) ----

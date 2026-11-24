@@ -155,7 +155,7 @@ if (!isset($conn) || $conn->connect_error) {
 }
 // Role gating: registration/promotion is HR-only (plus super_admin).
 // School-admin registration was removed entirely on 2026-11-18.
-$allowedRegRoles = ['super_admin', 'hr_dept'];
+$allowedRegRoles = ['super_admin', 'hr_dept', 'admissions_registrar_dept'];
 if (!hasRole($allowedRegRoles)) {
     jsonExit(['status' => 'error', 'message' => 'You do not have permission to register members.'], 403);
 }
