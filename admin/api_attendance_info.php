@@ -147,7 +147,7 @@ case 'member_attendance':
     $stmt->execute();
     $member = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-    if (!$member) { echo json_encode(['status'=>'error','message'=>'Member not found']); break; }
+    if (!$member) { echo json_encode(['status'=>'error','message'=>'Student not found']); break; }
 
     // Get attendance records (last 90 days)
     $stmt = $conn->prepare("SELECT attendance_date, status, notes, check_in_time FROM attendance WHERE member_id = ? AND attendance_date >= DATE_SUB(NOW(), INTERVAL 90 DAY) ORDER BY attendance_date DESC");
@@ -208,7 +208,7 @@ case 'update_status':
     $stmt->execute();
     $old = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-    if (!$old) { echo json_encode(['status'=>'error','message'=>'Member not found']); break; }
+    if (!$old) { echo json_encode(['status'=>'error','message'=>'Student not found']); break; }
 
     if ($old['status'] === 'archived') {
         echo json_encode(['status'=>'error','message'=>'Archived members are restored through the archive workflow.']);

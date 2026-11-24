@@ -154,14 +154,14 @@ $todayFormatted = ethio_date_format($today, 'F j, Y');
         <!-- ============ TAB 2: DATA EXPLORER ============ -->
         <div id="tab-explorer" class="tc" style="display:none">
             <div class="card mb-4 fi">
-                <div class="card-hd"><span class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-filter mr-1 text-emerald-500"></i>Filter Members</span><button onclick="resetF()" class="btn btn-sm btn-ghost"><i class="fa-solid fa-rotate-left"></i> Reset</button></div>
+                <div class="card-hd"><span class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-filter mr-1 text-emerald-500"></i>Filter Students</span><button onclick="resetF()" class="btn btn-sm btn-ghost"><i class="fa-solid fa-rotate-left"></i> Reset</button></div>
                 <div class="card-bd">
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
                         <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Gender</label><select id="fGender" class="sel w-full"><option value="">All</option><option value="male">Male</option><option value="female">Female</option></select></div>
-                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Age Group</label><select id="fAge" class="sel w-full"><option value="">All</option><?php foreach (\App\Services\MemberCategory::sections() as $rpCode => $rpSec): ?><option value="<?= $rpCode ?>"><?= e($rpSec['am']) ?> (<?= e($rpSec['letter']) ?>)</option><?php endforeach; ?></select></div>
+                        
                         <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Status</label><select id="fStatus" class="sel w-full"><option value="">All Active</option><option value="active">Active</option><option value="warning">Warning</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
-                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Member Type</label><select id="fMemType" class="sel w-full"><option value="">All</option><option value="regular">Regular</option><option value="honorary">Honorary</option></select></div>
-                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Registration</label><select id="fRegType" class="sel w-full"><option value="">All</option><option value="direct">Direct</option><option value="transfer">Transfer</option><option value="waiting">Waiting</option></select></div>
+                        
+                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">Registration</label><select id="fRegType" class="sel w-full"><option value="">All</option><option value="direct">Direct</option><option value="transfer">Transfer</option></select></div>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
                         <div><label class="block text-[10px] font-semibold text-slate-500 mb-1 uppercase">City</label><select id="fCity" class="sel w-full"><option value="">All</option></select></div>
@@ -196,7 +196,7 @@ $todayFormatted = ethio_date_format($today, 'F j, Y');
                     </div>
                 </div>
                 <div style="max-height:500px;overflow:auto">
-                    <table class="dt"><thead><tr><th>#</th><th>Name</th><th>Code</th><th>Gender</th><th>Age Grp</th><th>Phone</th><th>City</th><th>Status</th><th>Reg Type</th></tr></thead>
+                    <table class="dt"><thead><tr><th>#</th><th>Name</th><th>Code</th><th>Gender</th><th>Phone</th><th>City</th><th>Status</th><th>Reg Type</th></tr></thead>
                     <tbody id="expBody"></tbody></table>
                 </div>
             </div>
@@ -210,9 +210,9 @@ $todayFormatted = ethio_date_format($today, 'F j, Y');
                     <div class="card-hd bg-emerald-50"><span class="text-sm font-semibold text-emerald-800"><i class="fa-solid fa-file-csv mr-1"></i> Report CSV (up to 5,000)</span></div>
                     <div class="card-bd space-y-2">
                         <a href="/admin/api_export_members.php?tier=all&amp;format=csv" class="exp-card"><span><i class="fa-solid fa-database text-emerald-700 mr-2"></i>Complete Roster CSV</span><i class="fa-solid fa-download text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=csv&filter=all" class="exp-card"><span><i class="fa-solid fa-users text-emerald-600 mr-2"></i>All Members Report</span><i class="fa-solid fa-download text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=csv&filter=all" class="exp-card"><span><i class="fa-solid fa-users text-emerald-600 mr-2"></i>All Students Report</span><i class="fa-solid fa-download text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=csv&filter=active" class="exp-card"><span><i class="fa-solid fa-user-check text-blue-600 mr-2"></i>Active Only</span><i class="fa-solid fa-download text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=csv&filter=waiting" class="exp-card"><span><i class="fa-solid fa-hourglass-half text-amber-600 mr-2"></i>Waiting Members</span><i class="fa-solid fa-download text-slate-400"></i></a>
+                        
                         <a href="/admin/export_pdf.php?format=csv&filter=no_id" class="exp-card"><span><i class="fa-solid fa-id-card text-red-500 mr-2"></i>Without ID Card</span><i class="fa-solid fa-download text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=csv&filter=male" class="exp-card"><span><i class="fa-solid fa-person text-sky-600 mr-2"></i>Male Members</span><i class="fa-solid fa-download text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=csv&filter=female" class="exp-card"><span><i class="fa-solid fa-person-dress text-pink-600 mr-2"></i>Female Members</span><i class="fa-solid fa-download text-slate-400"></i></a>
@@ -223,7 +223,7 @@ $todayFormatted = ethio_date_format($today, 'F j, Y');
                     <div class="card-bd space-y-2">
                         <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="exp-card"><span><i class="fa-solid fa-users text-red-600 mr-2"></i>All Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=pdf&filter=active" target="_blank" class="exp-card"><span><i class="fa-solid fa-user-check text-red-600 mr-2"></i>Active Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=pdf&filter=waiting" target="_blank" class="exp-card"><span><i class="fa-solid fa-hourglass-half text-red-600 mr-2"></i>Waiting List</span><i class="fa-solid fa-print text-slate-400"></i></a>
+                        
                         <a href="/admin/export_pdf.php?format=pdf&filter=no_id" target="_blank" class="exp-card"><span><i class="fa-solid fa-id-card text-red-600 mr-2"></i>Without ID Card</span><i class="fa-solid fa-print text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=pdf&filter=male" target="_blank" class="exp-card"><span><i class="fa-solid fa-person text-red-600 mr-2"></i>Male Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=pdf&filter=female" target="_blank" class="exp-card"><span><i class="fa-solid fa-person-dress text-red-600 mr-2"></i>Female Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
@@ -279,9 +279,9 @@ function loadA(){
 function renderKPIs(){
     const t=AD.totals,tot=Number(t.active||0)+Number(t.warning||0)+Number(t.inactive||0);
     document.getElementById('kpiRow').innerHTML=[
-        {l:'Total Members',v:tot,c:'#16a34a',b:'#d1fae5'},{l:'Male',v:t.male||0,c:'#2563eb',b:'#dbeafe'},
+        {l:'Total Students',v:tot,c:'#16a34a',b:'#d1fae5'},{l:'Male',v:t.male||0,c:'#2563eb',b:'#dbeafe'},
         {l:'Female',v:t.female||0,c:'#ec4899',b:'#fce7f3'},{l:'With ID',v:t.has_id||0,c:'#06b6d4',b:'#cffafe'},
-        {l:'Waiting',v:t.waiting||0,c:'#f59e0b',b:'#fef3c7'},{l:'Teachers',v:t.is_teacher||0,c:'#8b5cf6',b:'#ede9fe'}
+        {l:'Teachers',v:t.is_teacher||0,c:'#8b5cf6',b:'#ede9fe'}
     ].map(k=>'<div class="sp" style="background:'+k.b+'"><div class="text-2xl font-bold" style="color:'+k.c+'">'+Number(k.v).toLocaleString()+'</div><div class="text-[10px] font-medium" style="color:'+k.c+'80">'+k.l+'</div></div>').join('');
 }
 
@@ -297,7 +297,7 @@ function renderCharts(){
     mc('cTrend',{type:'line',data:{labels:tr.map(x=>x.month),datasets:[{label:'Total',data:tr.map(x=>x.count),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',fill:true,tension:.4,borderWidth:2,pointRadius:4,pointBackgroundColor:'#16a34a'},{label:'Male',data:tr.map(x=>x.male_count),borderColor:'#3b82f6',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,4],pointRadius:3},{label:'Female',data:tr.map(x=>x.female_count),borderColor:'#ec4899',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,4],pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:10}}}}}});
     const ag=AD.age_distribution||[];
     mc('cAgeDist',{type:'bar',data:{labels:ag.map(a=>a.age_range),datasets:[{label:'Male',data:ag.map(a=>a.male_count),backgroundColor:'#3b82f6',borderRadius:6},{label:'Female',data:ag.map(a=>a.female_count),backgroundColor:'#ec4899',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{y:{beginAtZero:true,stacked:true},x:{stacked:true}}}});
-    mc('cRegType',{type:'pie',data:{labels:['Direct','Transfer','Waiting','Honorary'],datasets:[{data:[t.direct||0,t.transfer_reg||0,t.waiting||0,t.honorary||0],backgroundColor:['#16a34a','#3b82f6','#f59e0b','#8b5cf6'],borderWidth:0}]},options:dO()});
+    mc('cRegType',{type:'pie',data:{labels:['Direct','Transfer','Honorary'],datasets:[{data:[t.direct||0,t.transfer_reg||0,t.honorary||0],backgroundColor:['#16a34a','#3b82f6','#8b5cf6'],borderWidth:0}]},options:dO()});
     const locs=AD.location_distribution||[],maxL=locs.length>0?Math.max(...locs.map(l=>l.count)):1;
     document.getElementById('locBars').innerHTML=locs.length===0?'<p class="text-xs text-slate-400">No data</p>':locs.map((l,i)=>'<div class="flex items-center gap-2 mb-2"><span class="text-[10px] text-slate-600 w-20 truncate">'+esc(l.location)+'</span><div class="flex-1 pb"><div class="pf" style="width:'+(l.count/maxL*100)+'%;background:'+PAL[i%10]+'"></div></div><span class="text-[10px] font-bold text-slate-700">'+l.count+'</span></div>').join('');
     const edu=AD.education_distribution||[];
@@ -317,12 +317,12 @@ function loadFO(){if(foL)return;fetch('/admin/api_reports.php?action=get_filter_
 function pS(id,v){const s=document.getElementById(id);v.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;s.appendChild(o);});}
 
 function getP(){
-    const p=new URLSearchParams(),m={gender:'fGender',age_group:'fAge',f_status:'fStatus',member_type:'fMemType',registration_type:'fRegType',city:'fCity',sub_city:'fSubCity',education_level:'fEdu',has_id_card:'fIdCard',has_phone:'fPhone',search:'fSearch',date_from:'fDateFrom',date_to:'fDateTo'};
+    const p=new URLSearchParams(),m={gender:'fGender',f_status:'fStatus',registration_type:'fRegType',city:'fCity',sub_city:'fSubCity',education_level:'fEdu',has_id_card:'fIdCard',has_phone:'fPhone',search:'fSearch',date_from:'fDateFrom',date_to:'fDateTo'};
     for(const[k,id]of Object.entries(m)){const v=document.getElementById(id)?.value;if(v)p.set(k,v);}
     return p;
 }
 
-function resetF(){['fGender','fAge','fStatus','fMemType','fRegType','fCity','fSubCity','fEdu','fIdCard','fPhone','fSearch','fDateFrom','fDateTo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['expSum','expCharts','expRes','expEmpty'].forEach(id=>document.getElementById(id).style.display='none');}
+function resetF(){['fGender','fStatus','fRegType','fCity','fSubCity','fEdu','fIdCard','fPhone','fSearch','fDateFrom','fDateTo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['expSum','expCharts','expRes','expEmpty'].forEach(id=>document.getElementById(id).style.display='none');}
 
 function applyF(){
     const p=getP();p.set('action','get_filtered_members');
@@ -343,13 +343,12 @@ function applyF(){
         ].map(k=>'<div class="sp" style="background:'+k.b+'"><div class="text-lg font-bold" style="color:'+k.c+'">'+Number(k.v).toLocaleString()+'</div><div class="text-[9px] font-medium" style="color:'+k.c+'80">'+k.l+'</div></div>').join('');
         if(d.count===0){document.getElementById('expEmpty').style.display='block';return;}
         document.getElementById('expRes').style.display='block';
-        document.getElementById('expCount').textContent=d.count+' members found';
+        document.getElementById('expCount').textContent=d.count+' students found';
         const agL=RP_SECTIONS,stC={active:'ch-g',warning:'ch-a',inactive:'ch-r',archived:'ch-b'};
         document.getElementById('expBody').innerHTML=FM.slice(0,500).map((m,i)=>
             '<tr><td>'+(i+1)+'</td><td class="font-medium">'+esc(sv(m.student_name)+' '+sv(m.father_name)+' '+sv(m.grandfather_name))+'</td>'+
             '<td><code class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded">'+esc(sv(m.member_code)||'—')+'</code></td>'+
             '<td>'+(m.gender==='male'?'<span class="ch ch-b">M</span>':'<span class="ch ch-p">F</span>')+'</td>'+
-            '<td class="text-[10px]">'+(agL[m.age_group]||sv(m.age_group)||'—')+'</td>'+
             '<td class="text-[10px]">'+esc(sv(m.phone_number)||'—')+'</td>'+
             '<td class="text-[10px]">'+esc(sv(m.city)||'—')+'</td>'+
             '<td><span class="ch '+(stC[m.status]||'ch-b')+'">'+(sv(m.status)||'—')+'</span></td>'+
@@ -373,7 +372,7 @@ function expToServer(fmt){
     // Remap for server export
     if(p.has('f_status')){p.set('f_status',p.get('f_status'));}
     p.set('format',fmt);
-    p.set('title','Filtered Members Report');
+    p.set('title','Filtered Students Report');
     const url='/admin/export_pdf.php?'+p.toString();
     if(fmt==='pdf') window.open(url,'_blank');
     else window.location.href=url;

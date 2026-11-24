@@ -449,7 +449,7 @@ function autoUpdateTeacherStatus($conn, $memberId, $isTeacher = true) {
         }
 
         // Log the change
-        $summary = $isTeacher ? 'Member assigned as teacher' : 'Teacher role removed';
+        $summary = $isTeacher ? 'Student assigned as teacher' : 'Teacher role removed';
         logMemberChange($conn, $memberId, 'role_changed', [
             'field_changed' => 'is_teacher',
             'old_value' => $current['is_teacher'],
@@ -608,7 +608,7 @@ function onMemberPromoted($conn, $memberId, $overrideReason = null) {
 
     $memberName = trim($member['student_name'] . ' ' . $member['father_name']);
 
-    $details = ['summary' => "Member promoted to permanent: $memberName"];
+    $details = ['summary' => "Student promoted to permanent: $memberName"];
     if (is_string($overrideReason) && trim($overrideReason) !== '') {
         $details['override_reason'] = trim($overrideReason);
     }
@@ -616,7 +616,7 @@ function onMemberPromoted($conn, $memberId, $overrideReason = null) {
     logMemberChange($conn, $memberId, 'promoted', $details);
 
     sendNotification($conn, 'member_promoted',
-        "Member Promoted to Permanent",
+        "Student Promoted to Permanent",
         "$memberName has been promoted to permanent member",
         [
             'data' => [
@@ -646,11 +646,11 @@ function onMemberArchived($conn, $memberId, $reason = null) {
     $memberName = $member['student_name'] . ' ' . $member['father_name'];
     
     logMemberChange($conn, $memberId, 'archived', [
-        'summary' => "Member archived: $memberName" . ($reason ? " (Reason: $reason)" : "")
+        'summary' => "Student archived: $memberName" . ($reason ? " (Reason: $reason)" : "")
     ]);
     
     sendNotification($conn, 'member_archived',
-        "Member Archived",
+        "Student Archived",
         "$memberName has been moved to archive" . ($reason ? " (Reason: $reason)" : ""),
         [
             'priority' => 'normal',

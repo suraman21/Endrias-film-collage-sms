@@ -27,27 +27,27 @@ define('ACTIVE_THEME', 'fkss');
 // └─────────────────────────────────────────────────────────────┘
 
 // Full system name (shown in page titles, API responses)
-define('SCHOOL_NAME', 'FKSS School Management System');
+define('SCHOOL_NAME', 'Endrias Film College');
 
 // Short code (shown in headers, nav bars, mobile app)
-define('SCHOOL_NAME_SHORT', 'FKSS');
+define('SCHOOL_NAME_SHORT', 'EFC');
 
 // Full Amharic name (shown in landing page, reports, ID cards)
-define('SCHOOL_NAME_AMHARIC', 'ፈለገ ቅዱሳን ሰንበት ትምህርት ቤት');
+define('SCHOOL_NAME_AMHARIC', 'የኤኑዹሪያስ ፊልም ኮሌጅ');
 
 // Short Amharic name (shown in sidebar subtitles, compact labels)
-define('SCHOOL_NAME_SHORT_AM', 'ፈለገ ቅዱሳን');
+define('SCHOOL_NAME_SHORT_AM', 'ኤኑዹሪያስ');
 
-// English translation of school name (Felege Kidusan = "Spring of Saints")
-define('SCHOOL_TRANSLATION_EN', 'Spring of Saints');
+// English name of the college
+define('SCHOOL_TRANSLATION_EN', 'Endrias Film College');
 
 // Tagline — English and Amharic
-define('SCHOOL_TAGLINE', 'Sunday School Management System');
-define('SCHOOL_TAGLINE_AM', 'የሰንበት ትምህርት ቤት አስተዳደር');
+define('SCHOOL_TAGLINE', 'School Management System');
+define('SCHOOL_TAGLINE_AM', 'የትምህርት ቤት አስተዳደር');
 
 // What type of school is this? (used in labels, categories, AI prompts)
-define('SCHOOL_TYPE', 'Sunday School');
-define('SCHOOL_TYPE_AM', 'ሰንበት ት/ቤት');
+define('SCHOOL_TYPE', 'Film College');
+define('SCHOOL_TYPE_AM', 'ፊልም ኮሌጅ');
 
 
 // ┌─────────────────────────────────────────────────────────────┐
@@ -56,16 +56,16 @@ define('SCHOOL_TYPE_AM', 'ሰንበት ት/ቤት');
 // └─────────────────────────────────────────────────────────────┘
 
 // Parish/church full name — Amharic and English
-define('PARISH_NAME_AM', 'የቦሌ ቡልቡላ ፍ/ሕ ቅድስት ድንግል ማርያም እና መ/መ/ ቅ/ዮሐንስ ቤ/ክ');
-define('PARISH_NAME_EN', 'Bole Bulbula St. Mary & St. John Holy Church');
+define('PARISH_NAME_AM', '');
+define('PARISH_NAME_EN', '');
 
 // Denomination — the broader religious organization
-define('DENOMINATION_AM', 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን');
-define('DENOMINATION_EN', 'Ethiopian Orthodox Tewahdo Church');
+define('DENOMINATION_AM', '');
+define('DENOMINATION_EN', '');
 
 // Religious invocation (shown at top of ID cards)
 // Set to empty string '' if not needed
-define('RELIGIOUS_INVOCATION', 'በስመአብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ');
+define('RELIGIOUS_INVOCATION', '');
 
 
 // ┌─────────────────────────────────────────────────────────────┐
@@ -74,17 +74,17 @@ define('RELIGIOUS_INVOCATION', 'በስመአብ ወወልድ ወመንፈስ ቅ
 // └─────────────────────────────────────────────────────────────┘
 
 // Card title line — Amharic (e.g. "ውሉደ ብርሃን ሰንበት ት/ቤት አባል መታወቂያ ካርድ")
-define('ID_CARD_TITLE_AM', SCHOOL_NAME_SHORT_AM . ' ' . SCHOOL_TYPE_AM . ' አባል መታወቂያ ካርድ');
+define('ID_CARD_TITLE_AM', SCHOOL_NAME_SHORT_AM . ' ' . SCHOOL_TYPE_AM . ' ተማሪ መታወቂያ ካርድ');
 
 // Card title line — English (e.g. "Wulde Birhan Sunday School Member ID Card")
-define('ID_CARD_TITLE_EN', SCHOOL_TRANSLATION_EN . ' ' . SCHOOL_TYPE . ' Member ID Card');
+define('ID_CARD_TITLE_EN', SCHOOL_TRANSLATION_EN . ' ' . SCHOOL_TYPE . ' Student ID Card');
 
 // Card bottom line — short school name
 define('ID_CARD_FOOTER_AM', SCHOOL_NAME_SHORT_AM . ' ' . SCHOOL_TYPE_AM);
 
 // Signature labels
-define('ID_CARD_SIG_HEAD_AM', 'የ' . SCHOOL_TYPE_AM . 'ቱ ሃላፊ ስምና ፊርማ');
-define('ID_CARD_SIG_ADMIN_AM', 'የደብሩ አስተዳደር ስምና ፊርማ');
+define('ID_CARD_SIG_HEAD_AM', 'የ' . SCHOOL_TYPE_AM . ' ሃላፊ ስምና ፊርማ');
+define('ID_CARD_SIG_ADMIN_AM', SCHOOL_TYPE_AM . ' አስተዳደር ስምና ፊርማ');
 
 // Card disclaimer (bottom of back side)
 define('ID_CARD_DISCLAIMER_AM', 'ማስታወሻ: ይህ መታወቂያ ካርድ እስከ የሚያበቃበት ቀን ብቻ ዋጋ አለው። ከጠፋ ለአስተዳደሩ ያሳውቁ።');
@@ -118,7 +118,7 @@ define('MEMBER_CODE_FORMAT', '');
 // /home/felegeki/.fkss_env.php. The fallback below only applies when the
 // environment did not provide one, so development keeps today's value.
 if (!defined('SITE_DOMAIN')) {
-    define('SITE_DOMAIN', 'felegekidusan.arkeonethiopia.com');
+    define('SITE_DOMAIN', 'endriasfilmcollage.arkeonethiopia.com');
 }
 
 // Full site URL
@@ -154,7 +154,7 @@ define('ENV_FILE_NAME', '.fkss_env.php');
 // └─────────────────────────────────────────────────────────────┘
 
 define('ADMIN_PANEL_TITLE', SCHOOL_NAME_SHORT . ' Admin');
-define('ADMIN_LOGO_ICON', '✝');
+define('ADMIN_LOGO_ICON', '🎬');
 define('ADMIN_FOOTER_TEXT', SCHOOL_NAME_SHORT . ' Management System');
 
 
@@ -273,8 +273,8 @@ define('PWA_DESCRIPTION', SCHOOL_NAME_SHORT_AM . ' የ' . SCHOOL_TYPE_AM . ' ' .
 // └─────────────────────────────────────────────────────────────┘
 
 // Mission statement
-define('LANDING_MISSION_EN', 'To nurture young souls in the teachings of the ' . DENOMINATION_EN . ', fostering spiritual growth, moral values, and a deep connection with our faith and heritage.');
-define('LANDING_MISSION_AM', 'የኛ ተልእኮ ልጆችን በ' . DENOMINATION_AM . ' ትምህርቶች እያሳደግን መንፈሳዊ እድገትን፣ የሞራል እሴቶችን እና ከእምነታችን እና ከቅርሶቻችን ጋር ጥልቅ ግንኙነት መፍጠር ነው።');
+define('LANDING_MISSION_EN', 'To provide quality film and media education in Addis Ababa, preparing the next generation of filmmakers, actors, and creative professionals.');
+define('LANDING_MISSION_AM', SCHOOL_NAME_AMHARIC . ' ' . SCHOOL_TAGLINE_AM);
 
 // Copyright
 define('COPYRIGHT_YEAR', '2026');
@@ -304,7 +304,7 @@ define('DEVELOPER_SHOW_CREDIT', true);
 // │  Context given to AI chatbot about this school              │
 // └─────────────────────────────────────────────────────────────┘
 
-define('AI_SCHOOL_CONTEXT', 'This is an Ethiopian ' . SCHOOL_TYPE . ' (' . SCHOOL_TYPE_AM . ') belonging to ' . DENOMINATION_EN . '.');
+define('AI_SCHOOL_CONTEXT', 'This is an Ethiopian film and media college in Addis Ababa, focused on training the next generation of filmmakers and creative professionals.');
 
 
 // ┌─────────────────────────────────────────────────────────────┐

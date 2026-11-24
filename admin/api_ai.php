@@ -225,7 +225,6 @@ function collectDataSnapshot($conn, $scope = 'overview') {
             SUM(gender='female') as female,
             SUM(member_type='regular') as regular,
             SUM(member_type='special_regular') as special,
-            SUM(registration_type='waiting') as waiting,
             SUM(registration_type='transfer') as transfer,
             SUM(registration_type='direct') as direct,
             SUM(phone_number IS NOT NULL AND phone_number!='') as has_phone,
@@ -371,10 +370,10 @@ function getSystemPrompt($conn = null) {
     // What the system can DO — lets the assistant answer "what does X do?".
     $systemKnowledge = <<<'SYS'
 ABOUT THIS SYSTEM (use this to explain how it works, what a section/button/status does):
-This is a Sunday School Management System with role-based dashboards. Main areas:
+This is a school management system with role-based dashboards. Main areas:
 - Members: register & manage students ("members"). Each has a unique member code, profile, photo, age group, gender, phone, and a status: active, warning (becoming irregular), inactive, or archived.
-- Old Members Archive: members whose status is "archived" — people who left, graduated, or went inactive long-term. Kept for historical records, excluded from active counts and daily lists, and can be restored.
-- Manage Members: add, edit, approve waiting registrations, change status, archive/restore.
+- Old Students Archive: students whose status is "archived" — people who left, graduated, or went inactive long-term. Kept for historical records, excluded from active counts and daily lists, and can be restored.
+- Manage Students: add, edit, change status, archive/restore.
 - ID Cards: generate & print member ID cards (with QR codes).
 - Groups: organise members into groups/teams for activities.
 - Attendance & Status: record/review attendance per class/section per day (present, absent, late, excused) and spot members becoming irregular.

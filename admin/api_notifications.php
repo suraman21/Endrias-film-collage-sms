@@ -86,7 +86,7 @@ if (in_array($action, $commWriteActions, true)) {
 
 if (in_array($action, ['changes', 'sync_change'], true)
     && !in_array($_SESSION['admin_role'] ?? '', ['super_admin','school_admin','info_dept','hr_dept','admissions_registrar_dept'], true)) {
-    jsonResponse(['status'=>'error','message'=>'Member change history is restricted to member-management staff.'], 403);
+    jsonResponse(['status'=>'error','message'=>'Student change history is restricted to student-management staff.'], 403);
 }
 
 switch ($action) {

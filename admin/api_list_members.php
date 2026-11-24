@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     if (!isset($pdo) || !($pdo instanceof PDO)) {
-        throw new RuntimeException('Member directory database is unavailable.');
+        throw new RuntimeException('Student directory database is unavailable.');
     }
 
     $service = new MemberDirectoryService($pdo);
@@ -81,7 +81,7 @@ try {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'The requested directory view is not available.']);
 } catch (Throwable $error) {
-    reportInternalError('Member directory request failed', $error);
+    reportInternalError('Student directory request failed', $error);
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Could not load members.']);
 }

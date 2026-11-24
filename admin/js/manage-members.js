@@ -12,10 +12,8 @@
         manageSearchInput: 'q',
         manageFilterType: 'registration_type',
         manageFilterStatus: 'status',
-        manageFilterMemberType: 'member_type',
         manageFilterGender: 'gender',
         manageFilterCity: 'city',
-        manageFilterAgeGroup: 'age_group',
         manageFilterEducation: 'education_level'
     };
 

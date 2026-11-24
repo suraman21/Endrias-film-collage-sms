@@ -832,7 +832,7 @@ try {
     } catch (Throwable $e) { error_log("Registration workflow error: " . $e->getMessage()); }
 
     // M11: promotions say "promoted", not "registered".
-    $doneVerb = $upgrade_id > 0 ? 'Member promoted to permanent successfully!' : 'Member registered successfully!';
+    $doneVerb = $upgrade_id > 0 ? 'Student promoted to permanent successfully!' : 'Student registered successfully!';
     jsonExit([
         'status'      => 'success',
         'message'     => $doneVerb . ' Code: ' . ($member_code ?? 'Pending') . $enrollNote,

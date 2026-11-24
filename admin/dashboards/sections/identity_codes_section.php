@@ -442,7 +442,7 @@ async function runMigration(mode, btn){
             const dc = await window.DangerConfirm.ask({tier:'high', title:'Renumber every member identity code?', object:'All members',
                 summary:'Every member gets a NEW identity code. Run "Preview" first to see how many change.', intent:'I want to renumber all codes',
                 consequences:['Every member\'s identity code is re-issued with the current numbering rules.','All QR codes are regenerated: printed ID cards show the OLD code and should be re-printed.','People and lists that use the old codes must switch to the new ones.'],
-                keeps:['Old codes are kept as legacy codes, so scanning an old card still finds the member.','Member records themselves are not changed.'],
+                keeps:['Old codes are kept as legacy codes, so scanning an old card still finds the member.','Student records themselves are not changed.'],
                 irreversible:true, phrase:'RENUMBER CODES', confirmLabel:'Renumber all codes'});
             if (!dc) { msg($('idcMigMsg'), 'Cancelled — nothing was changed.', false); return; }
             window.__idcPhrase = dc.phrase;

@@ -435,7 +435,7 @@ var Finance = (function() {
         if (saving.saveFee) return;
         var member = document.getElementById('feeMember').value;
         var amt = document.getElementById('feeAmt').value;
-        if (!member || !amt) return toast('Member and amount required', 'e');
+        if (!member || !amt) return toast('Student and amount required', 'e');
 
         var status = document.getElementById('feePayStatus').value;
         setSaving('saveFee', true);

@@ -56,7 +56,7 @@ while ($row = $res->fetch_assoc()) {
     // Fire the dedicated eligibility notification (hr_dept + super_admin + school_admin).
     if (function_exists('sendNotification')) {
         sendNotification($conn, 'member_eligible_permanent',
-            "Member Eligible for Permanent Promotion",
+            "Student Eligible for Permanent Promotion",
             "$name has completed 6 months and is eligible for promotion to permanent.",
             [
                 'data' => ['member_id' => $memberId, 'member_code' => $row['member_code']],

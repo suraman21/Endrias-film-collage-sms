@@ -102,7 +102,7 @@ acm_chrome_open('persons', 'Persons & accounts', 'One human, independently manag
     <div class="acm-empty"><i class="fa-solid fa-user-xmark"></i> No persons match. <?= $canCreate ? 'Register one with the button above.' : '' ?></div>
     <?php else: ?>
     <div class="tw"><table>
-        <thead><tr><th>Name</th><th>Father</th><th>Phone</th><th>Member</th><th>Guardian</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Father</th><th>Phone</th><th>Student</th><th>Guardian</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($results as $row): ?>
             <tr>
@@ -234,11 +234,11 @@ acm_chrome_open('persons', 'Persons & accounts', 'One human, independently manag
     <div class="ct"><i class="fa-solid fa-paper-plane"></i> Submit activation ticket</div>
     <form id="acmTicketForm" class="acm-form" onsubmit="return false">
         <div><label class="flbl" for="t_type">Account type *</label>
-            <select class="inp" id="t_type" name="account_type"><option value="member">Member</option><option value="parent">Parent</option></select></div>
+            <select class="inp" id="t_type" name="account_type"><option value="member">Student</option><option value="parent">Parent</option></select></div>
         <div><label class="flbl" for="t_note">Submitter note</label><input class="inp" id="t_note" name="note" maxlength="500" placeholder="optional context for the reviewer"></div>
         <div class="acm-btn-row full"><button class="btn bp" id="acmTicketSubmit"><i class="fa-solid fa-paper-plane"></i> Submit for review</button></div>
     </form>
-    <div style="font-size:.75rem;color:var(--dim)">Member accounts need a linked member record; parent accounts need a linked guardian record (see links above).</div>
+    <div style="font-size:.75rem;color:var(--dim)">Student accounts need a linked student record; parent accounts need a linked guardian record (see links above).</div>
 </div>
 <?php endif; ?>
 <?php endif; ?>

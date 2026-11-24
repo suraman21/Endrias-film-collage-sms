@@ -64,7 +64,7 @@ try {
     }
     $title = $report->presetTitle() !== ''
         ? $report->presetTitle()
-        : ($requestedTitle !== '' ? $requestedTitle : SCHOOL_NAME_SHORT . ' Member Report');
+        : ($requestedTitle !== '' ? $requestedTitle : SCHOOL_NAME_SHORT . ' Student Report');
 
     $truncated = $summary['total'] > MemberReportService::MAX_ROWS;
     $filterValue = $_GET['filter'] ?? 'all';
@@ -148,7 +148,7 @@ try {
     }
     exit;
 } catch (Throwable $error) {
-    reportInternalError('Member report failed', $error);
+    reportInternalError('Student report failed', $error);
     if (!headers_sent()) {
         http_response_code(500);
         header('Content-Type: text/plain; charset=utf-8');

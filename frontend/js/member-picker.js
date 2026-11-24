@@ -117,7 +117,7 @@
             else if (!append) st.total = rows.length;
             populate(select, rows, append, st);
         } catch (error) {
-            if (error.name !== 'AbortError') console.error('Member picker search failed', error);
+            if (error.name !== 'AbortError') console.error('Student picker search failed', error);
         } finally {
             input.removeAttribute('aria-busy');
             controllers.delete(input);

@@ -217,7 +217,7 @@
     // children
     html += '<div class="fam-card"><div class="fam-card-hd"><span><i class="fa-solid fa-children text-sky-500"></i> Children (' + kids.length + ')</span></div>';
     if (!kids.length) html += '<div class="fam-empty fam-empty-sm">No children linked yet. Add one below.</div>';
-    else html += '<table class="fam-table fam-table-sm"><thead><tr><th>Member</th><th>Relation</th><th title="Primary contact: whose phone appears on the member record">Primary</th><th title="Office-verified links are the only ones a parent account can see">Verified</th><th></th></tr></thead><tbody>' + kids.map(function (k) {
+    else html += '<table class="fam-table fam-table-sm"><thead><tr><th>Student</th><th>Relation</th><th title="Primary contact: whose phone appears on the member record">Primary</th><th title="Office-verified links are the only ones a parent account can see">Verified</th><th></th></tr></thead><tbody>' + kids.map(function (k) {
       var mid = parseInt(k.id, 10);
       var gid = parseInt(g.id, 10);
       var verified = parseInt(k.is_verified, 10) === 1;
@@ -445,7 +445,7 @@
         box.innerHTML = '<div class="fam-empty"><i class="fa-regular fa-circle-check text-2xl text-emerald-500 mb-2"></i><div class="font-semibold">Everything is linked</div><div class="text-slate-400 mt-1">Every member with guardian details has a guardian record.' + (s.members_no_guardian ? ' <b>' + esc(s.members_no_guardian) + '</b> members have no guardian details at all — add them from the member profile when known.' : '') + '</div></div>';
         $('famUnlinkedPager').innerHTML = ''; return;
       }
-      box.innerHTML = '<table class="fam-table"><thead><tr><th>Member</th><th>Guardian on record</th><th>Phone</th><th class="text-right">Action</th></tr></thead><tbody>' + rows.map(function (m) {
+      box.innerHTML = '<table class="fam-table"><thead><tr><th>Student</th><th>Guardian on record</th><th>Phone</th><th class="text-right">Action</th></tr></thead><tbody>' + rows.map(function (m) {
         var mid = parseInt(m.id, 10);
         return '<tr><td><a href="#" onclick="FamilyLink.profile(' + mid + ');return false;" class="font-semibold text-slate-800 hover:text-emerald-600">' + esc(m.student_name || m.full_name_am) + '</a><div class="text-[11px] text-slate-400">' + esc(m.member_code || 'no code') + (m.current_section ? ' · ' + esc(m.current_section) : '') + '</div></td>' +
           '<td class="text-slate-700">' + esc(m.guardian_name) + '</td><td class="text-slate-600">' + esc(m.guardian_phone1 || '—') + '</td>' +

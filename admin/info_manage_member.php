@@ -1,6 +1,6 @@
 <?php
 /**
- * Manage Member - View/Edit Member Details
+ * Manage Student - View/Edit Student Details
  * Works with parent page's JavaScript functions
  * IDs must match: tab-preview, tab-edit, view-preview, view-edit
  */
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close(); 
         
         if (!$cur) { 
-            echo json_encode(['status' => 'error', 'message' => 'Member not found']); 
+            echo json_encode(['status' => 'error', 'message' => 'Student not found']); 
             exit; 
         }
         
@@ -335,7 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/backend/services/SecurityAuditService.php';
             \App\Services\SecurityAuditService::record(
                 $conn,
-                'Member Updated',
+                'Student Updated',
                 ['profile' => 'full'],
                 'member',
                 $id
@@ -343,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($statusChanged) {
                 \App\Services\SecurityAuditService::record(
                     $conn,
-                    'Member Status Changed',
+                    'Student Status Changed',
                     ['member_id' => (int)$id, 'from' => (string)($cur['status'] ?? ''), 'to' => $status, 'via' => 'edit_form'],
                     'member',
                     $id
@@ -375,7 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (\Throwable $searchError) {
             error_log('Search write-through failed for member ' . $id . ': ' . $searchError->getMessage());
         }
-        echo json_encode(['status' => 'success', 'message' => 'Member updated successfully']); 
+        echo json_encode(['status' => 'success', 'message' => 'Student updated successfully']); 
     } else { 
         $conn->rollback();
         foreach ($newUploadedPaths as $uploadedPath) \App\Services\MemberFileService::discard($uploadedPath);
@@ -412,7 +412,7 @@ $stmt->execute();
 $m = $stmt->get_result()->fetch_assoc(); 
 $stmt->close(); 
 
-if (!$m) die('<div style="padding:20px;color:#dc2626;">Member not found</div>');
+if (!$m) die('<div style="padding:20px;color:#dc2626;">Student not found</div>');
 
 // Ensure optional columns have safe defaults (in case column doesn't exist in DB yet)
 foreach (['spiritual_education','age_group','mother_name','full_name_en','full_name_am',
@@ -446,7 +446,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 <style>
 :root{--z-content:1;--z-sticky:100;--z-header:200;--z-nav:900;--z-dock:950;--z-fab:1000;--z-toast:1100;--z-overlay:1200;--z-impersonate:1300;--z-tooltip:1400}
 /* ============================================================
-   FKSS Member Profile — on-brand maroon + gold
+   EFC Student Profile — on-brand maroon + gold
    Uses the design-system CSS variables (themes/fkss/theme.css):
      --school-primary (#600000 maroon), --school-primary-light (#8B2030),
      --school-primary-dark (#400000), --school-accent (#F0C000 gold),
@@ -939,7 +939,7 @@ $mmRoles = [
             </div>
 
             <div class="mm-hero-info">
-                <button type="button" id="mmBackBtn" class="mm-back-btn" style="display:none" onclick="return window.MemberNav ? MemberNav.back() : false;"><i class="fas fa-arrow-left"></i> <span data-label>Back to previous member</span></button>
+                <button type="button" id="mmBackBtn" class="mm-back-btn" style="display:none" onclick="return window.MemberNav ? MemberNav.back() : false;"><i class="fas fa-arrow-left"></i> <span data-label>Back to previous student</span></button>
                 <div class="mm-name">
                     <?= e($fullName) ?>
                     <?php if (!empty($m['full_name_en'])): ?><div style="font-size:14px;font-weight:600;opacity:.85;margin-top:2px;letter-spacing:0"><?= e($m['full_name_en']) ?></div><?php endif; ?>
@@ -955,23 +955,18 @@ $mmRoles = [
                     <?php endif; ?>
                     <span><i class="fas fa-<?= $genderIcon ?>"></i> <?= $genderLabel ?></span>
                     <?php if ($dobDisplay): ?><span><i class="fas fa-cake-candles"></i> <?= e($dobDisplay) ?><?php if (!empty($m['age'])) echo ' · '.(int)$m['age'].' ዓመት'; ?></span><?php endif; ?>
-                    <?php
-                        $secLabel = trim((string)($m['current_section'] ?? '')) ?: trim((string)($m['age_group'] ?? ''));
-                        if ($secLabel !== ''): ?>
-                        <span><i class="fas fa-layer-group"></i> <?= e($secLabel) ?></span>
-                    <?php endif; ?>
+                    <?php $secLabel = trim((string)($m['current_section'] ?? '')) ?: trim((string)($m['age_group'] ?? '')); ?>
                     <?php if ($phonePrimary !== ''): ?><span><i class="fas fa-phone"></i> <a href="tel:<?= e($phonePrimary) ?>"><?= e($phonePrimary) ?></a></span><?php endif; ?>
                 </div>
                 <div class="mm-pills">
                     <?php $st = (string)($m['status'] ?? 'active'); ?>
                     <span class="mm-pill dot status-<?= e($st) ?>"><?= e(ucfirst($st)) ?></span>
                     <span class="mm-pill maroon"><?= e($regTypeMap[$m['registration_type'] ?? 'waiting'] ?? ucfirst((string)($m['registration_type'] ?? 'waiting'))) ?> registration</span>
-                    <span class="mm-pill"><?= e($memTypeMap[$m['member_type'] ?? 'regular'] ?? ucfirst((string)($m['member_type'] ?? 'regular'))) ?></span>
                     <span class="mm-pill gold"><?= e(ucfirst((string)($m['membership_tier'] ?? 'temporary'))) ?> tier</span>
                 </div>
 
                 <div class="mm-hero-actions">
-                    <button class="mm-ha primary" type="button" onclick="switchManageTab('edit')"><i class="fas fa-pen-to-square"></i> Edit member</button>
+                    <button class="mm-ha primary" type="button" onclick="switchManageTab('edit')"><i class="fas fa-pen-to-square"></i> Edit student</button>
                     <a class="mm-ha" target="_blank" href="/admin/print_member.php?id=<?= (int)$m['id'] ?>"><i class="fas fa-id-card"></i> ID / Print</a>
                     <button class="mm-ha" type="button" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
                     <?php if ($phonePrimary !== ''): ?>
@@ -984,7 +979,7 @@ $mmRoles = [
 
     <?php if (empty($_GET['embed'])): ?>
     <div class="mm-standalone-bar">
-        <span><i class="fas fa-circle-info"></i> Opening this member inside the dashboard…</span>
+        <span><i class="fas fa-circle-info"></i> Opening this student inside the dashboard…</span>
         <a href="/admin/dashboard.php?member=<?= (int)$m['id'] ?>"><i class="fas fa-arrow-right"></i> Continue</a>
         <a href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Back</a>
     </div>
@@ -996,7 +991,6 @@ $mmRoles = [
         <div class="mm-fact"><span class="mm-fact-label">Code</span><span class="mm-fact-value<?= empty($m['member_code']) ? ' muted' : '' ?>"><?= $disp($m['member_code']) ?></span></div>
         <div class="mm-fact"><span class="mm-fact-label">Gender</span><span class="mm-fact-value"><?= $genderLabel ?></span></div>
         <div class="mm-fact"><span class="mm-fact-label">Age</span><span class="mm-fact-value<?= empty($m['age']) ? ' muted' : '' ?>"><?= !empty($m['age']) ? (int)$m['age'].' years' : '—' ?></span></div>
-        <div class="mm-fact"><span class="mm-fact-label">Section</span><span class="mm-fact-value<?= ($secLabel === '') ? ' muted' : '' ?>"><?= $secLabel !== '' ? e($secLabel) : '—' ?></span></div>
         <div class="mm-fact"><span class="mm-fact-label">Phone</span><span class="mm-fact-value<?= $phonePrimary === '' ? ' muted' : '' ?>"><?= $phonePrimary !== '' ? '<a href="tel:'.e($phonePrimary).'">'.e($phonePrimary).'</a>' : '—' ?></span></div>
         <div class="mm-fact"><span class="mm-fact-label">Guardian</span><span class="mm-fact-value<?= empty($m['guardian_name']) ? ' muted' : '' ?>"><?= $disp($m['guardian_name']) ?></span></div>
     </div>
@@ -1065,16 +1059,6 @@ $mmRoles = [
                                     </span>
                                 </div>
                                 <div class="mm-info"><span class="mm-info-label">Age</span><span class="mm-info-value"><?= !empty($m['age']) ? (int)$m['age'].' years old' : '<span class="mm-info-value muted">—</span>' ?></span></div>
-                                <div class="mm-info"><span class="mm-info-label">Section / Age Group</span>
-                                    <span class="mm-info-value">
-                                        <?php if (!empty($m['current_section'])) echo e($m['current_section']);
-                                              elseif (!empty($m['age_group'])) echo e($m['age_group']);
-                                              else echo '<span class="mm-info-value muted">—</span>'; ?>
-                                        <?php if (!empty($m['age_group']) && trim((string)$m['age_group']) !== trim((string)($m['current_section'] ?? ''))): ?>
-                                            <span class="sub">Age group: <?= e($m['age_group']) ?></span>
-                                        <?php endif; ?>
-                                    </span>
-                                </div>
                             </div>
 
                             <div class="mm-sec-h">Education &amp; Work</div>
@@ -1228,7 +1212,6 @@ $mmRoles = [
                             <div class="mm-grid3">
                                 <div class="mm-info"><span class="mm-info-label">Database ID</span><span class="mm-info-value">#<?= (int)$m['id'] ?></span></div>
                                 <div class="mm-info"><span class="mm-info-label">Registered</span><span class="mm-info-value"><?= $fmtDate($m['registered_at'] ?? null) ?></span></div>
-                                <div class="mm-info"><span class="mm-info-label">Waiting Since</span><span class="mm-info-value"><?= $fmtDate($m['waiting_since'] ?? null) ?></span></div>
                                 <?php if (!empty($m['created_at'])): ?>
                                 <div class="mm-info"><span class="mm-info-label">Record Created</span><span class="mm-info-value"><?= $fmtDate($m['created_at']) ?></span></div>
                                 <?php endif; ?>
@@ -1313,15 +1296,12 @@ $mmRoles = [
                         <div class="mm-card-hdr">
                             <div class="mm-card-icon mm-icon-gold"><i class="fas fa-id-badge"></i></div>
                             <div>
-                                <div class="mm-card-title">Membership</div>
-                                <div class="mm-card-subtitle">Type, tier &amp; roles</div>
+                                <div class="mm-card-title">Registration &amp; Tier</div>
                             </div>
                         </div>
                         <div class="mm-card-body">
                             <div class="mm-chips">
                                 <span class="mm-chip maroon"><?= e($regTypeMap[$m['registration_type'] ?? 'waiting'] ?? ucfirst((string)($m['registration_type'] ?? 'waiting'))) ?></span>
-                                <span class="mm-chip"><?= e($memTypeMap[$m['member_type'] ?? 'regular'] ?? ucfirst((string)($m['member_type'] ?? 'regular'))) ?></span>
-                                <span class="mm-chip blue"><?= e($secLabel !== '' ? $secLabel : 'Unassigned') ?></span>
                                 <span class="mm-chip gold"><?= e(ucfirst((string)($m['membership_tier'] ?? 'temporary'))) ?> tier</span>
                             </div>
                             <div style="height:12px"></div>
@@ -1349,7 +1329,7 @@ $mmRoles = [
                             <a class="mm-fam-btn" style="justify-content:center;padding:10px;color:#6d28d9;background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.2);" href="/admin/dashboard.php?section=family&guardian=<?= (int)$g0['id'] ?>" onclick="return window.MemberNav ? MemberNav.manageFamily(<?= (int)$g0['id'] ?>) : true;"><i class="fas fa-people-roof"></i> Manage Family</a>
                             <?php endif; ?>
                             <?php if (in_array((string)($_SESSION['admin_role'] ?? ''), ['super_admin','school_admin','hr_dept','admissions_registrar_dept','info_dept'], true)): ?>
-                            <button type="button" class="mm-fam-btn" style="justify-content:center;padding:10px;color:#7f1d1d;background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.2);" onclick="if(confirm('Archive this member? They will move to Old Members Archive.')){archiveMember(<?= (int)$m['id'] ?>, <?= json_encode($fullName) ?>);}"><i class="fas fa-box-archive"></i> Archive Member</button>
+                            <button type="button" class="mm-fam-btn" style="justify-content:center;padding:10px;color:#7f1d1d;background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.2);" onclick="if(confirm('Archive this student? They will move to Old Students Archive.')){archiveMember(<?= (int)$m['id'] ?>, <?= json_encode($fullName) ?>);}"><i class="fas fa-box-archive"></i> Archive Student</button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -1415,21 +1395,6 @@ $mmRoles = [
                                             <input type="number" name="dob_month" value="<?= (int)($m['dob_ec_month'] ?? 0) ?>" placeholder="ወር / Month" min="1" max="13" class="mm-input">
                                             <input type="number" name="dob_year" value="<?= (int)($m['dob_ec_year'] ?? 0) ?>" placeholder="ዓመት / Year" class="mm-input">
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="mm-row">
-                                    <div class="mm-form-group">
-                                        <label class="mm-label">Current Section <span class="hint">Class / age group assignment</span></label>
-                                        <input type="text" name="current_section" value="<?= e($m['current_section'] ?? '') ?>" class="mm-input" placeholder="e.g. Grade 5, Youth…" autocomplete="off">
-                                    </div>
-                                    <div class="mm-form-group">
-                                        <label class="mm-label">Age Group <span class="hint">(if different from section)</span></label>
-                                        <select name="age_group" class="mm-input">
-                                            <option value="">— Same as section —</option>
-                                            <?php foreach (\App\Services\MemberCategory::sections() as $hrCode => $hrSec): ?>
-                                            <option value="<?= e($hrCode) ?>" <?= sel($m['age_group'] ?? '', $hrCode) ?>><?= e($hrSec['am']) ?> (<?= e($hrSec['ages']) ?>)</option>
-                                            <?php endforeach; ?>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -1638,11 +1603,11 @@ $mmRoles = [
                         <div class="mm-card">
                             <div class="mm-card-hdr">
                                 <div class="mm-card-icon mm-icon-amber"><i class="fas fa-cog"></i></div>
-                                <div><div class="mm-card-title">Status &amp; Type</div></div>
+                                <div><div class="mm-card-title">Status &amp; Registration</div></div>
                             </div>
                             <div class="mm-card-body">
                                 <div class="mm-form-group">
-                                    <label class="mm-label">Member Status</label>
+                                    <label class="mm-label">Student Status</label>
                                     <?php if ($canEditStatus): ?>
                                     <select name="status" class="mm-input">
                                         <option value="active" <?= sel($m['status']??'','active') ?>>Active</option>
@@ -1661,17 +1626,8 @@ $mmRoles = [
                                     <div class="mm-form-group">
                                         <label class="mm-label">Registration Type</label>
                                         <select name="registration_type" class="mm-input">
-                                            <option value="waiting" <?= sel($m['registration_type']??'','waiting') ?>>Waiting</option>
                                             <option value="transfer" <?= sel($m['registration_type']??'','transfer') ?>>Transfer</option>
                                             <option value="direct" <?= sel($m['registration_type']??'','direct') ?>>Direct</option>
-                                        </select>
-                                    </div>
-                                    <div class="mm-form-group">
-                                        <label class="mm-label">Member Type</label>
-                                        <select name="member_type" class="mm-input">
-                                            <option value="regular" <?= sel($m['member_type']??'','regular') ?>>Regular</option>
-                                            <option value="special_regular" <?= sel($m['member_type']??'','special_regular') ?>>Special Regular</option>
-                                            <option value="honorary" <?= sel($m['member_type']??'','honorary') ?>>Honorary</option>
                                         </select>
                                     </div>
                                 </div>

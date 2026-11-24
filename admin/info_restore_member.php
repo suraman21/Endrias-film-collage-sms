@@ -41,12 +41,12 @@ $member = $result->fetch_assoc();
 $checkStmt->close();
 
 if (!$member) {
-    echo json_encode(['status' => 'error', 'message' => 'Member not found']);
+    echo json_encode(['status' => 'error', 'message' => 'Student not found']);
     exit;
 }
 
 if ($member['status'] !== 'archived') {
-    echo json_encode(['status' => 'error', 'message' => 'Member is not in archive']);
+    echo json_encode(['status' => 'error', 'message' => 'Student is not in archive']);
     exit;
 }
 

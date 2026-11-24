@@ -93,7 +93,7 @@
         '</tr>';
     }).join('');
     els.list.innerHTML = '<table class="aw-table"><thead><tr>' +
-      '<th>Member</th><th>Department</th><th>Reason</th><th>Stage</th><th>Opened</th><th>Status</th><th></th>' +
+      '<th>Student</th><th>Department</th><th>Reason</th><th>Stage</th><th>Opened</th><th>Status</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
 

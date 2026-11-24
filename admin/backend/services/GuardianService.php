@@ -430,7 +430,7 @@ class GuardianService
             $exists = $mc->get_result()->fetch_assoc();
             $mc->close();
             if (!$exists) {
-                throw new \InvalidArgumentException('Member not found.');
+                throw new \InvalidArgumentException('Student not found.');
             }
         }
         if (!in_array($relation, ['father', 'mother', 'other'], true)) {

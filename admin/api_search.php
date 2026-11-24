@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     if (!isset($pdo) || !($pdo instanceof PDO)) {
-        throw new RuntimeException('Member directory database is unavailable.');
+        throw new RuntimeException('Student directory database is unavailable.');
     }
 
     $role = (string)($_SESSION['admin_role'] ?? '');

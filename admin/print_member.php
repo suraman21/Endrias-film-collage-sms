@@ -30,7 +30,7 @@ $m = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$m) {
-    die('<h2 style="color:red;text-align:center;margin-top:50px;">Member not found</h2>');
+    die('<h2 style="color:red;text-align:center;margin-top:50px;">Student not found</h2>');
 }
 
 // Ensure optional columns have safe defaults

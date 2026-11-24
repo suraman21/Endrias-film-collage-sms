@@ -303,7 +303,7 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <p style="color:var(--dim);font-size:.75rem;margin-top:.25rem;display:flex;align-items:center;gap:.5rem"><span class="pulse"></span> <?=$todayFormatted?></p>
 </div>
 <div class="topbar-right">
-<div class="search-box"><i class="fa-solid fa-search"></i><input id="globalSearch" placeholder="Search members, sections..." oninput="globalSearchHandler(this.value)" autocomplete="off"><div class="search-results" id="searchResults"></div></div>
+<div class="search-box"><i class="fa-solid fa-search"></i><input id="globalSearch" placeholder="Search students..." oninput="globalSearchHandler(this.value)" autocomplete="off"><div class="search-results" id="searchResults"></div></div>
 <?php include __DIR__ . '/../components/notification_center.php'; ?><?= renderNotificationCenter() ?>
 <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-sun" id="themeIcon"></i></button>
 <button class="icon-btn" onclick="window.print()" title="Print"><i class="fa-solid fa-print"></i></button>
@@ -362,10 +362,10 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div class="ring-wrap"><svg width="110" height="110" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(128,128,128,0.06)" stroke-width="11"/><circle cx="60" cy="60" r="50" fill="none" stroke="var(--info)" stroke-width="11" stroke-dasharray="<?=$mStroke?> 314" stroke-linecap="round"/><circle cx="60" cy="60" r="50" fill="none" stroke="var(--pink)" stroke-width="11" stroke-dasharray="<?=$fStroke?> 314" stroke-dashoffset="-<?=$mStroke?>" stroke-linecap="round"/></svg><div class="ring-center"><div class="rv"><?=$stats['total']?></div><div class="rl">Total</div></div></div>
 <div style="display:flex;gap:1rem;margin-top:.6rem;font-size:.65rem"><span style="display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:var(--info)"></span> Male <?=$stats['male']?> (<?=$mPct?>%)</span><span style="display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:var(--pink)"></span> Female <?=$stats['female']?> (<?=$fPct?>%)</span></div>
 </div>
-<div class="cd"><div class="ct"><i class="fa-solid fa-chart-bar" style="color:var(--warn)"></i> Sections</div><div id="secBars"></div></div>
+
 </div>
 
-<!-- Recent Members -->
+<!-- Recent Students -->
 <div class="cd">
 <div class="ct"><i class="fa-solid fa-clock-rotate-left" style="color:var(--ok)"></i> Recent Registrations <span style="font-size:.6rem;color:var(--dim);font-weight:400;margin-left:auto">Last 10</span></div>
 <?php if(count($recentMembers)>0):?>
@@ -389,14 +389,14 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div><label class="flbl">Search</label><input autocomplete="off" type="text" id="fSearch" class="inp" style="width:100%" placeholder="Name, code, phone..." oninput="applyFilters()"></div>
 <div><label class="flbl">Status</label><select id="fStatus" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><option value="active">Active</option><option value="warning">Warning</option><option value="inactive">Inactive</option></select></div>
 <div><label class="flbl">Gender</label><select id="fGender" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><option value="male">Male</option><option value="female">Female</option></select></div>
-<div><label class="flbl">Section</label><select id="fSection" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option></select></div>
-<div><label class="flbl">Reg Type</label><select id="fRegType" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><option value="waiting">Waiting</option><option value="transfer">Transfer</option><option value="direct">Direct</option></select></div>
-<div><label class="flbl">Member Type</label><select id="fMemberType" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><option value="regular">Regular</option><option value="special_regular">Special Regular</option><option value="honorary">Honorary</option></select></div>
-<div><label class="flbl">Age Group</label><select id="fAgeGroup" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><?php foreach (\App\Services\MemberCategory::sections() as $saCode => $saSec): ?><option value="<?= $saCode ?>"><?= e($saSec['am']) ?> (<?= e($saSec['letter']) ?>)</option><?php endforeach; ?></select></div>
+
+<div><label class="flbl">Reg Type</label><select id="fRegType" class="inp" style="width:100%" onchange="applyFilters()"><option value="">All</option><option value="transfer">Transfer</option><option value="direct">Direct</option></select></div>
+
+
 <div><label class="flbl">City</label><input autocomplete="off" type="text" id="fCity" class="inp" style="width:100%" placeholder="City..." oninput="applyFilters()"></div>
 </div></div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.3rem"><div id="resultCount" style="font-size:.72rem;color:var(--dim)">Loading...</div><div style="display:flex;align-items:center;gap:.4rem"><label style="font-size:.6rem;color:var(--dim)">Per page:</label><select id="perPage" class="inp bs" onchange="saveMemberPerPage();applyFilters()" style="width:auto" aria-label="Rows per page"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select></div></div>
-<div class="tw"><table id="mTbl"><thead><tr><th data-col="member_code" onclick="sortBy('member_code')">Code</th><th data-col="student_name" onclick="sortBy('student_name')">Name</th><th data-col="father_name" onclick="sortBy('father_name')">Father</th><th data-col="gender" onclick="sortBy('gender')">Gen</th><th data-col="age_group" onclick="sortBy('age_group')">Age</th><th data-col="current_section" onclick="sortBy('current_section')">Section</th><th data-col="status" onclick="sortBy('status')">Status</th><th data-col="registration_type" onclick="sortBy('registration_type')">Reg</th><th data-col="phone_number" onclick="sortBy('phone_number')">Phone</th><th data-col="city" onclick="sortBy('city')">City</th><th data-col="created_at" onclick="sortBy('created_at')">Date</th><th>⋯</th></tr></thead><tbody id="mBody"></tbody></table></div>
+<div class="tw"><table id="mTbl"><thead><tr><th data-col="member_code" onclick="sortBy('member_code')">Code</th><th data-col="student_name" onclick="sortBy('student_name')">Name</th><th data-col="father_name" onclick="sortBy('father_name')">Father</th><th data-col="gender" onclick="sortBy('gender')">Gen</th><th data-col="status" onclick="sortBy('status')">Status</th><th data-col="registration_type" onclick="sortBy('registration_type')">Reg</th><th data-col="phone_number" onclick="sortBy('phone_number')">Phone</th><th data-col="city" onclick="sortBy('city')">City</th><th data-col="created_at" onclick="sortBy('created_at')">Date</th><th>⋯</th></tr></thead><tbody id="mBody"></tbody></table></div>
 <div id="pag" style="display:flex;justify-content:center;gap:.35rem;margin-top:.75rem;flex-wrap:wrap"></div>
 </div>
 
@@ -451,11 +451,11 @@ renderSidebarUserCard($fullName, 'School Admin', $todayFormatted, $initials, 'li
 <div id="section-departments" class="cs">
 <h2 style="font-size:1.1rem;font-weight:700;color:var(--bright);margin-bottom:.85rem"><i class="fa-solid fa-building" style="color:var(--ac)"></i> Departments Overview</h2>
 <div class="dept-grid">
-<div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(236,72,153,.1);color:var(--pink)"><i class="fa-solid fa-users-gear"></i></div><div><div class="dept-name">HR Department</div><div class="dept-role">hr_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$stats['total']?></div><div class="ds-lbl">Members</div></div><div class="dept-stat"><div class="ds-val">Manage</div><div class="ds-lbl">Registration</div></div></div><button class="dept-switch" onclick="switchRole('hr_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as HR Dept</button></div>
+<div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(236,72,153,.1);color:var(--pink)"><i class="fa-solid fa-users-gear"></i></div><div><div class="dept-name">HR Department</div><div class="dept-role">hr_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$stats['total']?></div><div class="ds-lbl">Students</div></div><div class="dept-stat"><div class="ds-val">Manage</div><div class="ds-lbl">Registration</div></div></div><button class="dept-switch" onclick="switchRole('hr_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as HR Dept</button></div>
 
 <div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(139,92,246,.1);color:var(--purple)"><i class="fa-solid fa-id-card-clip"></i></div><div><div class="dept-name">Admission &amp; Registrar</div><div class="dept-role">admissions_registrar_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$stats['total']?></div><div class="ds-lbl">Students</div></div><div class="dept-stat"><div class="ds-val">Manage</div><div class="ds-lbl">Admission</div></div></div><button class="dept-switch" onclick="switchRole('admissions_registrar_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as Registrar</button></div>
 
-<div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(6,182,212,.1);color:var(--info)"><i class="fa-solid fa-info-circle"></i></div><div><div class="dept-name">Information Dept</div><div class="dept-role">info_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$stats['total']?></div><div class="ds-lbl">Members</div></div><div class="dept-stat"><div class="ds-val"><?=$stats['sections']?></div><div class="ds-lbl">Sections</div></div></div><button class="dept-switch" onclick="switchRole('info_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as Info Dept</button></div>
+<div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(6,182,212,.1);color:var(--info)"><i class="fa-solid fa-info-circle"></i></div><div><div class="dept-name">Information Dept</div><div class="dept-role">info_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$stats['total']?></div><div class="ds-lbl">Students</div></div></div><button class="dept-switch" onclick="switchRole('info_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as Info Dept</button></div>
 
 <div class="dept-card"><div class="dept-header"><div class="dept-icon" style="background:rgba(139,92,246,.1);color:var(--purple)"><i class="fa-solid fa-graduation-cap"></i></div><div><div class="dept-name">Education Dept</div><div class="dept-role">edu_dept</div></div></div><div class="dept-stats"><div class="dept-stat"><div class="ds-val"><?=$deptStats['edu_classes']?></div><div class="ds-lbl">Classes</div></div><div class="dept-stat"><div class="ds-val"><?=$deptStats['edu_enrolled']?></div><div class="ds-lbl">Enrolled</div></div></div><button class="dept-switch" onclick="switchRole('edu_dept')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Open as Edu Dept</button></div>
 
@@ -570,7 +570,7 @@ renderProfileTabSection('section-profile', 'cs');
 
 <div class="mo" id="memberModal"><div class="md" style="max-width:680px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-<h3 style="margin:0"><i class="fa-solid fa-id-card" style="color:var(--ac)"></i> Member Profile</h3>
+<h3 style="margin:0"><i class="fa-solid fa-id-card" style="color:var(--ac)"></i> Student Profile</h3>
 <div style="display:flex;align-items:center;gap:.3rem">
 <button class="btn bs bo" onclick="exportMemberProfile('pdf')" title="Export PDF"><i class="fa-solid fa-file-pdf" style="color:var(--bad)"></i> PDF</button>
 <button class="btn bs bo" onclick="exportMemberProfile('word')" title="Export Word"><i class="fa-solid fa-file-word" style="color:var(--info)"></i> Word</button>
@@ -655,7 +655,7 @@ document.querySelectorAll('[data-section]').forEach(el=>{el.addEventListener('cl
 // GLOBAL SEARCH
 let searchTimer;
 function globalSearchHandler(q){clearTimeout(searchTimer);const box=document.getElementById('searchResults');q=q.trim();if(q.length<2){box.classList.remove('show');return;}searchTimer=setTimeout(async()=>{try{const params=new URLSearchParams({q:q,limit:'8',page:'1'});const r=await fetch('/admin/api_list_members.php?'+params.toString(),{credentials:'same-origin',headers:{Accept:'application/json'}});const d=await r.json();if(!r.ok||d.status!=='success')throw new Error(d.message||'Search failed');globalSearchMembers=d.members||[];showSearchResults(globalSearchMembers);}catch(_){globalSearchMembers=[];showSearchResults([]);}},250);}
-function showSearchResults(matches){const box=document.getElementById('searchResults');if(!matches.length){box.innerHTML='<div class="sr-item" style="color:var(--dim)">No results</div>';box.classList.add('show');return;}box.innerHTML=matches.map(m=>`<div class="sr-item" onclick="viewMember(${parseInt(m.id,10)});document.getElementById('searchResults').classList.remove('show');document.getElementById('globalSearch').value='';"><span class="bg bg-info" style="font-size:.55rem">${esc(m.member_code||'')}</span><span style="font-weight:500;color:var(--bright)">${esc(m.student_name)}</span><span style="color:var(--dim);font-size:.62rem">${esc(m.current_section||'')}</span></div>`).join('');box.classList.add('show');}
+function showSearchResults(matches){const box=document.getElementById('searchResults');if(!matches.length){box.innerHTML='<div class="sr-item" style="color:var(--dim)">No results</div>';box.classList.add('show');return;}box.innerHTML=matches.map(m=>`<div class="sr-item" onclick="viewMember(${parseInt(m.id,10)});document.getElementById('searchResults').classList.remove('show');document.getElementById('globalSearch').value='';"><span class="bg bg-info" style="font-size:.55rem">${esc(m.member_code||'')}</span><span style="font-weight:500;color:var(--bright)">${esc(m.student_name)}</span></div>`).join('');box.classList.add('show');}
 document.addEventListener('click',e=>{if(!e.target.closest('.search-box'))document.getElementById('searchResults').classList.remove('show');});
 
 // NOTIFICATIONS
@@ -671,14 +671,13 @@ async function switchRole(role){const rn=role.replace(/_/g,' ');if(!(await dcAsk
 async function restoreRole(){try{const fd=new FormData();fd.append('action','restore');fd.append('csrf_token',CSRF);const r=await fetch('/admin/api_impersonate.php',{method:'POST',body:fd,credentials:'same-origin'});const d=await r.json();if(d.status==='success')window.location.href='/admin/dashboard.php';else toast(d.message||'Failed','e');}catch(e){toast('Failed','e');}}
 
 // SECTION BARS
-(function(){const el=document.getElementById('secBars');if(!el||!secDist.length){if(el)el.innerHTML='<p style="font-size:.72rem;color:var(--dim)">No data</p>';return;}const mx=Math.max(...secDist.map(s=>parseInt(s.c)));const clrs=['var(--ac)','var(--ok)','var(--purple)','var(--warn)','var(--pink)','#f97316','#06b6d4','#84cc16'];el.innerHTML=secDist.slice(0,8).map((s,i)=>{const p=mx>0?Math.round(parseInt(s.c)/mx*100):0;return`<div style="margin-bottom:.5rem"><div style="display:flex;justify-content:space-between;font-size:.65rem;margin-bottom:.15rem"><span style="color:var(--text);font-weight:500">${s.s}</span><span style="font-weight:700;color:${clrs[i%8]}">${s.c}</span></div><div class="progress"><div class="progress-bar" style="width:${p}%;background:${clrs[i%8]}"></div></div></div>`;}).join('');})();
 
 // MEMBERS
 async function loadMembers(page=1,append=false){
     const rc=document.getElementById('resultCount');
     const pp=memberPerPage();
     const params=new URLSearchParams({page:String(page),limit:String(pp),sort:sortCol,direction:sortDir});
-    const filters={fSearch:'q',fStatus:'status',fGender:'gender',fSection:'current_section',fRegType:'registration_type',fMemberType:'member_type',fAgeGroup:'age_group',fCity:'city'};
+    const filters={fSearch:'q',fStatus:'status',fGender:'gender',fRegType:'registration_type',fCity:'city'};
     Object.entries(filters).forEach(([id,key])=>{const value=document.getElementById(id)?.value.trim()||'';if(value)params.set(key,value);});
     if(!memberOptionsLoaded)params.set('include_options','1');
     if(page>1)params.set('include_total','0');
@@ -688,7 +687,7 @@ async function loadMembers(page=1,append=false){
     try{
         const r=await fetch('/admin/api_list_members.php?'+params.toString(),{credentials:'same-origin',headers:{Accept:'application/json'},signal:window.memberListRequest.signal});
         let d;try{d=await r.json();}catch(_){throw new Error('Server returned an unexpected response (HTTP '+r.status+').');}
-        if(!r.ok||d.status!=='success')throw new Error(d.message||'Could not load members');
+        if(!r.ok||d.status!=='success')throw new Error(d.message||'Could not load students');
         const rows=Array.isArray(d.members)?d.members:[];
         allMembers=append?allMembers.concat(rows):rows;
         filteredMembers=allMembers;
@@ -698,17 +697,17 @@ async function loadMembers(page=1,append=false){
         renderMembers();
     }catch(e){
         if(e.name==='AbortError')return;
-        if(rc)rc.innerHTML='<span style="color:var(--bad)">Could not load members. '+esc(e.message||'')+'</span>';
-        toast('Failed to load members','e');
+        if(rc)rc.innerHTML='<span style="color:var(--bad)">Could not load students. '+esc(e.message||'')+'</span>';
+        toast('Failed to load students','e');
     }
 }
-function populateDropdowns(sections){const secs=[...new Set((sections||[]).filter(Boolean))].sort();['fSection','attSection'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const v=s.value;const def='<option value="">All</option>';s.innerHTML=def+secs.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');s.value=v;});}
+function populateDropdowns(sections){const secs=[...new Set((sections||[]).filter(Boolean))].sort();['attSection'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const v=s.value;const def='<option value="">All</option>';s.innerHTML=def+secs.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');s.value=v;});}
 function applyFilters(){clearTimeout(memberFilterTimer);memberCursors={1:null};memberFilterTimer=setTimeout(()=>loadMembers(1),300);}
 function sortBy(col){if(sortCol===col)sortDir=sortDir==='asc'?'desc':'asc';else{sortCol=col;sortDir='asc';}document.querySelectorAll('#mTbl th').forEach(th=>th.classList.remove('sa','sd'));const th=document.querySelector('#mTbl th[data-col="'+col+'"]');if(th)th.classList.add(sortDir==='asc'?'sa':'sd');memberCursors={1:null};loadMembers(1);}
-function renderMembers(){const pp=memberPerPage();const pg=allMembers;const first=memberTotal&&pg.length?((memberFirstPage-1)*pp)+1:0,last=first?Math.min(memberTotal,first+pg.length-1):0;document.getElementById('resultCount').innerHTML=`Showing <span style="color:var(--bright);font-weight:600">${first}–${last}</span> of ${memberTotal}`;const tb=document.getElementById('mBody');if(!pg.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:2rem;color:var(--dim)">No members found</td></tr>';}else{tb.innerHTML=pg.map(m=>`<tr><td><span class="bg bg-info">${esc(m.member_code||'—')}</span></td><td style="font-weight:600;color:var(--bright)">${esc(m.student_name||'')}</td><td>${esc(m.father_name||'')}</td><td>${m.gender==='male'?'<span style="color:var(--info)">♂</span>':'<span style="color:var(--pink)">♀</span>'}</td><td>${esc(fmtAge(m.age_group))}</td><td>${esc(m.current_section||'—')}</td><td>${stBg(m.status)}</td><td>${rgBg(m.registration_type)}</td><td style="font-size:.68rem">${esc(m.phone_number||'—')}</td><td>${esc(m.city||'—')}</td><td style="font-size:.62rem;color:var(--dim)">${fmtDate(m.created_at)}</td><td><button class="btn bo bs" onclick="viewMember(${parseInt(m.id,10)})"><i class="fa-solid fa-eye"></i></button></td></tr>`).join('');}const p=document.getElementById('pag');if(memberPages<=1){p.innerHTML='';return;}const left=Math.max(0,memberTotal-last);const pos=memberFirstPage===curPage?`Page ${curPage} of ${memberPages}`:`Pages ${memberFirstPage}–${curPage} of ${memberPages}`;p.innerHTML=`<button class="btn bo bs" data-fk-pager-prev onclick="goP(${memberFirstPage-1})" ${memberFirstPage<=1?'disabled':''}>‹ Previous</button><span data-fk-pager-pos style="padding:.3rem;color:var(--dim)">${pos}</span><button class="btn bo bs" data-fk-pager-next onclick="goP(${curPage+1})" ${curPage>=memberPages?'disabled':''}>Next ›</button>`+(left>0?`<button class="btn bs" data-fk-pager-more onclick="loadMoreMembers(this)" style="margin-left:.6rem">Load more (${left} left)</button>`:'');}
+function renderMembers(){const pp=memberPerPage();const pg=allMembers;const first=memberTotal&&pg.length?((memberFirstPage-1)*pp)+1:0,last=first?Math.min(memberTotal,first+pg.length-1):0;document.getElementById('resultCount').innerHTML=`Showing <span style="color:var(--bright);font-weight:600">${first}–${last}</span> of ${memberTotal}`;const tb=document.getElementById('mBody');if(!pg.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--dim)">No students found</td></tr>';}else{tb.innerHTML=pg.map(m=>`<tr><td><span class="bg bg-info">${esc(m.member_code||'—')}</span></td><td style="font-weight:600;color:var(--bright)">${esc(m.student_name||'')}</td><td>${esc(m.father_name||'')}</td><td>${m.gender==='male'?'<span style="color:var(--info)">♂</span>':'<span style="color:var(--pink)">♀</span>'}</td><td>${stBg(m.status)}</td><td>${rgBg(m.registration_type)}</td><td style="font-size:.68rem">${esc(m.phone_number||'—')}</td><td>${esc(m.city||'—')}</td><td style="font-size:.62rem;color:var(--dim)">${fmtDate(m.created_at)}</td><td><button class="btn bo bs" onclick="viewMember(${parseInt(m.id,10)})"><i class="fa-solid fa-eye"></i></button></td></tr>`).join('');}const p=document.getElementById('pag');if(memberPages<=1){p.innerHTML='';return;}const left=Math.max(0,memberTotal-last);const pos=memberFirstPage===curPage?`Page ${curPage} of ${memberPages}`:`Pages ${memberFirstPage}–${curPage} of ${memberPages}`;p.innerHTML=`<button class="btn bo bs" data-fk-pager-prev onclick="goP(${memberFirstPage-1})" ${memberFirstPage<=1?'disabled':''}>‹ Previous</button><span data-fk-pager-pos style="padding:.3rem;color:var(--dim)">${pos}</span><button class="btn bo bs" data-fk-pager-next onclick="goP(${curPage+1})" ${curPage>=memberPages?'disabled':''}>Next ›</button>`+(left>0?`<button class="btn bs" data-fk-pager-more onclick="loadMoreMembers(this)" style="margin-left:.6rem">Load more (${left} left)</button>`:'');}
 function loadMoreMembers(btn){if(curPage>=memberPages)return;const page=curPage+1;if(sortCol==='id'&&sortDir==='desc'&&memberNextCursor)memberCursors[page]=memberNextCursor;if(btn){btn.disabled=true;btn.textContent='Loading…';}loadMembers(page,true);}
 function goP(page){if(page<1||page>memberPages)return;if(page===curPage+1&&sortCol==='id'&&sortDir==='desc'){if(!memberNextCursor)return;memberCursors[page]=memberNextCursor;}loadMembers(page);window.scrollTo({top:0,behavior:'smooth'});}
-function resetFilters(){['fSearch','fCity'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['fStatus','fGender','fSection','fRegType','fMemberType','fAgeGroup'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});memberCursors={1:null};loadMembers(1);}
+function resetFilters(){['fSearch','fCity'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['fStatus','fGender','fRegType'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});memberCursors={1:null};loadMembers(1);}
 let currentViewMember=null;
 function viewMember(id){const m=allMembers.find(x=>x.id==id)||globalSearchMembers.find(x=>x.id==id);if(!m)return;currentViewMember=m;
 const sec=(t,ico,clr,fields)=>`<div style="margin-bottom:.85rem"><div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:${clr};font-weight:700;margin-bottom:.45rem;display:flex;align-items:center;gap:.35rem"><i class="fa-solid fa-${ico}" style="font-size:.65rem"></i> ${t}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem .75rem">${fields.map(([l,v])=>`<div style="padding:.3rem 0"><span style="color:var(--dim);font-size:.65rem;display:block;letter-spacing:.03em">${l}</span><span style="font-size:.82rem;color:var(--bright)">${v||'—'}</span></div>`).join('')}</div></div>`;
@@ -717,11 +716,11 @@ document.getElementById('memberDetail').innerHTML=`
 <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:700;flex-shrink:0">${(m.student_name||'?')[0].toUpperCase()}</div>
 <div style="flex:1;min-width:0"><div style="font-size:1.05rem;font-weight:700;color:var(--bright)">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
 <div style="font-size:.72rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.2rem"><span class="bg bg-info">${esc(m.member_code||'—')}</span> ${stBg(m.status)} ${rgBg(m.registration_type)} <span style="color:${m.gender==='male'?'var(--info)':'var(--pink)'}">${m.gender==='male'?'♂ Male':'♀ Female'}</span></div></div></div>
-${sec('Personal Information','user','var(--ac)',[['Full Name',`<strong>${esc(m.student_name)}</strong>`],['Father Name',esc(m.father_name)],['Grandfather Name',esc(m.grandfather_name)],['Christian Name (የክርስትና ስም)',esc(m.baptismal_name)],['Gender',m.gender==='male'?'♂ Male':'♀ Female'],['Age Group',fmtAge(m.age_group)]])}
-${sec('Church & Education','graduation-cap','var(--purple)',[['Current Section',esc(m.current_section)],['Member Type',esc(m.member_type)],['Registration Type',esc(m.registration_type)],['Education Level',esc(m.education_level)],['Profession',esc(m.work_profession)],['Member Code',esc(m.member_code)]])}
+${sec('Personal Information','user','var(--ac)',[['Full Name',`<strong>${esc(m.student_name)}</strong>`],['Father Name',esc(m.father_name)],['Grandfather Name',esc(m.grandfather_name)],['Christian Name (የክርስትና ስም)',esc(m.baptismal_name)],['Gender',m.gender==='male'?'♂ Male':'♀ Female']])}
+${sec('Church & Education','graduation-cap','var(--purple)',[['Registration Type',esc(m.registration_type)],['Education Level',esc(m.education_level)],['Profession',esc(m.work_profession)],['Member Code',esc(m.member_code)]])}
 ${sec('Contact Details','phone','var(--ok)',[['Phone Number',esc(m.phone_number)],['Alt Phone',esc(m.alt_phone_number)],['Guardian Name',esc(m.guardian_name)],['Guardian Phone 1',esc(m.guardian_phone1)]])}
 ${sec('Address','location-dot','var(--warn)',[['City',esc(m.city)],['Sub City',esc(m.sub_city)],['Woreda',esc(m.woreda)],['Mender',esc(m.mender)],['Block Number',esc(m.block_number)],['House Number',esc(m.house_number)]])}
-<div style="text-align:right;font-size:.65rem;color:var(--dim);margin-top:.5rem;padding-top:.4rem;border-top:1px solid var(--cb)">Registered: ${fmtDate(m.created_at)} • Member ID: ${m.id}</div>`;
+<div style="text-align:right;font-size:.65rem;color:var(--dim);margin-top:.5rem;padding-top:.4rem;border-top:1px solid var(--cb)">Registered: ${fmtDate(m.created_at)} • Student ID: ${m.id}</div>`;
 document.getElementById('memberModal').classList.add('show');}
 
 
@@ -741,7 +740,7 @@ async function toggleUser(id,cur){const act=cur==='active'?'deactivate':'activat
 
 // REPORTS
 function loadAnalysis(){buildAnalysis();}
-function buildAnalysis(){const el=document.getElementById('membershipAnalysis');const bySt={active:Number(memberStats.active)||0,warning:Number(memberStats.warning)||0,inactive:Number(memberStats.inactive)||0},byG={male:Number(memberStats.male)||0,female:Number(memberStats.female)||0},bySec=Object.fromEntries(secDist.map(item=>[item.s||'Unassigned',Number(item.c)||0])),summary={total:Number(memberStats.total)||0,pending:Number(memberStats.pending)||0,teachers:Number(memberStats.teachers)||0,sections:Number(memberStats.sections)||0};const row=(obj,clr)=>Object.entries(obj).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:.72rem;padding:.3rem 0;border-bottom:1px solid var(--cb)"><span>${esc(k.replace(/_/g,' '))}</span><span style="font-weight:700;color:${clr}">${v}</span></div>`).join('');el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="two-col"><div><div class="flbl" style="margin-bottom:.4rem;color:var(--info)"><i class="fa-solid fa-signal"></i> Status</div>${row(bySt,'var(--bright)')}</div><div><div class="flbl" style="margin-bottom:.4rem;color:var(--purple)"><i class="fa-solid fa-venus-mars"></i> Gender</div>${row(byG,'var(--bright)')}</div><div><div class="flbl" style="margin-bottom:.4rem;color:var(--warn)"><i class="fa-solid fa-layer-group"></i> Section</div>${row(bySec,'var(--bright)')}</div><div><div class="flbl" style="margin-bottom:.4rem;color:var(--ok)"><i class="fa-solid fa-users"></i> Summary</div>${row(summary,'var(--bright)')}</div></div>`;}
+function buildAnalysis(){const el=document.getElementById('membershipAnalysis');const bySt={active:Number(memberStats.active)||0,warning:Number(memberStats.warning)||0,inactive:Number(memberStats.inactive)||0},byG={male:Number(memberStats.male)||0,female:Number(memberStats.female)||0},summary={total:Number(memberStats.total)||0,teachers:Number(memberStats.teachers)||0};const row=(obj,clr)=>Object.entries(obj).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:.72rem;padding:.3rem 0;border-bottom:1px solid var(--cb)"><span>${esc(k.replace(/_/g,' '))}</span><span style="font-weight:700;color:${clr}">${v}</span></div>`).join('');el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="two-col"><div><div class="flbl" style="margin-bottom:.4rem;color:var(--info)"><i class="fa-solid fa-signal"></i> Status</div>${row(bySt,'var(--bright)')}</div><div><div class="flbl" style="margin-bottom:.4rem;color:var(--purple)"><i class="fa-solid fa-venus-mars"></i> Gender</div>${row(byG,'var(--bright)')}</div><div><div class="flbl" style="margin-bottom:.4rem;color:var(--ok)"><i class="fa-solid fa-users"></i> Summary</div>${row(summary,'var(--bright)')}</div></div>`;}
 
 // ═══════════════════════════════════════════════════════
 // ULTRA PROFESSIONAL EXPORT ENGINE
@@ -861,14 +860,14 @@ function pdfStatBox(doc,x,y,w,label,value,color){
 
 // ═══ EXPORT MEMBER PROFILE (Single member) ═══
 function exportMemberProfile(fmt){
-    const m=currentViewMember;if(!m)return toast('No member selected','e');
+    const m=currentViewMember;if(!m)return toast('No student selected','e');
     if(fmt==='pdf')exportMemberPDF(m);
     else if(fmt==='word')exportMemberWord(m);
 }
 function exportMemberPDF(m){
     // Print-based PDF that fully supports Amharic (like info-dept)
     const w=window.open('','_blank','width=800,height=900');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Member Profile — ${esc(m.student_name)}</title>
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Student Profile — ${esc(m.student_name)}</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     @page{size:A4;margin:12mm 14mm}
@@ -893,16 +892,16 @@ function exportMemberPDF(m){
     </style><link rel="stylesheet" href="/admin/css/mobile.css?v=<?= SSMS_ASSET_VER ?>">
 </head><body>
     <div class="toolbar no-print"><button class="btn-g" onclick="window.print()">🖨️ Print / Save as PDF</button><button class="btn-o" onclick="window.close()">← Close</button><span style="color:#64748b;font-size:11px;margin-left:8px">Tip: Select "Save as PDF" in print dialog</span></div>
-    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Member Profile</h1><p>Official Member Record • Generated: ${genStamp()}</p></div>
+    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Student Profile</h1><p>Official Student Record • Generated: ${genStamp()}</p></div>
     <div class="profile"><div class="avatar">${(m.student_name||'?')[0].toUpperCase()}</div><div>
     <div style="font-size:14pt;font-weight:bold">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
     <div style="margin-top:4px"><span class="badge b-info">${esc(m.member_code||'—')}</span><span class="badge b-${m.status==='active'?'ok':(m.status==='warning'?'w':'bad')}">${(m.status||'—').toUpperCase()}</span><span class="badge b-info">${(m.registration_type||'').toUpperCase()}</span><span class="badge b-info">${m.gender==='male'?'Male':'Female'}</span></div></div></div>
-    ${[{t:'Personal Information',c:'st1',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female'],['Age Group',fmtAge(m.age_group)]]},
-    {t:'Church & Education',c:'st2',f:[['Current Section',m.current_section],['Member Type',m.member_type],['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
+    ${[{t:'Personal Information',c:'st1',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female']]},
+    {t:'Church & Education',c:'st2',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
     {t:'Contact Details',c:'st3',f:[['Phone Number',m.phone_number],['Alt Phone',m.alt_phone_number],['Guardian Name',m.guardian_name],['Guardian Phone',m.guardian_phone1]]},
     {t:'Address Information',c:'st4',f:[['City',m.city],['Sub City',m.sub_city],['Woreda',m.woreda],['Mender',m.mender],['Block Number',m.block_number],['House Number',m.house_number]]}
     ].map(s=>'<div class="sec"><div class="sec-title '+s.c+'">'+s.t+'</div><table class="f">'+s.f.map(([l,v],i)=>i%2===0?'<tr><td style="width:50%"><span class="lbl">'+l+'</span><span class="val">'+(esc(v)||'—')+'</span></td>'+(s.f[i+1]?'<td><span class="lbl">'+s.f[i+1][0]+'</span><span class="val">'+(esc(s.f[i+1][1])||'—')+'</span></td>':'<td></td>')+'</tr>':'').filter(Boolean).join('')+'</table></div>').join('')}
-    <div class="footer"><?= SCHOOL_NAME ?> • Member ID: ${m.id} • Registered: ${fmtDate(m.created_at)} • Generated: ${genStamp()}</div>
+    <div class="footer"><?= SCHOOL_NAME ?> • Student ID: ${m.id} • Registered: ${fmtDate(m.created_at)} • Generated: ${genStamp()}</div>
     <script>setTimeout(()=>window.print(),600)<\/script></body></html>`);
     w.document.close();
     toast('Print dialog opening — choose "Save as PDF"','s');
@@ -931,15 +930,15 @@ function exportMemberWord(m){
     <div style="font-size:14pt;font-weight:bold;color:#111827">${esc(m.student_name||'')} ${esc(m.father_name||'')} ${esc(m.grandfather_name||'')}</div>
     <div style="margin-top:4px"><span class="badge bg-info">${esc(m.member_code||'—')}</span><span class="badge bg-${m.status==='active'?'active':(m.status==='warning'?'warning':'inactive')}">${(m.status||'—').toUpperCase()}</span><span class="badge bg-info">${(m.registration_type||'—').toUpperCase()}</span><span class="badge bg-info">${m.gender==='male'?'Male':'Female'}</span></div>
     </div></div>
-    ${[{t:'Personal Information',c:'personal',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female'],['Age Group',fmtAge(m.age_group)]]},
-    {t:'Church & Education',c:'church',f:[['Current Section',m.current_section],['Member Type',m.member_type],['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
+    ${[{t:'Personal Information',c:'personal',f:[['Full Name',m.student_name],['Father Name',m.father_name],['Grandfather Name',m.grandfather_name],['Christian Name (የክርስትና ስም)',m.baptismal_name],['Gender',m.gender==='male'?'Male':'Female']]},
+    {t:'Church & Education',c:'church',f:[['Registration Type',m.registration_type],['Education Level',m.education_level],['Profession',m.work_profession],['Member Code',m.member_code]]},
     {t:'Contact Details',c:'contact',f:[['Phone Number',m.phone_number],['Alt Phone',m.alt_phone_number],['Guardian Name',m.guardian_name],['Guardian Phone',m.guardian_phone1]]},
     {t:'Address Information',c:'address',f:[['City',m.city],['Sub City',m.sub_city],['Woreda',m.woreda],['Mender',m.mender],['Block Number',m.block_number],['House Number',m.house_number]]}
     ].map(s=>`<div class="section"><div class="section-title st-${s.c}">${s.t}</div><table class="fields">${s.f.map(([l,v],i)=>i%2===0?`<tr><td style="width:25%"><span class="label">${l}</span><br><span class="value">${esc(v)||'—'}</span></td>${s.f[i+1]?`<td style="width:25%"><span class="label">${s.f[i+1][0]}</span><br><span class="value">${esc(s.f[i+1][1])||'—'}</span></td>`:'<td></td>'}</tr>`:'').filter(Boolean).join('')}</table></div>`).join('')}
     <div class="footer">Generated: ${genStamp()} | Member ID: ${m.id} | <?= SCHOOL_NAME ?> | Registered: ${fmtDate(m.created_at)}</div>
     </body></html>`;
     dlFile(html,'<?= MEMBER_CODE_PREFIX ?>_Member_'+(m.student_name||'profile').replace(/\s/g,'_')+'.doc','application/msword');
-    toast('Member profile exported as Word','s');
+    toast('Student profile exported as Word','s');
 }
 
 // ═══ MAIN DATA EXPORT (filtered members list + analytics) ═══
@@ -955,10 +954,10 @@ function exportFullReport(fmt){if(!allMembers.length){loadMembers().then(()=>exp
 
 // ── CSV ──
 function exportCSV(data){
-    const h=['Code','Name','Father Name','Grandfather','Christian Name (የክርስትና ስም)','Gender','Age Group','Section','Status','Reg Type','Member Type','Phone','Alt Phone','Guardian','Guardian Phone','City','Sub City','Woreda','Education','Profession','Registered'];
-    const rows=data.map(m=>[m.member_code,m.student_name,m.father_name,m.grandfather_name,m.baptismal_name,m.gender,fmtAge(m.age_group),m.current_section,m.status,m.registration_type,m.member_type,m.phone_number,m.alt_phone_number,m.guardian_name,m.guardian_phone1,m.city,m.sub_city,m.woreda,m.education_level,m.work_profession,m.created_at?fmtDate(m.created_at):''].map(v=>v||''));
+    const h=['Code','Name','Father Name','Grandfather','Christian Name (የክርስትና ስም)','Gender','Status','Reg Type','Phone','Alt Phone','Guardian','Guardian Phone','City','Sub City','Woreda','Education','Profession','Registered'];
+    const rows=data.map(m=>[m.member_code,m.student_name,m.father_name,m.grandfather_name,m.baptismal_name,m.gender,m.status,m.registration_type,m.phone_number,m.alt_phone_number,m.guardian_name,m.guardian_phone1,m.city,m.sub_city,m.woreda,m.education_level,m.work_profession,m.created_at?fmtDate(m.created_at):''].map(v=>v||''));
     let csv=h.join(',')+'\n'+rows.map(r=>r.map(c=>`"${(c+'').replace(/"/g,'""')}"`).join(',')).join('\n');
-    dlFile(csv,'<?= MEMBER_CODE_PREFIX ?>_Members_Full_'+new Date().toISOString().slice(0,10)+'.csv','text/csv');
+    dlFile(csv,'<?= MEMBER_CODE_PREFIX ?>_Students_Full_'+new Date().toISOString().slice(0,10)+'.csv','text/csv');
     toast('CSV exported with all fields','s');
 }
 
@@ -969,12 +968,11 @@ function exportExcelPro(data){
 
     // Sheet 1: Summary Dashboard
     const summary=[
-        ['<?= strtoupper(SCHOOL_NAME) ?>'],['Member Data Report'],
+        ['<?= strtoupper(SCHOOL_NAME) ?>'],['Student Data Report'],
         ['Generated: '+genStamp()],[''],
         ['OVERVIEW STATISTICS'],
-        ['Total Members','Active','Warning','Inactive','Pending','Male','Female','Sections'],
-        [a.total,a.bySt.active,a.bySt.warning,a.bySt.inactive,data.filter(m=>m.registration_type==='waiting').length,a.byG.Male,a.byG.Female,a.bySec.length],
-        [''],['SECTION DISTRIBUTION'],['Section','Count','Percentage'],...a.bySec.map(([s,c])=>[s,c,(c/a.total*100).toFixed(1)+'%']),
+        ['Total Students','Active','Warning','Inactive','Male','Female'],
+        [a.total,a.bySt.active,a.bySt.warning,a.bySt.inactive,a.byG.Male,a.byG.Female],
         [''],['GENDER ANALYSIS'],['Gender','Count','Percentage'],['Male',a.byG.Male,(a.byG.Male/a.total*100).toFixed(1)+'%'],['Female',a.byG.Female,(a.byG.Female/a.total*100).toFixed(1)+'%'],
         [''],['AGE GROUP DISTRIBUTION'],['Age Group','Count','Percentage'],...a.byAg.map(([g,c])=>[g,c,(c/a.total*100).toFixed(1)+'%']),
         [''],['REGISTRATION TYPES'],['Type','Count','Percentage'],...Object.entries(a.byRt).map(([t,c])=>[t,c,(c/a.total*100).toFixed(1)+'%']),
@@ -986,19 +984,15 @@ function exportExcelPro(data){
     XLSX.utils.book_append_sheet(wb,ws1,'📊 Summary');
 
     // Sheet 2: Full Member Data
-    const headers=['Code','Name','Father','Grandfather','Christian Name (የክርስትና ስም)','Gender','Age Group','Section','Status','Reg Type','Member Type','Phone','Alt Phone','Guardian','Guardian Phone','City','Sub City','Woreda','Education','Profession','Registered'];
-    const rows=data.map(m=>[m.member_code,m.student_name,m.father_name,m.grandfather_name,m.baptismal_name,m.gender,fmtAge(m.age_group),m.current_section,m.status,m.registration_type,m.member_type,m.phone_number,m.alt_phone_number,m.guardian_name,m.guardian_phone1,m.city,m.sub_city,m.woreda,m.education_level,m.work_profession,m.created_at?fmtDate(m.created_at):''].map(v=>v||''));
+    const headers=['Code','Name','Father','Grandfather','Christian Name (የክርስትና ስም)','Gender','Status','Reg Type','Phone','Alt Phone','Guardian','Guardian Phone','City','Sub City','Woreda','Education','Profession','Registered'];
+    const rows=data.map(m=>[m.member_code,m.student_name,m.father_name,m.grandfather_name,m.baptismal_name,m.gender,m.status,m.registration_type,m.phone_number,m.alt_phone_number,m.guardian_name,m.guardian_phone1,m.city,m.sub_city,m.woreda,m.education_level,m.work_profession,m.created_at?fmtDate(m.created_at):''].map(v=>v||''));
     const ws2=XLSX.utils.aoa_to_sheet([headers,...rows]);
     ws2['!cols']=headers.map(h=>({wch:h.length<8?12:18}));
-    ws2['!autofilter']={ref:'A1:U1'};
-    XLSX.utils.book_append_sheet(wb,ws2,'📋 All Members');
+    ws2['!autofilter']={ref:'A1:R1'};
+    XLSX.utils.book_append_sheet(wb,ws2,'📋 All Students');
 
-    // Sheet 3: By Section
-    const ws3=XLSX.utils.aoa_to_sheet([['Section','Members','Percentage'],...a.bySec.map(([s,c])=>[s,c,(c/a.total*100).toFixed(1)+'%'])]);
-    ws3['!cols']=[{wch:25},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws3,'📌 Sections');
 
-    XLSX.writeFile(wb,'<?= MEMBER_CODE_PREFIX ?>_Members_Report_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    XLSX.writeFile(wb,'<?= MEMBER_CODE_PREFIX ?>_Students_Report_'+new Date().toISOString().slice(0,10)+'.xlsx');
     toast('Professional Excel exported with 3 sheets + analytics','s');
 }
 
@@ -1007,7 +1001,7 @@ function exportPDFPro(data){
     const a=buildAnalyticsData(data);
     const isFiltered=filteredMembers.length>0&&filteredMembers.length!==allMembers.length;
     const w=window.open('','_blank','width=1100,height=900');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title><?= SCHOOL_NAME_SHORT ?> Member Report</title>
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title><?= SCHOOL_NAME_SHORT ?> Student Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
     @page{size:A4 landscape;margin:8mm 10mm}
@@ -1041,8 +1035,8 @@ function exportPDFPro(data){
     </style><link rel="stylesheet" href="/admin/css/mobile.css?v=<?= SSMS_ASSET_VER ?>">
 </head><body>
     <div class="toolbar no-print"><button class="btn-g" onclick="window.print()">🖨️ Print / Save as PDF</button><button class="btn-o" onclick="window.close()">← Close</button><span style="color:#64748b;font-size:11px;margin-left:8px">Tip: In print dialog, select "Save as PDF"</span></div>
-    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Member Report</h1>
-    <div class="meta">${isFiltered?'Filtered: '+data.length+' of '+allMembers.length+' members':'Complete Report: '+data.length+' members'} | Generated: ${genStamp()}</div></div>
+    <div class="header"><h1><?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Student Report</h1>
+    <div class="meta">${isFiltered?'Filtered: '+data.length+' of '+allMembers.length+' students':'Complete Report: '+data.length+' students'} | Generated: ${genStamp()}</div></div>
     <div class="summary">
     <div class="pill"><b>${a.total}</b> Total</div>
     <div class="pill"><b>${a.bySt.active}</b> Active</div>
@@ -1050,19 +1044,17 @@ function exportPDFPro(data){
     <div class="pill"><b>${a.bySt.inactive}</b> Inactive</div>
     <div class="pill"><b>${a.byG.Male}</b> Male</div>
     <div class="pill"><b>${a.byG.Female}</b> Female</div>
-    <div class="pill"><b>${a.bySec.length}</b> Sections</div>
-    </div>
+        </div>
     <div class="analytics">
-    <table><thead><tr><th colspan="3" style="background:#8b5cf6">Section Distribution</th></tr><tr><th>Section</th><th>Count</th><th>%</th></tr></thead><tbody>${a.bySec.slice(0,10).map(([s,c])=>'<tr><td>'+esc(s)+'</td><td style="font-weight:bold">'+c+'</td><td>'+(c/a.total*100).toFixed(1)+'%</td></tr>').join('')}</tbody></table>
     <table><thead><tr><th colspan="3" style="background:#0891b2">Age Groups</th></tr><tr><th>Group</th><th>Count</th><th>%</th></tr></thead><tbody>${a.byAg.map(([g,c])=>'<tr><td>'+g+'</td><td style="font-weight:bold">'+c+'</td><td>'+(c/a.total*100).toFixed(1)+'%</td></tr>').join('')}</tbody></table>
     <table><thead><tr><th colspan="3" style="background:#d97706">Registration</th></tr><tr><th>Type</th><th>Count</th><th>%</th></tr></thead><tbody>${Object.entries(a.byRt).map(([t,c])=>'<tr><td>'+t+'</td><td style="font-weight:bold">'+c+'</td><td>'+(c/a.total*100).toFixed(1)+'%</td></tr>').join('')}</tbody></table>
     ${a.byCity.length?'<table><thead><tr><th colspan="2" style="background:#ec4899">Top Cities</th></tr><tr><th>City</th><th>Count</th></tr></thead><tbody>'+a.byCity.slice(0,8).map(([c,n])=>'<tr><td>'+esc(c)+'</td><td style="font-weight:bold">'+n+'</td></tr>').join('')+'</tbody></table>':''}
     </div>
-    <div class="sec-title s1">Complete Member List</div>
-    <table class="main"><thead><tr><th>#</th><th>Code</th><th>Full Name</th><th>Father</th><th>Gender</th><th>Age</th><th>Section</th><th>Status</th><th>Reg Type</th><th>Phone</th><th>City</th><th>Sub City</th><th>Education</th></tr></thead><tbody>
-    ${data.map((m,i)=>{const sc=m.status==='active'?'s-active':(m.status==='warning'?'s-warning':'s-inactive');return'<tr><td style="color:#9ca3af">'+(i+1)+'</td><td style="font-family:monospace;font-size:7.5pt">'+esc(m.member_code||'')+'</td><td style="font-weight:600">'+esc(m.student_name||'')+'</td><td>'+esc(m.father_name||'')+'</td><td>'+(m.gender==='male'?'M':'F')+'</td><td>'+fmtAge(m.age_group)+'</td><td>'+esc(m.current_section||'—')+'</td><td><span class="status '+sc+'">'+(m.status||'')+'</span></td><td>'+esc(m.registration_type||'')+'</td><td>'+esc(m.phone_number||'')+'</td><td>'+esc(m.city||'')+'</td><td>'+esc(m.sub_city||'')+'</td><td>'+esc(m.education_level||'')+'</td></tr>';}).join('')}
+    <div class="sec-title s1">Complete Student List</div>
+    <table class="main"><thead><tr><th>#</th><th>Code</th><th>Full Name</th><th>Father</th><th>Gender</th><th>Status</th><th>Reg Type</th><th>Phone</th><th>City</th><th>Sub City</th><th>Education</th></tr></thead><tbody>
+    ${data.map((m,i)=>{const sc=m.status==='active'?'s-active':(m.status==='warning'?'s-warning':'s-inactive');return'<tr><td style="color:#9ca3af">'+(i+1)+'</td><td style="font-family:monospace;font-size:7.5pt">'+esc(m.member_code||'')+'</td><td style="font-weight:600">'+esc(m.student_name||'')+'</td><td>'+esc(m.father_name||'')+'</td><td>'+(m.gender==='male'?'M':'F')+'</td><td><span class="status '+sc+'">'+(m.status||'')+'</span></td><td>'+esc(m.registration_type||'')+'</td><td>'+esc(m.phone_number||'')+'</td><td>'+esc(m.city||'')+'</td><td>'+esc(m.sub_city||'')+'</td><td>'+esc(m.education_level||'')+'</td></tr>';}).join('')}
     </tbody></table>
-    <div class="footer"><?= SCHOOL_NAME ?> — Confidential Report — ${genStamp()} — ${data.length} members</div>
+    <div class="footer"><?= SCHOOL_NAME ?> — Confidential Report — ${genStamp()} — ${data.length} students</div>
     <script>setTimeout(()=>window.print(),600)<\/script></body></html>`);
     w.document.close();
     toast('Print dialog opening — choose "Save as PDF"','s');
@@ -1096,12 +1088,12 @@ function exportWordPro(data){
     .footer{margin-top:20px;padding-top:6px;border-top:2px solid #16a34a;color:#9ca3af;font-size:7pt;text-align:center}
     </style><link rel="stylesheet" href="/admin/css/mobile.css?v=<?= SSMS_ASSET_VER ?>">
 </head><body>
-    <div class="header"><h1>⛪ <?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Member Report</h1>
-    <p>${isFiltered?'Filtered Report: '+data.length+' of '+allMembers.length+' members':'Complete Report: '+data.length+' members'}</p>
+    <div class="header"><h1>⛪ <?= SCHOOL_NAME_SHORT ?> <?= SCHOOL_TYPE ?> — Student Report</h1>
+    <p>${isFiltered?'Filtered Report: '+data.length+' of '+allMembers.length+' students':'Complete Report: '+data.length+' students'}</p>
     <div class="date">Generated: ${genStamp()}</div></div>
 
     <div class="stats">
-    <div class="stat-box"><div class="num" style="color:#06b6d4">${a.total}</div><div class="lbl">Total Members</div></div>
+    <div class="stat-box"><div class="num" style="color:#06b6d4">${a.total}</div><div class="lbl">Total Students</div></div>
     <div class="stat-box"><div class="num" style="color:#10b981">${a.bySt.active}</div><div class="lbl">Active</div></div>
     <div class="stat-box"><div class="num" style="color:#f59e0b">${a.bySt.warning}</div><div class="lbl">Warning</div></div>
     <div class="stat-box"><div class="num" style="color:#ef4444">${a.bySt.inactive}</div><div class="lbl">Inactive</div></div>
@@ -1110,9 +1102,7 @@ function exportWordPro(data){
     </div>
 
     <div class="two-col">
-    <div><div class="section-title st-purple">Section Distribution</div>
-    ${a.bySec.slice(0,10).map(([s,c])=>{const pct=a.total>0?(c/a.total*100).toFixed(0):0;return`<div class="bar-row"><span class="bar-label">${esc(s)}</span><span class="bar-val">${c}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#8b5cf6"></div></div><span style="font-size:6pt;color:#6b7280;width:28px">${pct}%</span></div>`;}).join('')}</div>
-    <div><div class="section-title st-green">Age Group Analysis</div>
+        <div><div class="section-title st-green">Age Group Analysis</div>
     <table class="mini-table"><tr><th>Age Group</th><th>Count</th><th>Share</th></tr>
     ${a.byAg.map(([g,c],i)=>`<tr${i%2?' class="alt"':''}><td>${g}</td><td style="font-weight:bold">${c}</td><td>${(c/a.total*100).toFixed(1)}%</td></tr>`).join('')}</table>
     <div class="section-title st-amber">Registration Types</div>
@@ -1122,24 +1112,22 @@ function exportWordPro(data){
     ${a.byCity.length?`<div class="section-title st-pink">Top Cities</div>
     <div class="two-col">${a.byCity.slice(0,5).map(([c,n])=>`<div class="bar-row"><span class="bar-label">${esc(c)}</span><span class="bar-val">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${a.total>0?(n/a.byCity[0][1]*100).toFixed(0):0}%;background:#ec4899"></div></div></div>`).join('')}${a.byCity.length>5?a.byCity.slice(5,10).map(([c,n])=>`<div class="bar-row"><span class="bar-label">${esc(c)}</span><span class="bar-val">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${a.total>0?(n/a.byCity[0][1]*100).toFixed(0):0}%;background:#ec4899"></div></div></div>`).join(''):''}</div>`:''}
 
-    <div class="section-title st-primary" style="margin-top:16px">Complete Member Data</div>
-    <table><thead><tr><th>#</th><th>Code</th><th>Name</th><th>Father</th><th>Gender</th><th>Age</th><th>Section</th><th>Status</th><th>Reg</th><th>Phone</th><th>City</th></tr></thead><tbody>
+    <div class="section-title st-primary" style="margin-top:16px">Complete Student Data</div>
+    <table><thead><tr><th>#</th><th>Code</th><th>Name</th><th>Father</th><th>Gender</th><th>Status</th><th>Reg</th><th>Phone</th><th>City</th></tr></thead><tbody>
     ${data.map((m,i)=>`<tr${i%2?' class="alt"':''}>
     <td style="color:#9ca3af">${i+1}</td>
     <td><span class="badge" style="background:#e0f2fe;color:#0369a1">${esc(m.member_code||'—')}</span></td>
     <td style="font-weight:600">${esc(m.student_name||'')}</td>
     <td>${esc(m.father_name||'')}</td>
     <td>${m.gender==='male'?'♂':'♀'}</td>
-    <td>${fmtAge(m.age_group)}</td>
-    <td>${esc(m.current_section||'—')}</td>
     <td><span class="badge bg-${m.status==='active'?'active':(m.status==='warning'?'warning':'inactive')}">${(m.status||'—').toUpperCase()}</span></td>
     <td>${esc(m.registration_type||'—')}</td>
     <td style="font-size:7pt">${esc(m.phone_number||'—')}</td>
     <td>${esc(m.city||'—')}</td></tr>`).join('')}
     </tbody></table>
-    <div class="footer"><?= SCHOOL_NAME ?> — Confidential Report — Generated ${genStamp()} — Total: ${data.length} members</div>
+    <div class="footer"><?= SCHOOL_NAME ?> — Confidential Report — Generated ${genStamp()} — Total: ${data.length} students</div>
     </body></html>`;
-    dlFile(html,'<?= MEMBER_CODE_PREFIX ?>_Members_Report_'+new Date().toISOString().slice(0,10)+'.doc','application/msword');
+    dlFile(html,'<?= MEMBER_CODE_PREFIX ?>_Students_Report_'+new Date().toISOString().slice(0,10)+'.doc','application/msword');
     toast('Professional Word report exported with analytics','s');
 }
 
@@ -1147,7 +1135,7 @@ function exportWordPro(data){
 function genCustomReport(){
     const tp=document.getElementById('crType').value,fmt=document.getElementById('crFmt').value;
     const total=Number(memberStats.total)||0;
-    const a={total:total,bySt:{active:Number(memberStats.active)||0,warning:Number(memberStats.warning)||0,inactive:Number(memberStats.inactive)||0},byG:{Male:Number(memberStats.male)||0,Female:Number(memberStats.female)||0},bySec:secDist.map(item=>[item.s||'Unassigned',Number(item.c)||0]),byRt:{Waiting:Number(memberStats.pending)||0,Transfer:Number(memberStats.transfer)||0,Direct:Number(memberStats.direct)||0}};
+    const a={total:total,bySt:{active:Number(memberStats.active)||0,warning:Number(memberStats.warning)||0,inactive:Number(memberStats.inactive)||0},byG:{Male:Number(memberStats.male)||0,Female:Number(memberStats.female)||0},byRt:{Transfer:Number(memberStats.transfer)||0,Direct:Number(memberStats.direct)||0}};
     let h,r,fn,title;const pct=c=>a.total>0?(c/a.total*100).toFixed(1)+'%':'0.0%';
     switch(tp){
         case'sections':h=['Section','Count','Percentage','Visualization'];title='Section Distribution Report';
@@ -1172,7 +1160,7 @@ function genCustomReport(){
         pdfFooter(doc);doc.save('<?= MEMBER_CODE_PREFIX ?>_'+fn+'_Report.pdf');
     }else if(fmt==='excel'){
         const wb=XLSX.utils.book_new();
-        const ws=XLSX.utils.aoa_to_sheet([['<?= SCHOOL_NAME_SHORT ?> Sunday School — '+title],['Generated: '+genStamp()],[''],[h],...r.map(x=>[x])]);
+        const ws=XLSX.utils.aoa_to_sheet([['<?= SCHOOL_NAME ?> — '+title],['Generated: '+genStamp()],[''],[h],...r.map(x=>[x])]);
         ws['!cols']=h.map(()=>({wch:20}));ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:h.length-1}}];
         XLSX.utils.book_append_sheet(wb,ws,fn);XLSX.writeFile(wb,'<?= MEMBER_CODE_PREFIX ?>_'+fn+'_Report.xlsx');
     }else if(fmt==='word'){

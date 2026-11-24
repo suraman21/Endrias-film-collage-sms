@@ -47,7 +47,7 @@ function financeMember(?int $id): void {
     $stmt = $conn->prepare('SELECT id FROM members WHERE id=?');
     $stmt->bind_param('i', $id); $stmt->execute();
     $exists = (bool)$stmt->get_result()->fetch_assoc(); $stmt->close();
-    if (!$exists) throw new LedgerInputException('Member not found.');
+    if (!$exists) throw new LedgerInputException('Student not found.');
 }
 /**
  * Audit 2026-10-20 (A14): every ledger mutation leaves an activity_logs row
