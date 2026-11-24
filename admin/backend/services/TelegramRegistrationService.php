@@ -744,9 +744,10 @@ final class TelegramRegistrationService
         }
         $publicId = self::publicId();
         $expires = date('Y-m-d H:i:s', time()+86400);
-        // Profile-flag inspection
-        $waiting = (int)($actor['can_waiting'] ?? 1) === 1;
-        $direct  = (int)($actor['can_direct'] ?? 0) === 1;
+        // Profile-flag inspection. The waiting/temporary profile was removed
+        // from the bot (2026-11-24); operators whose only flag was can_waiting
+        // fall back to direct, mirroring the admin default registration type.
+        $direct  = ((int)($actor['can_direct'] ?? 0) === 1) || ((int)($actor['can_waiting'] ?? 1) === 1);
         $transfer = (int)($actor['can_transfer'] ?? 0) === 1;
         // Determine the single profile if exactly one is allowed, otherwise fall
         // through to the profile chooser. IMPORTANT: only auto-skip the chooser
@@ -755,9 +756,8 @@ final class TelegramRegistrationService
         // appears silent.
         $autoProfile = null;
         foreach ([
-            'waiting' => $waiting && !$direct && !$transfer,
-            'direct'  => $direct && !$waiting && !$transfer,
-            'transfer'=> $transfer && !$waiting && !$direct,
+            'direct'  => $direct && !$transfer,
+            'transfer'=> $transfer && !$direct,
         ] as $p => $only) {
             if ($only) {
                 $s = $this->conn->prepare("SELECT id,version FROM telegram_form_profiles WHERE profile_key=? AND status='published' ORDER BY version DESC LIMIT 1");
@@ -786,15 +786,13 @@ final class TelegramRegistrationService
     private function chooseProfile(int $chatId, array $session, array $actor, string $text): array
     {
         $profile = str_contains($text,'transfer') || str_contains($text,'ዝውውር') ? 'transfer'
-                 : (str_contains($text,'direct') || str_contains($text,'ቀጥታ') ? 'direct'
-                 : (str_contains($text,'temporary') || str_contains($text,'ጊዜያዊ') ? 'waiting' : ''));
+                 : (str_contains($text,'direct') || str_contains($text,'ቀጥታ') ? 'direct' : '');
         if ($profile===''
-            || ($profile==='direct' && (int)$actor['can_direct']!==1)
+            || ($profile==='direct' && (int)$actor['can_direct']!==1 && (int)($actor['can_waiting']??1)!==1)
             || ($profile==='transfer' && (int)($actor['can_transfer']??0)!==1)
-            || ($profile==='waiting' && (int)$actor['can_waiting']!==1)) {
+        ) {
             $buttons=[];
-            if ((int)$actor['can_waiting']===1) $buttons[]=[['text'=>'⏳ ጊዜያዊ / Temporary']];
-            if ((int)$actor['can_direct']===1) $buttons[]=[['text'=>'⚡ ቀጥታ ምዝገባ']];
+            if ((int)$actor['can_direct']===1 || (int)($actor['can_waiting']??1)===1) $buttons[]=[['text'=>'⚡ ቀጥታ ምዝገባ']];
             if ((int)($actor['can_transfer']??0)===1) $buttons[]=[['text'=>'🔄 የዝውውር ምዝገባ']];
             $buttons[]=[['text'=>'❌ ሰርዝ']];
             return TelegramKeyboard::msg($chatId,'የምዝገባ ዓይነት ይምረጡ።', TelegramKeyboard::reply($buttons, true, true));
@@ -911,8 +909,7 @@ final class TelegramRegistrationService
         switch ($status) {
             case 'choosing':
                 $buttons=[]; $actor = $this->actorOfSession($session);
-                if ((int)($actor['can_waiting']??1)===1)$buttons[]=[['text'=>'⏳ ጊዜያዊ / Temporary']];
-                if ((int)($actor['can_direct']??0)===1)$buttons[]=[['text'=>'⚡ ቀጥታ ምዝገባ']];
+                if ((int)($actor['can_direct']??0)===1 || (int)($actor['can_waiting']??1)===1)$buttons[]=[['text'=>'⚡ ቀጥታ ምዝገባ']];
                 if ((int)($actor['can_transfer']??0)===1)$buttons[]=[['text'=>'🔄 የዝውውር ምዝገባ']];
                 $buttons[]=[['text'=>'❌ ሰርዝ']];
                 return $this->editOrSend($chatId,$editMessageId,'የምዝገባ ዓይነት ይምረጡ።',TelegramKeyboard::reply($buttons,true,true));
