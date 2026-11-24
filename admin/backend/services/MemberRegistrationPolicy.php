@@ -26,7 +26,7 @@ final class MemberRegistrationPolicy
         // School-admin registration (quick_add) was removed entirely on
         // 2026-11-18: the school dashboard no longer registers members.
         if ($role === 'school_admin') {
-            throw new InvalidArgumentException('School administrators cannot register members.');
+            throw new InvalidArgumentException('School administrators cannot register students.');
         }
         // quick_add is now always false (capability removed); the contract
         // keys stay so existing callers keep working unchanged.
@@ -82,7 +82,7 @@ final class MemberRegistrationPolicy
             'registration_type' => $registrationType,
             'member_type' => $quickAdd
                 ? 'regular'
-                : self::enum($input['member_type'] ?? 'regular', self::MEMBER_TYPES, 'member type'),
+                : self::enum($input['member_type'] ?? 'regular', self::MEMBER_TYPES, 'student type'),
             'status' => $quickAdd
                 ? 'active'
                 : self::enum($input['status'] ?? 'active', self::STATUSES, 'status'),

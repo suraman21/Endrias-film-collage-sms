@@ -169,7 +169,7 @@ final class HrAttendanceService
                 throw new \DomainException('Sheet contains an invalid record.');
             }
             if (isset($submitted[$mid])) {
-                throw new \DomainException('Duplicate member in sheet.');
+                throw new \DomainException('Duplicate student in sheet.');
             }
             $submitted[$mid] = $status;
             $note = trim((string)($rec['notes'] ?? $rec['note'] ?? ''));

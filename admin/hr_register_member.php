@@ -1,11 +1,11 @@
 <?php
 /**
  * ============================================================
- * Member Registration API
+ * Student Registration API
  * ============================================================
  * POST /admin/hr_register_member.php
  *
- * Member codes use a bounded, high-entropy generator with a unique lookup.
+ * Student codes use a bounded, high-entropy generator with a unique lookup.
  * No sequential MAX query or fixed 90,000-code ceiling.
  * ============================================================
  */
@@ -157,7 +157,7 @@ if (!isset($conn) || $conn->connect_error) {
 // School-admin registration was removed entirely on 2026-11-18.
 $allowedRegRoles = ['super_admin', 'hr_dept', 'admissions_registrar_dept'];
 if (!hasRole($allowedRegRoles)) {
-    jsonExit(['status' => 'error', 'message' => 'You do not have permission to register members.'], 403);
+    jsonExit(['status' => 'error', 'message' => 'You do not have permission to register students.'], 403);
 }
 
 try {
@@ -321,7 +321,7 @@ $guardian_house        = field('guardian_house');
 // after registration, keeping every pre-v2 consumer in sync.
 
 // Position assignments (identity v2) — the picker is fed by the Super
-// Admin Identity & Codes catalogue and drives the member's code and the
+// Admin Identity & Codes catalogue and drives the student's code and the
 // derived legacy flags. Available for regular AND special_regular.
 $position_ids = [];
 if (!$isQuickAdd && isset($_POST['position_ids']) && is_array($_POST['position_ids'])) {
@@ -334,7 +334,7 @@ if (!$isQuickAdd && isset($_POST['position_ids']) && is_array($_POST['position_i
     $position_ids = array_values(array_unique($position_ids));
 }
 
-// ── Member Code ──
+// ── Student Code ──
 $waiting_since = null;
 $member_code   = null;
 $code_letter   = null; // resolved category letter; allocation is deferred
@@ -352,7 +352,7 @@ if ($registration_type === 'waiting') {
     //
     // DATA INTEGRITY: when no age group was selected the category must NOT
     // be guessed (defaulting everyone to ህጻናት/A silently corrupts ministry
-    // reporting). Such members are saved with a PENDING code; the Identity
+    // reporting). Such students are saved with a PENDING code; the Identity
     // hub (admin/api_identity.php) or the migration tool issues the right
     // code once the age group is known.
     $code_letter = \App\Services\MemberCategory::letterFor($age_group);
@@ -434,7 +434,7 @@ if (isset($_POST['upgrade_member_id']) && is_scalar($_POST['upgrade_member_id'])
     $upgrade_id_check = (int)$_POST['upgrade_member_id'];
 }
 if ($upgrade_id_check > 0 && !is_string($doc_signed_form_path)) {
-    jsonExit(['status' => 'error', 'message' => 'The signed registration form must be uploaded to promote a member.']);
+    jsonExit(['status' => 'error', 'message' => 'The signed registration form must be uploaded to promote a student.']);
 }
 
 
@@ -546,7 +546,7 @@ try {
         unset($data['registered_at']);
         unset($data['waiting_since']);
         unset($data['member_code']);
-        // PROMOTION CONSISTENCY (2026-11-18): a member promoted to
+        // PROMOTION CONSISTENCY (2026-11-18): a student promoted to
         // permanent leaves the waiting pool everywhere — dashboards,
         // lists, badges and reports all key off registration_type.
         // Temporary is always waiting (M8), so read the STORED type
@@ -655,15 +655,15 @@ try {
         $stmt->close();
     }
 
-    // Family Link: attach the new member to a guardian record.
+    // Family Link: attach the new student to a guardian record.
     // Preference: explicit picker choice -> typo-tolerant auto-match ->
     // create a fresh guardian from the typed legacy fields. Never fatal:
     // a linkage failure must not break or roll back registration.
     try {
         require_once __DIR__ . '/backend/services/GuardianService.php';
         $pickedGuardianId = (int)($_POST['guardian_link_id'] ?? 0);
-        // Reads the member's just-saved guardian_* columns; on a picked or
-        // auto-matched guardian the member's legacy columns are refreshed
+        // Reads the student's just-saved guardian_* columns; on a picked or
+        // auto-matched guardian the student's legacy columns are refreshed
         // from the guardian row (single source of truth).
         \App\Services\GuardianService::attachFromLegacy($conn, (int)$newId, $pickedGuardianId, 'hr');
     } catch (\Throwable $glError) {
@@ -671,7 +671,7 @@ try {
     }
 
     // Keep versioned search keys transactionally aligned with the original
-    // member fields. This is a no-op until sql/080 is present.
+    // student fields. This is a no-op until sql/080 is present.
     if (!\App\Services\MemberCanonicalIdentityService::refresh($conn, (int)$newId)
         && \App\Services\MemberCanonicalIdentityService::available($conn)) {
         throw new RuntimeException('Canonical identity refresh failed.');
@@ -679,7 +679,7 @@ try {
 
     if (!\App\Services\SecurityAuditService::record(
         $conn,
-        $upgrade_id > 0 ? 'Member Registration Updated' : 'Member Registered',
+        $upgrade_id > 0 ? 'Student Registration Updated' : 'Student Registered',
         [
             'profile' => $isQuickAdd ? 'quick_add' : 'full',
             'registration_type' => $registration_type,
@@ -707,7 +707,7 @@ try {
     // the QR. Never fails the registration itself — worst case the code
     // stays pending and the Identity hub completes it later.
     // M8: waiting registrations NEVER mint here — applyPositions() would
-    // otherwise undo the waiting=>null above and hand a code to a member
+    // otherwise undo the waiting=>null above and hand a code to a student
     // the doctrine keeps pending until promotion (the position picker is
     // permanent-only in the UI, so waiting rows hold no positions anyway).
     // This also silences the M17 no-op 'Member Positions Synced' audit for
@@ -873,7 +873,7 @@ try {
         }
         jsonExit([
             'status' => 'duplicate',
-            'message' => 'A strongly matching member already exists. Review that record or explicitly authorize a duplicate.',
+            'message' => 'A strongly matching student already exists. Review that record or explicitly authorize a duplicate.',
             'match' => $e->member,
         ], 409);
     }

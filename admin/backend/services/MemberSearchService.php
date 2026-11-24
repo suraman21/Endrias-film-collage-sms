@@ -289,7 +289,7 @@ final class MemberSearchService
             }
             $stmt = $conn->prepare('SELECT id FROM members WHERE id > ? ORDER BY id LIMIT ' . $limit);
             if (!$stmt) {
-                $result['error'] = 'Could not read member ids.';
+                $result['error'] = 'Could not read student ids.';
                 return $result;
             }
             $stmt->bind_param('i', $afterId);

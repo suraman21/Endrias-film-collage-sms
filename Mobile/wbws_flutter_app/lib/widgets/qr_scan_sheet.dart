@@ -250,7 +250,7 @@ class _QrScanSheetState extends State<QrScanSheet>
                     const Flexible(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('የአባሉን ክውእር ኮድ ወደ ካሜራው የቅርቡ',
+                        child: Text('የተማሪውን ክውእር ኮድ ወደ ካሜራው የቅርቡ',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: Colors.white60, fontSize: 13)),

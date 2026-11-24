@@ -144,7 +144,7 @@ class _AttendanceWarningDetailScreenState
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.person_outline, size: 18),
-                        label: const Text('Member profile'),
+                        label: const Text('Student profile'),
                         onPressed: () => Navigator.of(context).push(SmoothPageRoute(
                             page: MemberDetailScreen(memberId: warningInt(_w!['member_id'])))),
                       ),
@@ -229,7 +229,7 @@ class _AttendanceWarningDetailScreenState
                   color: AppTheme.warning.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(10)),
               child: const Text(
-                  'No longer meets the threshold (a day was corrected or the member returned). Please close it with an outcome.',
+                  'No longer meets the threshold (a day was corrected or the student returned). Please close it with an outcome.',
                   style: TextStyle(fontSize: 12)),
             ),
         ]),

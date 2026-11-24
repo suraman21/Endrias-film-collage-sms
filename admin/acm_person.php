@@ -27,7 +27,7 @@ if (!in_array($role, AcmPolicy::consoleRoles(), true)) {
 $canCreate = AcmPolicy::can($role, 'person', 'create');
 $canEdit = AcmPolicy::can($role, 'person', 'edit');
 $canTicket = AcmPolicy::can($role, 'ticket', 'create');
-// S7: per-account suspend/reactivate (member/parent rows only;
+// S7: per-account suspend/reactivate (student/parent rows only;
 // the service re-guards role + state, so hidden buttons are
 // convenience, never security).
 $canSuspend = AcmPolicy::can($role, 'account', 'suspend');
@@ -137,7 +137,7 @@ acm_chrome_open('persons', 'Persons & accounts', 'One human, independently manag
         <div><label class="flbl" for="f_email">Email</label><input class="inp" id="f_email" name="email" type="email" maxlength="100"></div>
         <div><label class="flbl" for="f_doctype">ID document type</label><input class="inp" id="f_doctype" name="id_doc_type" maxlength="40" placeholder="Kebele ID / Passport / …"></div>
         <div><label class="flbl" for="f_docref">ID document ref</label><input class="inp" id="f_docref" name="id_doc_ref" maxlength="100"></div>
-        <div><label class="flbl" for="f_member">Linked member ID (members.id)</label><input class="inp" id="f_member" name="member_id" inputmode="numeric" placeholder="optional"></div>
+        <div><label class="flbl" for="f_member">Linked student ID (members.id)</label><input class="inp" id="f_member" name="member_id" inputmode="numeric" placeholder="optional"></div>
         <div><label class="flbl" for="f_guardian">Linked guardian ID (guardians.id)</label><input class="inp" id="f_guardian" name="guardian_id" inputmode="numeric" placeholder="optional"></div>
         <div class="full"><label class="flbl" for="f_notes">Notes</label><textarea class="inp" id="f_notes" name="notes" rows="2" maxlength="2000"></textarea></div>
         <div class="acm-btn-row full"><button class="btn bp" id="acmPersonSave"><i class="fa-solid fa-floppy-disk"></i> Save person</button></div>
@@ -158,7 +158,7 @@ acm_chrome_open('persons', 'Persons & accounts', 'One human, independently manag
             <dt>Phone</dt><dd><?= e((string)($person['phone'] ?? '—')) ?></dd>
             <dt>Email</dt><dd><?= e((string)($person['email'] ?? '—')) ?></dd>
             <dt>ID document</dt><dd><?= e(trim((string)($person['id_doc_type'] ?? '') . ' ' . (string)($person['id_doc_ref'] ?? '')) ?: '—') ?></dd>
-            <dt>Links</dt><dd>member <?= !empty($person['member_id']) ? '#' . (int)$person['member_id'] : '—' ?> · guardian <?= !empty($person['guardian_id']) ? '#' . (int)$person['guardian_id'] : '—' ?></dd>
+            <dt>Links</dt><dd>student <?= !empty($person['member_id']) ? '#' . (int)$person['member_id'] : '—' ?> · guardian <?= !empty($person['guardian_id']) ? '#' . (int)$person['guardian_id'] : '—' ?></dd>
         </dl>
         <?php if (!empty($dups['same_phone']) || !empty($dups['same_name_dob'])): ?>
         <div class="acm-alert warn" style="margin-top:.7rem"><i class="fa-solid fa-triangle-exclamation"></i> Possible duplicates:

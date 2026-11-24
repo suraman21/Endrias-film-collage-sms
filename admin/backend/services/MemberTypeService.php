@@ -68,7 +68,7 @@ final class MemberTypeService
     public static function saveLabel(\mysqli $conn, string $key, string $labelAm, string $labelEn): array
     {
         if (!in_array($key, self::KEYS, true)) {
-            return ['status' => 'error', 'message' => 'Unknown membership type.'];
+            return ['status' => 'error', 'message' => 'Unknown student type.'];
         }
         $labelAm = trim($labelAm);
         $labelEn = trim($labelEn);
@@ -95,6 +95,6 @@ final class MemberTypeService
         }
         return $ok
             ? ['status' => 'success', 'message' => 'Membership type updated.']
-            : ['status' => 'error', 'message' => 'Unable to save membership type.'];
+            : ['status' => 'error', 'message' => 'Unable to save student type.'];
     }
 }

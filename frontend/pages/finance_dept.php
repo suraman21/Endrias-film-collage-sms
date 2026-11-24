@@ -58,7 +58,7 @@ ob_start();
                 <li><button class="school-nav-link active" data-section="dashboard"><i class="fa-solid fa-gauge-high"></i> Overview</button></li>
                 <li><button class="school-nav-link" data-section="income"><i class="fa-solid fa-arrow-trend-up"></i> Income</button></li>
                 <li><button class="school-nav-link" data-section="expense"><i class="fa-solid fa-arrow-trend-down"></i> Expenses</button></li>
-                <li><button class="school-nav-link" data-section="fees"><i class="fa-solid fa-hand-holding-dollar"></i> Member Fees</button></li>
+                <li><button class="school-nav-link" data-section="fees"><i class="fa-solid fa-hand-holding-dollar"></i> Student Fees</button></li>
                 <li><button class="school-nav-link" data-section="categories"><i class="fa-solid fa-tags"></i> Categories</button></li>
                 <li><button class="school-nav-link" data-section="reports"><i class="fa-solid fa-chart-line"></i> Reports</button></li>
                 <li><button class="school-nav-link" data-comm-open="inbox"><i class="fa-solid fa-comments"></i> Communication</button></li>
@@ -168,7 +168,7 @@ ob_start();
                     </div>
                 </div>
                 <div style="overflow-x:auto">
-                    <table><thead><tr><th>Date</th><th>Category</th><th>Member</th><th>Description</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Actions</th></tr></thead>
+                    <table><thead><tr><th>Date</th><th>Category</th><th>Student</th><th>Description</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Actions</th></tr></thead>
                     <tbody id="incBody"></tbody></table>
                 </div>
             </div>
@@ -194,7 +194,7 @@ ob_start();
             <div id="section-fees" class="school-section">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
                     <h2 style="font-size:1.2rem;font-weight:700;color:var(--school-text-bright)">
-                        <i class="fa-solid fa-hand-holding-dollar" style="color:var(--school-accent)"></i> Member Fees
+                        <i class="fa-solid fa-hand-holding-dollar" style="color:var(--school-accent)"></i> Student Fees
                     </h2>
                     <button class="btn-primary btn-sm" onclick="Finance.openFeeModal()"><i class="fa-solid fa-plus"></i> Record</button>
                 </div>
@@ -215,7 +215,7 @@ ob_start();
                     </div>
                 </div>
                 <div style="overflow-x:auto">
-                    <table><thead><tr><th>Member</th><th>Code</th><th>Type</th><th>Amount</th><th>Month</th><th>Year</th><th>Status</th><th>Paid</th></tr></thead>
+                    <table><thead><tr><th>Student</th><th>Code</th><th>Type</th><th>Amount</th><th>Month</th><th>Year</th><th>Status</th><th>Paid</th></tr></thead>
                     <tbody id="feesBody"></tbody></table>
                     <div id="feesPager"></div>
                 </div>
@@ -291,8 +291,8 @@ ob_start();
             <div class="school-form-group"><label class="school-label">Receipt #</label><input id="txnReceipt" class="school-input"></div>
         </div>
         <div class="school-form-group" id="txnMemberWrap">
-            <label class="school-label" for="txnMemberSearch">Member (optional)</label>
-            <input id="txnMemberSearch" class="school-input" type="search" autocomplete="off" placeholder="Search name, phone, or member code" data-member-picker-target="txnMember">
+            <label class="school-label" for="txnMemberSearch">Student (optional)</label>
+            <input id="txnMemberSearch" class="school-input" type="search" autocomplete="off" placeholder="Search name, phone, or student code" data-member-picker-target="txnMember">
             <select id="txnMember" class="school-input" data-optional="true"><option value="">— None —</option></select>
         </div>
         <button class="btn-primary" onclick="Finance.saveTxn()" style="width:100%;justify-content:center"><i class="fa-solid fa-save"></i> Save</button>
@@ -307,9 +307,9 @@ ob_start();
             <button onclick="modal('feeModal',false)" style="background:none;border:none;color:var(--school-text-dim);font-size:1.25rem;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="school-form-group">
-            <label class="school-label" for="feeMemberSearch">Member</label>
-            <input id="feeMemberSearch" class="school-input" type="search" autocomplete="off" placeholder="Search name, phone, or member code" data-member-picker-target="feeMember">
-            <select id="feeMember" class="school-input"><option value="">Select member…</option></select>
+            <label class="school-label" for="feeMemberSearch">Student</label>
+            <input id="feeMemberSearch" class="school-input" type="search" autocomplete="off" placeholder="Search name, phone, or student code" data-member-picker-target="feeMember">
+            <select id="feeMember" class="school-input"><option value="">Select student…</option></select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
             <div class="school-form-group"><label class="school-label">Amount (ETB)</label><input type="number" id="feeAmt" class="school-input" step="0.01" min="0"></div>

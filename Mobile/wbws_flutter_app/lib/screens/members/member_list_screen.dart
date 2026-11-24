@@ -122,7 +122,7 @@ class _MemberListScreenState extends State<MemberListScreen>
   void _openLookup() {
     QrScanSheet.open(
       context,
-      header: 'Scan member card',
+      header: 'Scan student card',
       onScan: (raw) async {
         final code = QrAttendance.extractMemberCode(raw);
         if (code == null) return QrFeedback.invalid();
@@ -229,7 +229,7 @@ class _MemberListScreenState extends State<MemberListScreen>
         _refreshing = false;
         if (_members.isEmpty) {
           _initialLoading = false;
-          _error = 'Waiting for network and no members saved on this phone';
+          _error = 'Waiting for network and no students saved on this phone';
         }
       });
       return;
@@ -293,8 +293,8 @@ class _MemberListScreenState extends State<MemberListScreen>
         _refreshFailed = true;
         if (_members.isEmpty) {
           _error = _isOffline
-              ? 'Waiting for network and no members saved on this phone'
-              : (failMessage ?? "Couldn't load members right now");
+              ? 'Waiting for network and no students saved on this phone'
+              : (failMessage ?? "Couldn't load students right now");
         }
       });
     }
@@ -416,7 +416,7 @@ class _MemberListScreenState extends State<MemberListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Members'),
+        title: const Text('Students'),
         automaticallyImplyLeading: Navigator.canPop(context),
         actions: [
           // Batch roster photo capture — walks the member list and
@@ -465,7 +465,7 @@ class _MemberListScreenState extends State<MemberListScreen>
           ),
           // Phase 9: scan a member-card QR to jump straight to the file.
           IconButton(
-              tooltip: 'Scan member QR',
+              tooltip: 'Scan student QR',
               icon: const Icon(Icons.qr_code_scanner, size: 20),
               onPressed: _openLookup),
           IconButton(
@@ -478,11 +478,11 @@ class _MemberListScreenState extends State<MemberListScreen>
           // Honest cached-data strips: what's on screen is local.
           if (_isOffline && _members.isNotEmpty)
             _cachedStrip(
-                'Waiting for network — showing members saved on this phone',
+                'Waiting for network — showing students saved on this phone',
                 Icons.cloud_off),
           if (!_isOffline && _refreshFailed && _members.isNotEmpty)
             _cachedStrip(
-                "Couldn't update right now — showing members saved on this phone",
+                "Couldn't update right now — showing students saved on this phone",
                 Icons.sync_problem),
           // Background refresh in flight — data stays, never a blank.
           if (_refreshing)
@@ -495,7 +495,7 @@ class _MemberListScreenState extends State<MemberListScreen>
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search members...',
+                hintText: 'Search students...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -572,7 +572,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                       )
                     : _members.isEmpty
                         ? const Center(
-                            child: Text('No members found',
+                            child: Text('No students found',
                                 style: TextStyle(color: Colors.grey)))
                         : RawScrollbar(
                             controller: _scrollController,
@@ -611,7 +611,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                                       child: PagedListFooter(
                                         shown: _members.length,
                                         total: _serverTotal,
-                                        noun: 'members',
+                                        noun: 'students',
                                         loading: _loadingMore,
                                         hasMore: _hasMoreMembers,
                                         onLoadMore: _loadMore,

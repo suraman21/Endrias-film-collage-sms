@@ -13,15 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const SUMMARY_LABELS = [
         ['rows', 'Rows read'],
-        ['new_permanent', 'New permanent members'],
-        ['new_temporary', 'New temporary members'],
-        ['updated', 'Members to update'],
+        ['new_permanent', 'New permanent students'],
+        ['new_temporary', 'New temporary students'],
+        ['updated', 'Students to update'],
         ['unchanged', 'Unchanged'],
         ['to_enroll', 'Class assignments'],
-        ['unassigned_new', 'New members without class'],
+        ['unassigned_new', 'New students without class'],
         ['codes_to_issue', 'Student codes to issue'],
         ['codes_pending', 'Student codes pending (no age)'],
-        ['skipped_archived', 'Archived members skipped'],
+        ['skipped_archived', 'Archived students skipped'],
     ];
 
     function line(text, cls) {
@@ -122,10 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const out = [];
                 const newP = Number(sm.new_permanent || 0), newT = Number(sm.new_temporary || 0);
-                if (newP + newT) out.push(`${newP + newT} NEW member(s) are created (${newP} permanent, ${newT} temporary).`);
-                if (Number(sm.updated || 0)) out.push(`${sm.updated} existing member(s) are UPDATED with the values in the file.`);
+                if (newP + newT) out.push(`${newP + newT} NEW student(s) are created (${newP} permanent, ${newT} temporary).`);
+                if (Number(sm.updated || 0)) out.push(`${sm.updated} existing student(s) are UPDATED with the values in the file.`);
                 if (Number(sm.to_enroll || 0)) out.push(`${sm.to_enroll} class assignment(s) are made.`);
-                if (Number(sm.codes_to_issue || 0)) out.push(`${sm.codes_to_issue} member code(s) are issued.`);
+                if (Number(sm.codes_to_issue || 0)) out.push(`${sm.codes_to_issue} student code(s) are issued.`);
                 if (!out.length) out.push('Nothing changes: every row already matches the database.');
                 return out;
             });
@@ -142,15 +142,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const dc = await window.DangerConfirm.ask({
                     tier: 'high',
-                    title: `Import ${tier} members from this file?`,
+                    title: 'Import students from this file?',
                     object: file.name,
-                    summary: 'Members are created or updated from the Excel file in one all-or-nothing step.',
+                    summary: 'Students are created or updated from the Excel file in one all-or-nothing step.',
                     intent: 'I want to import this file',
                     consequences: () => previewImpact(file),
-                    fallbackConsequences: ['Could not check the file first. New members may be created and existing members updated with the values in the file.'],
-                    keeps: ['The whole file is saved only if every row is valid.', 'Members that are not in the file are not touched.', 'Family links are made later in Family Link.'],
-                    phrase: 'IMPORT MEMBERS',
-                    confirmLabel: 'Import members'
+                    fallbackConsequences: ['Could not check the file first. New students may be created and existing students updated with the values in the file.'],
+                    keeps: ['The whole file is saved only if every row is valid.', 'Students that are not in the file are not touched.', 'Family links are made later in Family Link.'],
+                    phrase: 'IMPORT STUDENTS',
+                    confirmLabel: 'Import students'
                 });
                 if (!dc) return;
                 phrase = dc.phrase;
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setBusy(true, dryRun ? checkBtn : submitBtn);
             statusContainer.classList.remove('hidden');
             statusLog.textContent = '';
-            line(`${dryRun ? 'Checking' : 'Importing'} ${file.name} (${tier} members)...`, 'text-blue-400');
+            line(`${dryRun ? 'Checking' : 'Importing'} ${file.name} (students)...`, 'text-blue-400');
 
             const formData = new FormData();
             formData.append('import_file', file);
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error(err);
-                line('✗ Network or server error occurred. Nothing was confirmed as saved — check the member list before retrying.', 'text-red-400 font-bold mt-2');
+                line('✗ Network or server error occurred. Nothing was confirmed as saved — check the student list before retrying.', 'text-red-400 font-bold mt-2');
             } finally {
                 setBusy(false);
                 if (!keepFile) {
@@ -209,6 +209,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    attachFormLogic('formSyncTemporary', 'import_file_temp', 'fileNameDisplayTemp', 'btnSyncTemp', 'btnCheckTemp', 'temporary');
     attachFormLogic('formSyncPermanent', 'import_file_perm', 'fileNameDisplayPerm', 'btnSyncPerm', 'btnCheckPerm', 'permanent');
 });

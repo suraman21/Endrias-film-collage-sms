@@ -754,7 +754,7 @@ if ($action === 'save_settings' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'PO
 
     brandRespond([
         'status'   => 'success',
-        'message'  => 'Saved. Every member ID card will use this layout.',
+        'message'  => 'Saved. Every student ID card will use this layout.',
         'settings' => $merged,
     ]);
 }

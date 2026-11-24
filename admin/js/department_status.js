@@ -3,7 +3,7 @@
  *
  * Renders the Education status badges, a "Change" action (HR and
  * Information only — the server enforces it) and the period history for a
- * member. Mount it on any container that holds
+ * student. Mount it on any container that holds
  *   <div data-dept-status="MEMBER_ID"></div>
  * e.g. after injecting info_manage_member.php into a dashboard panel:
  *   DeptStatus.mount(panelElement)
@@ -81,7 +81,7 @@
     function render(box, memberId, data, history) {
         var html = '<div class="ds-wrap">';
         if (!data.available) {
-            html += '<div class="ds-unavailable"><i class="fas fa-info-circle"></i> Department status is not enabled yet on this installation (feature flag / sql 071). Every member is treated as active in both departments.</div></div>';
+            html += '<div class="ds-unavailable"><i class="fas fa-info-circle"></i> Department status is not enabled yet on this installation (feature flag / sql 071). Every student is treated as active in both departments.</div></div>';
             box.innerHTML = html;
             return;
         }
@@ -101,7 +101,7 @@
             html += '</div>';
         });
         html += '</div>';
-        html += '<div class="ds-note">Department status is separate from the global member status. Inactive members are left off that department\'s attendance sheets and grade lists from the day of the change; their history is kept. Reactivation starts a fresh period.</div>';
+        html += '<div class="ds-note">Department status is separate from the global student status. Inactive students are left off that department\'s attendance sheets and grade lists from the day of the change; their history is kept. Reactivation starts a fresh period.</div>';
         if (history && history.length) {
             html += '<table class="ds-hist"><thead><tr><th>Department</th><th>Status</th><th>From</th><th>To</th><th>By</th><th>Reason</th></tr></thead><tbody>';
             history.forEach(function (h) {
@@ -167,14 +167,14 @@
                 });
                 html += '</tbody></table>';
             } else {
-                html += '<div class="ds-note">No attendance warnings for this member.</div>';
+                html += '<div class="ds-note">No attendance warnings for this student.</div>';
             }
             el.innerHTML = html;
         }).catch(function () { el.innerHTML = ''; });
     }
 
     // Danger confirmation (DC-4, MEDIUM): deactivating in a department removes
-    // the member from that department's sheets. Uses the shared dialog
+    // the student from that department's sheets. Uses the shared dialog
     // (loaded on demand); reactivation keeps the simple dialog below.
     function dcLoad() {
         return new Promise(function (res) {
@@ -206,12 +206,12 @@
             dcLoad().then(function (ok) {
                 if (!ok) { toast('The confirmation dialog did not load. Reload the page (Ctrl+F5) and try again.', false); return; }
                 window.DangerConfirm.ask({
-                    tier: 'medium', title: 'Deactivate this member in ' + LABELS[dept] + '?', object: LABELS[dept],
-                    summary: 'The member is switched off in this department only. Nothing is deleted.', intent: 'I want to deactivate this member here',
-                    consequences: ['From today the member no longer appears on ' + LABELS[dept] + ' attendance sheets or grade lists.', 'Open attendance warnings in this department stop growing.'],
-                    keeps: ['All history (attendance, marks, warnings) is kept.', 'Other departments are not affected.', 'You can reactivate the member later.'],
+                    tier: 'medium', title: 'Deactivate this student in ' + LABELS[dept] + '?', object: LABELS[dept],
+                    summary: 'The student is switched off in this department only. Nothing is deleted.', intent: 'I want to deactivate this student here',
+                    consequences: ['From today the student no longer appears on ' + LABELS[dept] + ' attendance sheets or grade lists.', 'Open attendance warnings in this department stop growing.'],
+                    keeps: ['All history (attendance, marks, warnings) is kept.', 'Other departments are not affected.', 'You can reactivate the student later.'],
                     reason: { label: 'Reason (at least 3 letters)', required: true, minLength: 3, maxLength: 500, placeholder: 'e.g. Travelled abroad for 3 months' },
-                    phrase: 'DEACTIVATE MEMBER', confirmLabel: 'Deactivate'
+                    phrase: 'DEACTIVATE STUDENT', confirmLabel: 'Deactivate'
                 }).then(function (r) { if (r) sendSet(box, memberId, dept, to, r.reason); });
             });
             return;
@@ -222,8 +222,8 @@
         bg.innerHTML = '<div class="ds-modal" role="dialog" aria-modal="true">' +
             '<h4>' + verb + ' in ' + esc(LABELS[dept]) + '</h4>' +
             '<div class="ds-note">' + (to === 'inactive'
-                ? 'The member will no longer appear on ' + esc(LABELS[dept]) + ' attendance sheets or grade lists from today. Nothing is deleted.'
-                : 'The member returns to ' + esc(LABELS[dept]) + ' sheets from today. A new period starts, so earlier absences do not carry over.') + '</div>' +
+                ? 'The student will no longer appear on ' + esc(LABELS[dept]) + ' attendance sheets or grade lists from today. Nothing is deleted.'
+                : 'The student returns to ' + esc(LABELS[dept]) + ' sheets from today. A new period starts, so earlier absences do not carry over.') + '</div>' +
             '<label style="font-size:12px;font-weight:600;color:#334155">Reason (required)</label>' +
             '<textarea maxlength="500" placeholder="e.g. Travelled abroad for 3 months"></textarea>' +
             '<div class="ds-actions"><button type="button" class="ds-btn" data-ds-cancel>Cancel</button>' +

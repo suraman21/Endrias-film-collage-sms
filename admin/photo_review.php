@@ -120,7 +120,7 @@ body {
   <div class="hero">
     <div>
       <h1><i class="fa-solid fa-camera-retro"></i> Photo Review</h1>
-      <p>Resolve photos where more than one photographer captured a member. Pick the better shot.</p>
+      <p>Resolve photos where more than one photographer captured a student. Pick the better shot.</p>
     </div>
     <div style="display:flex;gap:8px;">
       <a class="btn btn-primary" href="/admin/photo_import.php"><i class="fa-solid fa-file-zipper"></i> Import ZIP</a>

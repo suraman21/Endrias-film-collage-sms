@@ -888,7 +888,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
                 padding: EdgeInsets.only(bottom: 8),
                 child: Text(
                   'This sheet is already approved. Attendance warnings for '
-                  'its members are recalculated and the taker is notified '
+                  'its students are recalculated and the taker is notified '
                   'with your reason.',
                   style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                 ),

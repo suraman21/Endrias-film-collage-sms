@@ -39,7 +39,7 @@ try {
     error_log('Dashboard attendance warning counts failed: ' . $e->getMessage());
 }
 
-// Practice members are loaded only from Super Admin → Load button.
+// Practice students are loaded only from Super Admin → Load button.
 // Never write on a GET. That used to hold the only PHP worker and
 // make /admin/ time out for everyone.
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && session_status() === PHP_SESSION_ACTIVE) {
@@ -389,7 +389,7 @@ main{padding:0!important;background:#fff!important;color:#1a0a0a!important}
     body.page-edu #rosterArea .dt td:nth-child(7)::before { content: 'Age'; }
     /* Age is data, not an action row: neutralise the generic last-child styling. */
     body.page-edu #rosterArea .dt td:last-child { display: block; margin-top: 0; padding-top: 0; border-top: 0; }
-    /* Unassigned members (7 cols, leading checkbox) — Phone is data, not an
+    /* Unassigned students (7 cols, leading checkbox) — Phone is data, not an
        action row: neutralise the generic last-child styling. */
     body.page-edu #unassignedArea .dt td:nth-child(1) {
         grid-column: auto;
@@ -481,7 +481,7 @@ main{padding:0!important;background:#fff!important;color:#1a0a0a!important}
     body.page-edu .hr-chip { min-height: 38px; }
     /* Section fade on switch. */
     body.page-edu .sec.act { animation: eduSecIn .18s ease; }
-    /* Member-search hit lists fill the card. */
+    /* Student-search hit lists fill the card. */
     body.page-edu .t-hits { max-height: 240px; }
 }
 
@@ -576,7 +576,7 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div class="sc" style="background:linear-gradient(135deg,#ec4899,#d946ef)"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:1.75rem;font-weight:700"><?= $totalEnrolled ?></div><div style="font-size:.75rem;opacity:.8">Enrolled</div></div><i class="fa-solid fa-user-graduate" style="font-size:1.5rem;opacity:.3"></i></div></div>
 <?php // Attendance alerting Phase 2: Open Attendance Warnings (Education only — server-scoped) ?>
 <a class="sc" id="aw-dashboard-card" href="/admin/attendance_warnings.php?department=edu" style="background:linear-gradient(135deg,#dc2626,#f97316);text-decoration:none;color:inherit" title="Open attendance warnings"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:1.75rem;font-weight:700" data-aw-total><?= $attendanceWarningsAvailable ? (int)$attendanceWarningCounts['edu']['total'] : '—' ?></div><div style="font-size:.75rem;opacity:.8">Open Attendance Warnings<?= $attendanceWarningsAvailable && (int)$attendanceWarningCounts['edu']['critical'] > 0 ? ' · ' . (int)$attendanceWarningCounts['edu']['critical'] . ' critical' : '' ?></div></div><i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem;opacity:.3"></i></div></a>
-<?php // Attendance alerting Phase 5: Assessment follow-ups (make-up queue opened when a member returns to Education) ?>
+<?php // Attendance alerting Phase 5: Assessment follow-ups (make-up queue opened when a student returns to Education) ?>
 <a class="sc" id="af-dashboard-card" href="/admin/assessment_followups.php" style="background:linear-gradient(135deg,#7c3aed,#a855f7);text-decoration:none;color:inherit" title="Assessments missed during an inactive period — decide make-up / exempt"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:1.75rem;font-weight:700" data-af-pending><?= $assessmentFollowupCard['available'] ? (int)$assessmentFollowupCard['pending'] : '—' ?></div><div style="font-size:.75rem;opacity:.8">Assessment Follow-ups · pending decision<?= $assessmentFollowupCard['available'] && (int)$assessmentFollowupCard['makeup_required'] > 0 ? ' · ' . (int)$assessmentFollowupCard['makeup_required'] . ' make-up' : '' ?></div></div><i class="fa-solid fa-clipboard-check" style="font-size:1.5rem;opacity:.3"></i></div></a>
 <?php // Attendance alerting Phase 4: Monthly Attendance (current EC month, Education only — server-scoped) ?>
 <a class="sc" id="am-dashboard-card" href="/admin/attendance_monthly.php?department=edu" style="background:linear-gradient(135deg,#0f766e,#14b8a6);text-decoration:none;color:inherit" title="Monthly attendance report (Ethiopian months)"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:1.75rem;font-weight:700" data-am-below><?= $attendanceMonthCard['available'] ? (int)$attendanceMonthCard['below'] : '—' ?></div><div style="font-size:.75rem;opacity:.8">Monthly Attendance · <?= e($attendanceMonthCard['month_label_am']) ?> · below threshold<?= $attendanceMonthCard['available'] && $attendanceMonthCard['avg_rate'] !== null ? ' · avg ' . $attendanceMonthCard['avg_rate'] . '%' : '' ?></div></div><i class="fa-solid fa-calendar-days" style="font-size:1.5rem;opacity:.3"></i></div></a>
@@ -669,7 +669,7 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div style="display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:1rem">
 <button class="tbn act" id="enrTabClasses" onclick="switchEnrollTab('classes')"><i class="fa-solid fa-school"></i> By Class</button>
 <button class="tbn" id="enrTabRoster" onclick="switchEnrollTab('roster')"><i class="fa-solid fa-table-list"></i> All Students</button>
-<button class="tbn" id="enrTabUnassigned" onclick="switchEnrollTab('unassigned')"><i class="fa-solid fa-user-xmark"></i> Unassigned Members</button>
+<button class="tbn" id="enrTabUnassigned" onclick="switchEnrollTab('unassigned')"><i class="fa-solid fa-user-xmark"></i> Unassigned Students</button>
 
 </div>
 
@@ -708,7 +708,7 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div id="rosterPager" class="crd" style="padding:0 .75rem;margin-top:-1px"></div>
 </div>
 
-<!-- TAB: Unassigned Members -->
+<!-- TAB: Unassigned Students -->
 <div id="enrPanelUnassigned" style="display:none">
 <div class="crd" style="padding:1rem">
 <div id="unassignedFormAlert" class="form-alert" role="alert"></div>
@@ -1081,7 +1081,7 @@ Classes with low curriculum recorded percentages indicate pending exam score sub
 </div>
 
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.75rem">
-<input autocomplete="off" type="text" id="pfSearch" class="inp" style="flex:1;min-width:200px" placeholder="Search by student name, father name, or member code…" oninput="applyPerformanceFilter()">
+<input autocomplete="off" type="text" id="pfSearch" class="inp" style="flex:1;min-width:200px" placeholder="Search by student name, father name, or student code…" oninput="applyPerformanceFilter()">
 <button class="btn btn-p" type="button" onclick="applyPerformanceFilter()"><i class="fa-solid fa-filter"></i> Apply Filter</button>
 <button class="btn btn-o" type="button" onclick="resetPerformanceFilter()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
 </div>
@@ -1268,8 +1268,8 @@ renderProfileTabSection('sec-profile', 'sec');
 <p style="font-size:.75rem;color:#64748b;margin:0 0 1rem">Creates their login and class work in one save. They sign in with the username and password.</p>
 <div id="teacherFormAlert" class="form-alert" role="alert"></div>
 <input type="hidden" id="teacherMemberId" value="">
-<div style="margin-bottom:.75rem"><label class="lbl">Link an existing member (optional)</label>
-<input id="teacherMemberQ" class="inp" placeholder="Search member name or code..." autocomplete="off" oninput="searchTeacherMembers(this.value)">
+<div style="margin-bottom:.75rem"><label class="lbl">Link an existing student (optional)</label>
+<input id="teacherMemberQ" class="inp" placeholder="Search student name or code..." autocomplete="off" oninput="searchTeacherMembers(this.value)">
 <div id="teacherMemberHits" class="t-hits" style="display:none"></div>
 <div id="teacherMemberPicked" style="font-size:.72rem;color:#64748b;margin-top:.35rem">Not linked — you can still type a name below.</div>
 </div>
@@ -1540,13 +1540,13 @@ renderProfileTabSection('sec-profile', 'sec');
 <div class="mo" id="bulkEnrollModal"><div class="mc" style="max-width:680px">
 <div style="background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;padding:1rem 1.25rem;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center"><h3 style="font-weight:700;font-size:1rem;margin:0"><i class="fa-solid fa-users"></i> Bulk Enroll Students</h3><button onclick="closeModal('bulkEnrollModal')" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem">&times;</button></div>
 <div style="padding:1.25rem">
-<p style="font-size:.75rem;color:#64748b;margin:0 0 .75rem">Pick a class, search the members who are not in a class yet, tick the ones you want, and save once.</p>
+<p style="font-size:.75rem;color:#64748b;margin:0 0 .75rem">Pick a class, search the students who are not in a class yet, tick the ones you want, and save once.</p>
 <div id="bulkFormAlert" class="form-alert" role="alert"></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
 <div><label class="lbl">Target class *</label>
 <select id="bulkClass" class="inp"><option value="">— Select class —</option><?php foreach ($classes as $c): ?><option value="<?= (int)$c['id'] ?>"><?= e($c['class_name']) ?><?php if (!empty($c['class_name_en'])): ?> (<?= e($c['class_name_en']) ?>)<?php endif; ?></option><?php endforeach; ?></select></div>
-<div><label class="lbl">Search members</label>
-<input type="text" id="bulkSearch" class="inp" placeholder="Name or member code…" autocomplete="off" oninput="debounceBulkSearch()"></div>
+<div><label class="lbl">Search students</label>
+<input type="text" id="bulkSearch" class="inp" placeholder="Name or student code…" autocomplete="off" oninput="debounceBulkSearch()"></div>
 </div>
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:end;margin-bottom:.75rem">
 <div style="min-width:140px"><label class="lbl">Filter</label>
@@ -2233,7 +2233,7 @@ document.getElementById('subjectForm')?.addEventListener('submit',async function
     }).catch(err=>{toast(err.message||'Could not reach the server.','err');}).finally(()=>{if(btn)btn.disabled=false;});
 });
 
-// ═══ MEMBER TYPE HELPERS ═══
+// ═══ STUDENT TYPE HELPERS ═══
 function roleTags(m) {
     let t='';
     if(m.is_teacher==1) t+='<span class="ch ch-w" style="font-size:.45rem;padding:0 4px">Teacher</span> ';
@@ -2494,7 +2494,7 @@ async function executeTransfer() {
     } catch(e){ toast('Error','err'); }
 }
 
-// --- Unassigned Members ---
+// --- Unassigned Students ---
 function debounceUnassigned() { clearTimeout(_unassignedTimer); _unassignedTimer=setTimeout(loadUnassigned, 350); }
 let _unassignedPage=1, _unassignedLimit=50;
 async function loadUnassigned(page=1) {
@@ -2565,9 +2565,9 @@ function updateBulkCount() { const cnt=_bulkSelected.size; const el=document.que
 async function bulkEnrollSelected() {
     setFormAlert('unassignedFormAlert','');
     const cls=document.getElementById('unassignedTargetClass').value;
-    if(!cls){ setFormAlert('unassignedFormAlert','Pick the class these members should join.','err'); toast('Pick a class first.','err'); return; }
+    if(!cls){ setFormAlert('unassignedFormAlert','Pick the class these students should join.','err'); toast('Pick a class first.','err'); return; }
     const ids=[..._bulkSelected];
-    if(!ids.length){ setFormAlert('unassignedFormAlert','Tick at least one member.','err'); toast('Tick at least one member.','err'); return; }
+    if(!ids.length){ setFormAlert('unassignedFormAlert','Tick at least one student.','err'); toast('Tick at least one student.','err'); return; }
     const dc=await dcAsk({tier:'medium',title:'Enrol '+ids.length+' student(s) into '+(dcSelText('unassignedTargetClass')||'the selected class')+'?',object:dcSelText('unassignedTargetClass'),summary:'Each selected student gets an active enrolment in this class for the current year.',intent:'I want to enrol these students',consequences:[ids.length+' student(s) will appear in this class roster, attendance sheets and mark lists.','Students already active in another class are handled by the server rules (it reports any that were skipped).'],keeps:['You can remove a student from the class later; history is kept.'],phrase:'ENROLL STUDENTS',confirmLabel:'Enrol '+ids.length+' student(s)'}); if(!dc) return;
     const fd=new FormData(); fd.append('action','bulk_enroll'); fd.append('class_id',cls); fd.append('member_ids',JSON.stringify(ids));
     try {
@@ -2576,8 +2576,8 @@ async function bulkEnrollSelected() {
             toast(d.message||'Students enrolled.', d.status==='partial'?'w':'ok');
             _bulkSelected.clear(); loadUnassigned(1); loadEnrollOverview();
         }else{
-            setFormAlert('unassignedFormAlert',d.message||'Could not enroll those members.','err');
-            toast(d.message||'Could not enroll those members.','err');
+            setFormAlert('unassignedFormAlert',d.message||'Could not enroll those students.','err');
+            toast(d.message||'Could not enroll those students.','err');
         }
     } catch(e){ const msg=friendlyNetError(e); setFormAlert('unassignedFormAlert',msg,'err'); toast(msg,'err'); }
 }
@@ -2610,7 +2610,7 @@ async function loadBulkCandidates(page=1) {
     try {
         const d=await getAPI(url);
         if(d.status!=='success'){
-            list.innerHTML=`<div style="padding:1rem;text-align:center;color:#dc2626">${esc(d.message||'Could not load members.')}</div>`;
+            list.innerHTML=`<div style="padding:1rem;text-align:center;color:#dc2626">${esc(d.message||'Could not load students.')}</div>`;
             return;
         }
         const m=d.members||[];
@@ -2622,8 +2622,8 @@ async function loadBulkCandidates(page=1) {
             <input type="checkbox" class="bulk-cb" value="${x.id}" ${_bulkModalSelected.has(parseInt(x.id,10))?'checked':''} onchange="bulkModalToggle(this)">
             <div style="flex:1"><strong>${esc(x.student_name)}</strong> ${esc(x.father_name||'')} <span class="ch ch-i" style="font-size:.5rem">${esc(x.member_code||'')}</span> ${roleTags(x)}</div>
             <span style="color:${x.gender==='male'?'#2563eb':'#ec4899'};font-size:.7rem">${x.gender==='male'?'♂':'♀'}</span>
-        </label>`).join(''):'<div style="padding:1rem;text-align:center;color:#94a3b8">No unassigned members match this search.</div>')
-        +(total>0?`<div style="padding:.45rem .5rem;font-size:.68rem;color:#94a3b8">Showing ${from}–${to} of ${total} unassigned member(s).</div>`:'')
+        </label>`).join(''):'<div style="padding:1rem;text-align:center;color:#94a3b8">No unassigned students match this search.</div>')
+        +(total>0?`<div style="padding:.45rem .5rem;font-size:.68rem;color:#94a3b8">Showing ${from}–${to} of ${total} unassigned student(s).</div>`:'')
         +pagerButtons(_bulkModalPage,pages,'loadBulkCandidates');
         const sa=document.getElementById('bulkSelectAll'); if(sa) sa.checked=allOn;
         updateBulkModalCount();
@@ -2640,7 +2640,7 @@ async function executeBulkEnroll() {
     const cls=document.getElementById('bulkClass').value;
     const ids=[..._bulkModalSelected];
     if(!cls){ setFormAlert('bulkFormAlert','Pick the class these students should join.','err'); markField('bulkClass',true); toast('Pick a class first.','err'); return; }
-    if(!ids.length){ setFormAlert('bulkFormAlert','Tick at least one member.','err'); toast('Tick at least one member.','err'); return; }
+    if(!ids.length){ setFormAlert('bulkFormAlert','Tick at least one student.','err'); toast('Tick at least one student.','err'); return; }
     const btn=document.getElementById('bulkEnrollBtn');
     if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Enrolling…';}
     const fd=new FormData(); fd.append('action','bulk_enroll'); fd.append('class_id',cls); fd.append('member_ids',JSON.stringify(ids));
@@ -2654,7 +2654,7 @@ async function executeBulkEnroll() {
             loadEnrollOverview();
             if(document.getElementById('enrPanelUnassigned')?.style.display==='block') loadUnassigned(1);
         }else{
-            setFormAlert('bulkFormAlert',d.message||'Could not enroll those members.','err'); toast(d.message||'Could not enroll those members.','err');
+            setFormAlert('bulkFormAlert',d.message||'Could not enroll those students.','err'); toast(d.message||'Could not enroll those students.','err');
             if(d.error_ref) console.warn('Ref', d.error_ref);
         }
     } catch(e){ const msg=friendlyNetError(e); setFormAlert('bulkFormAlert',msg,'err'); toast(msg,'err'); }
@@ -4232,7 +4232,7 @@ function exportFilteredPerformance(){
     try{
         if(typeof XLSX !== 'undefined' && XLSX.utils){
             const headers = [
-                '#', 'Student Name', 'Father Name', 'Baptismal Name', 'Member Code',
+                '#', 'Student Name', 'Father Name', 'Baptismal Name', 'Student Code',
                 'Class', 'Gender', 'Grade Average (%)', 'Letter Grade',
                 'Total Obtained (pts)', 'Total Max (pts)', 'Assessments Count',
                 'Attendance Rate (%)', 'Attendance Breakdown', 'Present Days', 'Absent Days', 'Late Days', 'Excused Days', 'Total Sessions'

@@ -100,5 +100,5 @@ try {
 } catch (Throwable $error) {
     reportInternalError('Unified search request failed', $error);
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Could not search members.']);
+    echo json_encode(['status' => 'error', 'message' => 'Could not search students.']);
 }

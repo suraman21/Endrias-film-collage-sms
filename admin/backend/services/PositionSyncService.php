@@ -100,7 +100,7 @@ final class PositionSyncService
     public static function applyPositions(\mysqli $conn, int $memberId, array $positionIds, int $actorId = 0): array
     {
         if ($memberId <= 0) {
-            return ['status' => 'error', 'message' => 'Invalid member.'];
+            return ['status' => 'error', 'message' => 'Invalid student.'];
         }
         $ids = [];
         foreach ($positionIds as $raw) {
@@ -188,7 +188,7 @@ final class PositionSyncService
 
             SecurityAuditService::record(
                 $conn,
-                'Student Positions Synced',
+                'Member Positions Synced',
                 ['position_ids' => $ids, 'old_code' => $oldCode, 'new_code' => $newCode],
                 'member',
                 $memberId

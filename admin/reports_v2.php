@@ -105,7 +105,7 @@ $assetVer = '20261022r';
 
       <label class="rc-field">
         <span class="rc-field-label">Search</span>
-        <input type="search" id="rc-search" placeholder="Member ID, name, phone…" autocomplete="off">
+        <input type="search" id="rc-search" placeholder="Student ID, name, phone…" autocomplete="off">
       </label>
 
       <div class="rc-field">
@@ -211,7 +211,7 @@ $assetVer = '20261022r';
 
       <footer class="rc-foot">
         <span id="rc-asof">—</span>
-        <span>Source: <strong>members</strong> directory · Education enrolment (current year) · Family Link · staff positions — read‑only</span>
+        <span>Source: <strong>students</strong> directory · Education enrolment (current year) · Family Link · staff positions — read‑only</span>
         <span>Lists show up to 2 000 rows; files up to 5 000 rows. Every export is recorded.</span>
       </footer>
     </main>
@@ -256,7 +256,7 @@ $assetVer = '20261022r';
     <div class="rc-modal-card rc-modal-wide" role="dialog" aria-modal="true" aria-labelledby="rc-exportlog-title">
       <div class="rc-modal-hd"><h2 id="rc-exportlog-title">Export log — who exported what</h2><button type="button" class="rc-iconbtn" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="rc-modal-bd">
-        <p class="rc-muted" id="rc-exportlog-note">Last 200 member exports (files and PDF/legacy exports). Filters are recorded as field:operator — values are never stored.</p>
+        <p class="rc-muted" id="rc-exportlog-note">Last 200 student exports (files and PDF/legacy exports). Filters are recorded as field:operator — values are never stored.</p>
         <div id="rc-exportlog-table"></div>
       </div>
     </div>

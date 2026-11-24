@@ -214,26 +214,26 @@ $todayFormatted = ethio_date_format($today, 'F j, Y');
                         <a href="/admin/export_pdf.php?format=csv&filter=active" class="exp-card"><span><i class="fa-solid fa-user-check text-blue-600 mr-2"></i>Active Only</span><i class="fa-solid fa-download text-slate-400"></i></a>
                         
                         <a href="/admin/export_pdf.php?format=csv&filter=no_id" class="exp-card"><span><i class="fa-solid fa-id-card text-red-500 mr-2"></i>Without ID Card</span><i class="fa-solid fa-download text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=csv&filter=male" class="exp-card"><span><i class="fa-solid fa-person text-sky-600 mr-2"></i>Male Members</span><i class="fa-solid fa-download text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=csv&filter=female" class="exp-card"><span><i class="fa-solid fa-person-dress text-pink-600 mr-2"></i>Female Members</span><i class="fa-solid fa-download text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=csv&filter=male" class="exp-card"><span><i class="fa-solid fa-person text-sky-600 mr-2"></i>Male Students</span><i class="fa-solid fa-download text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=csv&filter=female" class="exp-card"><span><i class="fa-solid fa-person-dress text-pink-600 mr-2"></i>Female Students</span><i class="fa-solid fa-download text-slate-400"></i></a>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-hd bg-red-50"><span class="text-sm font-semibold text-red-800"><i class="fa-solid fa-file-pdf mr-1"></i> PDF Reports</span></div>
                     <div class="card-bd space-y-2">
-                        <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="exp-card"><span><i class="fa-solid fa-users text-red-600 mr-2"></i>All Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=pdf&filter=active" target="_blank" class="exp-card"><span><i class="fa-solid fa-user-check text-red-600 mr-2"></i>Active Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=pdf&filter=all" target="_blank" class="exp-card"><span><i class="fa-solid fa-users text-red-600 mr-2"></i>All Students</span><i class="fa-solid fa-print text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=pdf&filter=active" target="_blank" class="exp-card"><span><i class="fa-solid fa-user-check text-red-600 mr-2"></i>Active Students</span><i class="fa-solid fa-print text-slate-400"></i></a>
                         
                         <a href="/admin/export_pdf.php?format=pdf&filter=no_id" target="_blank" class="exp-card"><span><i class="fa-solid fa-id-card text-red-600 mr-2"></i>Without ID Card</span><i class="fa-solid fa-print text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=pdf&filter=male" target="_blank" class="exp-card"><span><i class="fa-solid fa-person text-red-600 mr-2"></i>Male Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=pdf&filter=female" target="_blank" class="exp-card"><span><i class="fa-solid fa-person-dress text-red-600 mr-2"></i>Female Members</span><i class="fa-solid fa-print text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=pdf&filter=male" target="_blank" class="exp-card"><span><i class="fa-solid fa-person text-red-600 mr-2"></i>Male Students</span><i class="fa-solid fa-print text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=pdf&filter=female" target="_blank" class="exp-card"><span><i class="fa-solid fa-person-dress text-red-600 mr-2"></i>Female Students</span><i class="fa-solid fa-print text-slate-400"></i></a>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-hd bg-blue-50"><span class="text-sm font-semibold text-blue-800"><i class="fa-solid fa-file-word mr-1"></i> Word Documents</span></div>
                     <div class="card-bd space-y-2">
-                        <a href="/admin/export_pdf.php?format=docx&filter=all" class="exp-card"><span><i class="fa-solid fa-users text-blue-600 mr-2"></i>All Members</span><i class="fa-solid fa-file-word text-slate-400"></i></a>
-                        <a href="/admin/export_pdf.php?format=docx&filter=active" class="exp-card"><span><i class="fa-solid fa-user-check text-blue-600 mr-2"></i>Active Members</span><i class="fa-solid fa-file-word text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=docx&filter=all" class="exp-card"><span><i class="fa-solid fa-users text-blue-600 mr-2"></i>All Students</span><i class="fa-solid fa-file-word text-slate-400"></i></a>
+                        <a href="/admin/export_pdf.php?format=docx&filter=active" class="exp-card"><span><i class="fa-solid fa-user-check text-blue-600 mr-2"></i>Active Students</span><i class="fa-solid fa-file-word text-slate-400"></i></a>
                         <a href="/admin/export_pdf.php?format=docx&filter=no_id" class="exp-card"><span><i class="fa-solid fa-id-card text-blue-600 mr-2"></i>Missing ID List</span><i class="fa-solid fa-file-word text-slate-400"></i></a>
                     </div>
                 </div>
@@ -308,7 +308,7 @@ function renderCharts(){
     mc('cRecent',{type:'bar',data:{labels:rc.map(r=>r.day.slice(5)),datasets:[{label:'Registrations',data:rc.map(r=>r.count),backgroundColor:'#16a34a',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:8},maxRotation:45}}}}});
     mc('cIdCard',{type:'doughnut',data:{labels:['Has ID','No ID'],datasets:[{data:[t.has_id||0,t.no_id||0],backgroundColor:['#06b6d4','#f87171'],borderWidth:0}]},options:dO()});
     const sc=AD.subcity_distribution||[];
-    mc('cSubCity',{type:'bar',data:{labels:sc.map(x=>x.sub_city),datasets:[{label:'Members',data:sc.map(x=>x.count),backgroundColor:PAL.slice(0,sc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+    mc('cSubCity',{type:'bar',data:{labels:sc.map(x=>x.sub_city),datasets:[{label:'Students',data:sc.map(x=>x.count),backgroundColor:PAL.slice(0,sc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
 }
 
 // ============ DATA EXPLORER ============

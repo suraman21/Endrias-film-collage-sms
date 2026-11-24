@@ -293,7 +293,7 @@ function markChangeSynced($conn, $changeId) {
  *   - 'priority' => 'low', 'normal', 'high', 'urgent'
  *   - 'to_dept' => target department
  *   - 'to_user_id' => specific user
- *   - 'related_member_id' => member this is about
+ *   - 'related_member_id' => student this is about
  *   - 'due_date' => YYYY-MM-DD
  *   - 'related_data' => additional data array
  * @return int|false Task ID or false on failure
@@ -562,12 +562,12 @@ function onMemberRegistered($conn, $memberId) {
     
     // Log the change
     logMemberChange($conn, $memberId, 'registered', [
-        'summary' => "New member registered: $memberName"
+        'summary' => "New student registered: $memberName"
     ]);
     
     // Send notification
     sendNotification($conn, 'member_registered',
-        "New Member Registered",
+        "New Student Registered",
         "$memberName has been registered (Type: $regType)",
         [
             'data' => [
@@ -580,8 +580,8 @@ function onMemberRegistered($conn, $memberId) {
     
     // If direct or transfer registration, create task for Education Dept to assign class
     if ($regType === 'direct' || $regType === 'transfer') {
-        createDepartmentTask($conn, "Assign class for new member: $memberName", [
-            'description' => "New member $memberName needs to be assigned to a class based on their age and spiritual education level.",
+        createDepartmentTask($conn, "Assign class for new student: $memberName", [
+            'description' => "New student $memberName needs to be assigned to a class based on their age and spiritual education level.",
             'task_type' => 'action',
             'priority' => 'normal',
             'to_dept' => 'edu_dept',
@@ -617,7 +617,7 @@ function onMemberPromoted($conn, $memberId, $overrideReason = null) {
 
     sendNotification($conn, 'member_promoted',
         "Student Promoted to Permanent",
-        "$memberName has been promoted to permanent member",
+        "$memberName has been promoted to permanent student",
         [
             'data' => [
                 'member_id' => $memberId,

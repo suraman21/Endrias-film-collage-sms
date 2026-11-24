@@ -1,6 +1,6 @@
 <?php
 /**
- * Restore Member - Move member back from archive to active
+ * Restore Student - Move student back from archive to active
  * AJAX endpoint
  */
 
@@ -28,11 +28,11 @@ if (empty($csrfToken) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSIO
 $id = isset($input['id']) ? (int)$input['id'] : 0;
 
 if ($id <= 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid member ID']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid student ID']);
     exit;
 }
 
-// Verify member exists and is archived
+// Verify student exists and is archived
 $checkStmt = $conn->prepare("SELECT id, student_name, father_name, status, status_before_archive FROM members WHERE id = ?");
 $checkStmt->bind_param("i", $id);
 $checkStmt->execute();
@@ -76,24 +76,24 @@ if ($stmt) {
             require_once __DIR__ . '/backend/services/SecurityAuditService.php';
             $auditOk = \App\Services\SecurityAuditService::record(
                 $conn,
-                'Member Restored',
+                'Student Restored',
                 ['restored_to' => $restoreTo],
                 'member',
                 $id
             );
             if (!$auditOk) {
-                error_log('Member restore audit recording failed for member ' . $id . '.');
+                error_log('Student restore audit recording failed for student ' . $id . '.');
             }
         } catch (Throwable $auditErr) {
             error_log('Member restore audit error: ' . $auditErr->getMessage());
         }
         echo json_encode([
             'status' => 'success',
-            'message' => $memberName . ' has been restored to ' . $restoreTo . ' members'
+            'message' => $memberName . ' has been restored to ' . $restoreTo . ' students'
         ]);
     } else {
         error_log('Member restore update failed.');
-        echo json_encode(['status' => 'error', 'message' => 'Unable to restore the member.']);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to restore the student.']);
     }
     $stmt->close();
 } else {

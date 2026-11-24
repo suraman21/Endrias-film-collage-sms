@@ -190,7 +190,7 @@
         },
         {
           head: 'Student record',
-          // A login without a members row is legal, so say so plainly rather
+          // A login without a student row is legal, so say so plainly rather
           // than rendering an empty cell that looks like a loading failure.
           cell: function (r) {
             return r.member_code
@@ -2272,9 +2272,9 @@
       var bits = [];
       if (d.teacher.member_code) bits.push(esc(d.teacher.member_code));
       if (d.teacher.username) bits.push('@' + esc(d.teacher.username));
-      // A teacher login need not be linked to a member record, so the code
+      // A teacher login need not be linked to a student record, so the code
       // is genuinely absent rather than empty. Say so.
-      sub = bits.join(' &nbsp;\u00b7&nbsp; ') || 'No member record linked';
+      sub = bits.join(' &nbsp;\u00b7&nbsp; ') || 'No student record linked';
 
       chips += '<span class="ch ch-i" title="Reporting period. Context, not a filter.">'
         + '<i class="fa-solid fa-calendar" aria-hidden="true"></i> '

@@ -86,14 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Info dept is a data-updater (viewer+edit); registration/promotion stay HR-only.
         $allowedEditRoles = ['super_admin', 'school_admin', 'hr_dept', 'admissions_registrar_dept', 'info_dept'];
         if (!hasRole($allowedEditRoles)) {
-            echo json_encode(['status' => 'error', 'message' => 'You do not have permission to edit members.']);
+            echo json_encode(['status' => 'error', 'message' => 'You do not have permission to edit students.']);
             http_response_code(403);
             exit;
         }
         
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0; 
         if ($id <= 0) { 
-            echo json_encode(['status' => 'error', 'message' => 'Invalid member ID']); 
+            echo json_encode(['status' => 'error', 'message' => 'Invalid student ID']); 
             exit; 
         }
         
@@ -120,11 +120,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (array_key_exists('membership_tier', $cur)) {
         $storedTier = (string)($cur['membership_tier'] ?? 'permanent');
         if ($storedTier === 'permanent' && $registration_type === 'waiting') {
-            echo json_encode(['status' => 'error', 'message' => "Permanent members cannot have Registration Type 'Waiting'. Change it to Direct (or Transfer) and save again."]);
+            echo json_encode(['status' => 'error', 'message' => "Permanent students cannot have Registration Type 'Waiting'. Change it to Direct (or Transfer) and save again."]);
             exit;
         }
         if ($storedTier === 'temporary' && $registration_type !== 'waiting') {
-            echo json_encode(['status' => 'error', 'message' => "Temporary members must have Registration Type 'Waiting'."]);
+            echo json_encode(['status' => 'error', 'message' => "Temporary students must have Registration Type 'Waiting'."]);
             exit;
         }
     }
@@ -380,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->rollback();
         foreach ($newUploadedPaths as $uploadedPath) \App\Services\MemberFileService::discard($uploadedPath);
         reportInternalError('Member update execution failed', $stmt->error);
-        echo json_encode(['status' => 'error', 'message' => 'Unable to update the member.']);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to update the student.']);
     }
     $stmt->close();
     
@@ -395,7 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($newUploadedPaths as $uploadedPath) \App\Services\MemberFileService::discard($uploadedPath);
         }
         reportInternalError('Member update failed', $e);
-        echo json_encode(['status' => 'error', 'message' => 'Unable to update the member.']);
+        echo json_encode(['status' => 'error', 'message' => 'Unable to update the student.']);
     }
     exit;
 }
@@ -404,7 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // GET REQUEST - Display Member Details
 // ============================================================
 $memberId = isset($_GET['id']) ? (int)$_GET['id'] : 0; 
-if ($memberId <= 0) die('<div style="padding:20px;color:#dc2626;">Invalid member ID</div>');
+if ($memberId <= 0) die('<div style="padding:20px;color:#dc2626;">Invalid student ID</div>');
 
 $stmt = $conn->prepare('SELECT * FROM members WHERE id = ?'); 
 $stmt->bind_param('i', $memberId); 
@@ -1180,7 +1180,7 @@ $mmRoles = [
                                 <i class="fas fa-children"></i> Siblings<?= $famSiblings ? ' <span style="background:var(--school-surface-hover,#f1f5f9);color:var(--school-text-dim,#475569);padding:1px 8px;border-radius:999px;font-weight:800;">'.count($famSiblings).'</span>' : '' ?>
                             </div>
                             <?php if (!$famSiblings): ?>
-                                <div style="font-size:12px;color:var(--school-text-muted,#94a3b8);margin-top:4px"><?= $famGuardians ? 'No other member is linked to this guardian yet.' : '—' ?></div>
+                                <div style="font-size:12px;color:var(--school-text-muted,#94a3b8);margin-top:4px"><?= $famGuardians ? 'No other student is linked to this guardian yet.' : '—' ?></div>
                             <?php else: ?>
                                 <div class="mm-sibs">
                                     <?php foreach ($famSiblings as $famS):
@@ -1373,7 +1373,7 @@ $mmRoles = [
                                 <div class="mm-form-group">
                                     <label class="mm-label">Mother Name</label>
                                     <input type="text" name="mother_name" value="<?= e($m['mother_name'] ?? '') ?>" class="mm-input" autocomplete="off" placeholder="Used for duplicate detection">
-                                    <div class="mm-help">Optional. Used when checking for duplicate members across the system.</div>
+                                    <div class="mm-help">Optional. Used when checking for duplicate students across the system.</div>
                                 </div>
                                 <?php endif; ?>
                                 <div class="mm-form-group">

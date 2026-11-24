@@ -12,7 +12,7 @@ final class DuplicateMemberException extends \DomainException
     /** @param array{id:int,member_code:string,status:string,name:string} $member */
     public function __construct(array $member)
     {
-        parent::__construct('A strongly matching member already exists.');
+        parent::__construct('A strongly matching student already exists.');
         $this->member = $member;
     }
 }
@@ -89,7 +89,7 @@ final class MemberDuplicateService
             . ($lock ? ' FOR UPDATE' : '');
         $statement = $conn->prepare($sql);
         if (!$statement) {
-            throw new \RuntimeException('Could not check member identity.');
+            throw new \RuntimeException('Could not check student identity.');
         }
         $statement->bind_param($types, ...$params);
         $statement->execute();
@@ -151,7 +151,7 @@ final class MemberDuplicateService
         $lockName = 'ssms_member_duplicate_' . substr(hash('sha256', $fingerprint), 0, 40);
         $statement = $conn->prepare('SELECT GET_LOCK(?, ?)');
         if (!$statement) {
-            throw new \RuntimeException('Could not prepare member identity lock.');
+            throw new \RuntimeException('Could not prepare student identity lock.');
         }
         $timeout = max(0, min(10, $timeout));
         $statement->bind_param('si', $lockName, $timeout);
@@ -178,7 +178,7 @@ final class MemberDuplicateService
             $statement->execute();
             $statement->close();
         } catch (\Throwable $error) {
-            error_log('Could not release member identity lock: ' . $error->getMessage());
+            error_log('Could not release student identity lock: ' . $error->getMessage());
         }
     }
 

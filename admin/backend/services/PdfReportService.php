@@ -20,7 +20,7 @@
  * Report templates:
  *   general   — KPI band + department comparison (all sources)
  *   classes   — class-based detail (education)
- *   member    — one member's attendance history per source
+ *   member    — one student's attendance history per source
  *   full      — combined deep-dive (all of the above)
  */
 
@@ -190,7 +190,7 @@ class PdfReportService
         }
     }
 
-    /** One member's history under each source's own heading (never merged). */
+    /** One student's history under each source's own heading (never merged). */
     private static function renderMember(\TCPDF $pdf, \mysqli $conn, int $memberId, ?string $from, ?string $to): void
     {
         $stmt = $conn->prepare(
@@ -209,7 +209,7 @@ class PdfReportService
         }
 
         $name = trim($member['student_name'] . ' ' . $member['father_name'] . ' ' . $member['grandfather_name']);
-        self::sectionTitle($pdf, 'Member: ' . $name);
+        self::sectionTitle($pdf, 'Student: ' . $name);
         $pdf->SetFont(self::FONT, '', 9.5);
         $pdf->Cell(0, 6, 'Code: ' . ($member['member_code'] ?: '—')
             . '    Status: ' . ($member['status'] ?: '—')

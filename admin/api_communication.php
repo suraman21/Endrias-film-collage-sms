@@ -152,7 +152,7 @@ switch ($action) {
                 $score = isset($g['score']) && $g['score'] !== '' ? (float)$g['score'] : null;
                 $remark = trim((string)($g['remark'] ?? $g['remarks'] ?? ''));
                 if (!$memberId) continue;
-                if ($score !== null && ($score < 0 || $score > $maxScore)) { $skipped[] = "Invalid score for member $memberId (max: $maxScore)"; continue; }
+                if ($score !== null && ($score < 0 || $score > $maxScore)) { $skipped[] = "Invalid score for student $memberId (max: $maxScore)"; continue; }
                 if ($score === null && $remark === '') continue;
                 $rid = \App\Services\SubmissionService::upsertScore($conn, [
                     'assessment_id' => $assessmentId,
@@ -166,7 +166,7 @@ switch ($action) {
                     'term_id' => $termId,
                     'max_score' => $maxScore,
                 ]);
-                if ($rid <= 0) { $skipped[] = "Member $memberId is not enrolled in this class — mark not saved."; continue; }
+                if ($rid <= 0) { $skipped[] = "Student $memberId is not enrolled in this class — mark not saved."; continue; }
                 $saved++;
                 if ($score !== null) { $totalScore += $score; $scoreCount++; }
             }

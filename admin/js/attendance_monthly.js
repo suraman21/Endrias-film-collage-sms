@@ -150,7 +150,7 @@
   function renderList() {
     var isEdu = dept() === 'edu';
     if (!state.items.length) {
-      els.list.innerHTML = '<div class="am-empty">No members match for this month.</div>';
+      els.list.innerHTML = '<div class="am-empty">No students match for this month.</div>';
       return;
     }
     var html = '<table class="am-table"><thead><tr>' +
@@ -181,7 +181,7 @@
   function renderFoot() {
     var from = state.total ? state.offset + 1 : 0;
     var to = Math.min(state.total, state.offset + state.items.length);
-    els.total.textContent = state.total ? state.total + ' member' + (state.total === 1 ? '' : 's') : '';
+    els.total.textContent = state.total ? state.total + ' student' + (state.total === 1 ? '' : 's') : '';
     els.meta.textContent = (state.total ? 'Showing ' + from + '–' + to + ' of ' + state.total : '') +
       (state.summary && state.summary.computed_at_ec ? ' · computed ' + state.summary.computed_at_ec + ' EC' : '');
     els.prev.disabled = state.offset <= 0;
@@ -224,10 +224,10 @@
   function openMember(id) {
     var row = state.items.filter(function (r) { return r.member_id === id; })[0];
     get({ action: 'member', department: dept(), member_id: id }).then(function (j) {
-      if (j.status !== 'success') { toast(j.message || 'Could not load member', 'err'); return; }
+      if (j.status !== 'success') { toast(j.message || 'Could not load student', 'err'); return; }
       var months = j.months || [];
       var html = '<div class="am-modal" role="dialog" aria-modal="true"><div class="am-dialog">' +
-        '<h2>' + esc(row ? row.name : 'Member #' + id) + '</h2>' +
+        '<h2>' + esc(row ? row.name : 'Student #' + id) + '</h2>' +
         '<div class="am-note">' + esc(row ? row.member_code + ' · ' + row.group : '') + ' · ' + esc(j.department_label || '') + '</div>';
       if (!months.length) {
         html += '<div class="am-empty" style="margin-top:10px">No monthly data yet.</div>';

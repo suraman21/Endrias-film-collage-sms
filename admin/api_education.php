@@ -118,11 +118,11 @@ if (in_array($action, $__legacyWriteActions, true)
 }
 
 // TIER 2c — Enrolment-management READS (audit 2026-10-20). The "unassigned"
-// lists return every active member / teacher of the school with date of
+// lists return every active student / teacher of the school with date of
 // birth, education level and staff flags; they exist only for the Education
 // enrolment screen (dashboards/edu_dept.php). Teachers and takers never call
 // them and must not be able to list the whole school through them. The
-// school-wide roster / member search / teacher directory belong to the same
+// school-wide roster / student search / teacher directory belong to the same
 // screen (teacher + taker dashboards only ever call get_enrolled_students).
 $__manageReadActions = ['get_unassigned_members', 'get_unassigned_teachers', 'enrollment_overview',
     'roster', 'search_members', 'list_teachers'];
@@ -190,7 +190,7 @@ $currentYear = function_exists('ay_resolve') ? ay_resolve($conn)['year'] : null;
 
 // ── PII minimization (PATCH H7) ─────────────────────────────────────────────
 // Teachers and attendance takers receive rosters to teach, not contact
-// details: member/teacher phone numbers are stripped from every payload
+// details: student/teacher phone numbers are stripped from every payload
 // for those roles. Staff roles keep full contact data.
 $__maskPhone = in_array($__role, ['teacher', 'attendance_taker'], true);
 
@@ -343,7 +343,7 @@ switch ($action) {
         $classId = (int)($_POST['class_id'] ?? 0);
 
         if (!$memberId || !$classId) {
-            echo json_encode(['status' => 'error', 'message' => 'Please select both member and class']);
+            echo json_encode(['status' => 'error', 'message' => 'Please select both student and class']);
             exit;
         }
 
@@ -485,7 +485,7 @@ switch ($action) {
         $notes = is_string($noteValue) ? trim($noteValue) : '';
         
         if (!$memberId || !$classId) {
-            echo json_encode(['status' => 'error', 'message' => 'Member ID and class ID are required']);
+            echo json_encode(['status' => 'error', 'message' => 'Student ID and class ID are required']);
             exit;
         }
         
@@ -523,7 +523,7 @@ switch ($action) {
         $isEnrolled = $enrollment->get_result()->num_rows > 0;
         $enrollment->close();
         if (!$isEnrolled) {
-            echo json_encode(['status' => 'error', 'message' => 'The member is not actively enrolled in this class.']);
+            echo json_encode(['status' => 'error', 'message' => 'The student is not actively enrolled in this class.']);
             exit;
         }
         
@@ -546,7 +546,7 @@ switch ($action) {
         if ($stmt->execute()) {
             // Update attendance summary for the RECORDED date's month.
             updateAttendanceSummary($conn, $memberId, $yearId, $attendanceDate);
-            // Attendance alerting Phase 2: Education edits re-evaluate the member.
+            // Attendance alerting Phase 2: Education edits re-evaluate the student.
             \App\Services\AttendanceWarningService::safeEvaluateMany($conn, 'edu', [$memberId], $attendanceDate, $recordedBy);
             
             echo json_encode(['status' => 'success', 'message' => 'Attendance recorded!']);
@@ -665,10 +665,10 @@ switch ($action) {
     // ============================================================
     case 'promote':
         // ATOMICITY GUARANTEE: a promotion either completes fully (old
-        // enrollment closed + new enrollment created + member denormalized)
+        // enrollment closed + new enrollment created + student denormalized)
         // or makes NO changes at all. Previously the four steps ran as
         // independent autocommits, so a mid-sequence failure could leave a
-        // member enrolled in two classes or in none.
+        // student enrolled in two classes or in none.
         $memberId = (int)($_POST['member_id'] ?? 0);
         $fromClassId = (int)($_POST['from_class_id'] ?? 0);
         $toClassId = (int)($_POST['to_class_id'] ?? 0);
@@ -716,9 +716,9 @@ switch ($action) {
         try {
             // Mark old enrollment as completed.
             // Finding K (2026-10-02): the pre-flight SELECT above is a plain
-            // read, so two concurrent promotions of the same member to
+            // read, so two concurrent promotions of the same student to
             // *different* target classes both passed it and both inserted an
-            // 'active' row — verified at runtime, the member ended up active
+            // 'active' row — verified at runtime, the student ended up active
             // in two classes. Re-assert the precondition here so only one
             // request can close the source enrollment. `unique_enrollment`
             // does not help: it is on (member_id, class_id, academic_year_id)
@@ -744,7 +744,7 @@ switch ($action) {
             }
             $stmt->close();
 
-            // Update member's denormalized class reference
+            // Update student's denormalized class reference
             autoUpdateMemberClass($conn, $memberId, $toClassId, $yearId);
 
             // Update promoted_at (column added by migration/config auto-fix)
@@ -1810,14 +1810,14 @@ switch ($action) {
         $classCheck->close();
 
         // ATOMICITY GUARANTEE: closing the old enrollment and creating the
-        // new one commit together or not at all — a member can never end up
+        // new one commit together or not at all — a student can never end up
         // stranded (no active enrollment) or double-enrolled by a
         // mid-sequence failure.
         $conn->begin_transaction();
         try {
             // Finding K (2026-10-02): the SELECT at the top of this case is a
             // plain read, so a replayed or concurrent request could transfer an
-            // enrollment that has ALREADY been transferred — leaving the member
+            // enrollment that has ALREADY been transferred — leaving the student
             // active in two classes at once. Re-assert the precondition inside
             // the UPDATE so only a still-active row can be closed, and treat a
             // zero-row result as a lost race rather than success. The
@@ -1857,7 +1857,7 @@ switch ($action) {
         break;
 
     // ============================================================
-    // GET UNASSIGNED MEMBERS (not enrolled in any class this year)
+    // GET UNASSIGNED STUDENTS (not enrolled in any class this year)
     // ============================================================
     case 'get_unassigned_members':
         $search=trim($_GET['search']??''); $genderFilter=trim($_GET['gender']??'');
@@ -1934,7 +1934,7 @@ switch ($action) {
         $stmt->bind_param("i",$currentYear['id']); $stmt->execute(); $r=$stmt->get_result(); if($r) $totalE=(int)$r->fetch_assoc()['c'];
         $totalT=0; $r2=$conn->query("SELECT COUNT(*) c FROM users WHERE role='teacher' AND is_active=1"); if($r2) $totalT=(int)$r2->fetch_assoc()['c'];
         $assignedT=0; try { $yc2=$currentYear?" AND ta.academic_year_id=".(int)$currentYear['id']:""; $r3=$conn->query("SELECT COUNT(DISTINCT ta.teacher_id) c FROM teacher_assignments ta WHERE ta.is_active=1 $yc2"); if($r3) $assignedT=(int)$r3->fetch_assoc()['c']; } catch(Exception $e){}
-        // Member type breakdown
+        // Student type breakdown
         $typeBreakdown=['regular'=>0,'special_regular'=>0,'honorary'=>0];
         try { $r4=$conn->query("SELECT member_type, COUNT(*) as c FROM members WHERE status='active' GROUP BY member_type");
             if($r4) while($rw=$r4->fetch_assoc()) { $typeBreakdown[$rw['member_type']??'regular']=(int)$rw['c']; }
@@ -1961,7 +1961,7 @@ switch ($action) {
         echo json_encode([
             'status' => 'error',
             'code' => 'member_type_manual_only',
-            'message' => 'Automatic member type synchronization has been retired. Edit the member type manually in the member record.'
+            'message' => 'Automatic student type synchronization has been retired. Edit the student type manually in the student record.'
         ]);
         break;
 

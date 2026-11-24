@@ -1,9 +1,9 @@
 <?php
 /**
  * ============================================================================
- * Lesson attendance history — one member (Attendance alerting — Phase 6)
+ * Lesson attendance history — one student (Attendance alerting — Phase 6)
  * ============================================================================
- * Requirements §3: Education, HR and Information can see, per member, every
+ * Requirements §3: Education, HR and Information can see, per student, every
  * lesson outcome with subject, lesson number, teacher, date and result.
  * Teachers see only lessons of their own classes (scoped by the API).
  * Education may cancel a lesson here (kept, flagged, re-derives the day).
@@ -85,7 +85,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
     </div>
     <div class="rc-header-right">
       <form class="la-form" id="la-form">
-        <input type="number" min="1" id="la-member" placeholder="Member ID" value="<?= $memberId > 0 ? $memberId : '' ?>">
+        <input type="number" min="1" id="la-member" placeholder="Student ID" value="<?= $memberId > 0 ? $memberId : '' ?>">
         <button class="rc-btn rc-btn-ghost rc-btn-sm" type="submit">Open</button>
       </form>
     </div>
@@ -96,7 +96,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
       Lesson attendance is not available yet (feature flag off or <code>sql/076_attendance_sessions.sql</code> not applied).
     </div>
     <div class="la-head">
-      <h2 id="la-title">Select a member</h2>
+      <h2 id="la-title">Select a student</h2>
       <span class="rc-muted" id="la-total"></span>
     </div>
     <div id="la-list"></div>
@@ -144,7 +144,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
         $('la-unavailable').hidden = !!d.available;
         total = d.total || 0;
         var m = d.member || {};
-        $('la-title').innerHTML = '<a href="' + esc(cfg.memberUrl + memberId) + '">' + esc(m.name || ('Member #' + memberId)) + '</a> <span class="rc-muted">' + esc(m.member_code || '') + '</span>';
+        $('la-title').innerHTML = '<a href="' + esc(cfg.memberUrl + memberId) + '">' + esc(m.name || ('Student #' + memberId)) + '</a> <span class="rc-muted">' + esc(m.member_code || '') + '</span>';
         $('la-total').textContent = total ? total + ' lesson record(s)' : '';
         shown = append ? shown.concat(d.items || []) : (d.items || []);
         render(shown);
@@ -154,7 +154,7 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
   function render(items) {
     var more = $('la-more');
     if (more) { var left = Math.max(0, total - (offset + items.length)); more.hidden = left <= 0; more.disabled = false; more.textContent = 'Load more (' + left + ' left)'; }
-    if (!items.length) { $('la-list').innerHTML = '<div class="la-empty">No lesson attendance recorded for this member' + (cfg.role === 'teacher' ? ' in your classes' : '') + '.</div>'; $('la-meta').textContent = ''; return; }
+    if (!items.length) { $('la-list').innerHTML = '<div class="la-empty">No lesson attendance recorded for this student' + (cfg.role === 'teacher' ? ' in your classes' : '') + '.</div>'; $('la-meta').textContent = ''; return; }
     var rows = items.map(function (it) {
       var cancelled = it.session_status === 'cancelled';
       return '<tr' + (cancelled ? ' style="opacity:.6"' : '') + '>' +
@@ -178,9 +178,9 @@ $backUrl = $userRole === 'teacher' ? '/admin/dashboards/teacher.php' : '/admin/d
     if (!(window.DangerConfirm && window.DangerConfirm.ask)) { toast('The confirmation dialog did not load. Reload the page (Ctrl+F5) and try again.', false); return; }
     var cells = b.closest('tr') ? b.closest('tr').children : [];
     var label = [0, 1, 2].map(function (i) { return cells[i] ? cells[i].textContent.trim() : ''; }).filter(Boolean).join(' · ');
-    window.DangerConfirm.ask({ tier: 'medium', title: 'Cancel this lesson?', object: label || 'This lesson', summary: 'The lesson no longer counts for this member.',
+    window.DangerConfirm.ask({ tier: 'medium', title: 'Cancel this lesson?', object: label || 'This lesson', summary: 'The lesson no longer counts for this student.',
       intent: 'I want to cancel this lesson',
-      consequences: ['The lesson is marked CANCELLED and does not count in attendance.', 'The member\u2019s day result is recalculated.'],
+      consequences: ['The lesson is marked CANCELLED and does not count in attendance.', 'The student\u2019s day result is recalculated.'],
       keeps: ['The original record and your reason stay in the history.'],
       reason: { label: 'Reason for cancelling (at least 3 letters)', required: true, minLength: 3, maxLength: 500 },
       phrase: 'CANCEL LESSON', confirmLabel: 'Cancel lesson' }).then(function (dc) { if (dc) sendCancel(b.getAttribute('data-cancel'), dc.reason); });

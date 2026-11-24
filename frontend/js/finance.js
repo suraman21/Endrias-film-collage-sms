@@ -140,7 +140,7 @@ var Finance = (function() {
             statCard('fa-wallet', 'info', num((stats.income || 0) - (stats.expense || 0)), 'Balance', (stats.income || 0) >= (stats.expense || 0) ? 'success' : 'danger') +
             statCard('fa-calendar', 'accent', num(stats.month_in || 0), 'This Month Income') +
             statCard('fa-clock', 'accent2', String(stats.pending || 0), 'Pending') +
-            statCard('fa-users', 'info', String(stats.members || 0), 'Active Members');
+            statCard('fa-users', 'info', String(stats.members || 0), 'Active Students');
     }
 
     function statCard(icon, colorType, value, label, valueColor) {
@@ -280,7 +280,7 @@ var Finance = (function() {
             object: (type === 'income' ? 'Income ' : 'Expense ') + amt + (t.transaction_date ? ' on ' + t.transaction_date : '') + (t.receipt_number ? ' · receipt ' + t.receipt_number : ''),
             summary: 'A money record is removed from the books.', intent: 'I want to delete this transaction',
             consequences: ['The record is deleted permanently. There is no undo or recycle bin.', 'Totals, balances and finance reports change immediately.', 'Only a short audit note stays (amount, date, receipt).'],
-            keeps: ['Other transactions, categories and member fees are not touched.', 'If this was a mistake in the amount, use Edit instead of Delete.'],
+            keeps: ['Other transactions, categories and student fees are not touched.', 'If this was a mistake in the amount, use Edit instead of Delete.'],
             irreversible: true, phrase: 'DELETE TRANSACTION', confirmLabel: 'Delete transaction' });
         if (!dc) return;
         window.api.post('finance.php', { action: 'delete_transaction', id: id, confirm_phrase: dc.phrase })
@@ -357,7 +357,7 @@ var Finance = (function() {
     }
 
     // ══════════════════════════════════════════════════════════
-    // MEMBER FEES
+    // STUDENT FEES
     // ══════════════════════════════════════════════════════════
 
     function openFeeModal() {
@@ -465,11 +465,11 @@ var Finance = (function() {
     }
 
     // ══════════════════════════════════════════════════════════
-    // MEMBERS (for dropdowns)
+    // STUDENTS (for dropdowns)
     // ══════════════════════════════════════════════════════════
 
     function loadMembers() {
-        // Phase 3 paging: the shared picker reaches every member (search +
+        // Phase 3 paging: the shared picker reaches every student (search +
         // "Show more…"); the old first-50 load stays only as a fallback.
         if (window.MemberPicker) {
             members = [1];
@@ -485,7 +485,7 @@ var Finance = (function() {
                         return '<option value="' + m.id + '">' + esc(m.student_name) + ' (' + esc(m.member_code || '') + ')</option>';
                     }).join('');
                     document.getElementById('txnMember').innerHTML = '<option value="">— None —</option>' + opts;
-                    document.getElementById('feeMember').innerHTML = '<option value="">Select member...</option>' + opts;
+                    document.getElementById('feeMember').innerHTML = '<option value="">Select student...</option>' + opts;
                 }
             });
     }

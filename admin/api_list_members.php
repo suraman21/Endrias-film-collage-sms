@@ -83,5 +83,5 @@ try {
 } catch (Throwable $error) {
     reportInternalError('Student directory request failed', $error);
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Could not load members.']);
+    echo json_encode(['status' => 'error', 'message' => 'Could not load students.']);
 }

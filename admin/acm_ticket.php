@@ -170,7 +170,7 @@ acm_chrome_open('queue', (string)($ticket['ticket_no'] ?? 'Ticket'), 'Activation
 
 <?php if ($hasDupWarnings): ?>
 <div class="acm-alert warn"><i class="fa-solid fa-triangle-exclamation"></i> <strong>Duplicate warnings are open.</strong>
-    Verify the physical parent/member ID before approving — approval requires the confirmation checkbox below.
+    Verify the physical parent/student ID before approving — approval requires the confirmation checkbox below.
     <?php if (!empty($dups['same_phone'])): ?>
     <br>Same phone: <?= e(implode(', ', array_map(function ($r) { return '#' . (int)$r['id'] . ' ' . (string)($r['full_name_am'] ?? ''); }, $dups['same_phone']))) ?>
     <?php endif; ?>
@@ -204,7 +204,7 @@ acm_chrome_open('queue', (string)($ticket['ticket_no'] ?? 'Ticket'), 'Activation
             <dt>Baptismal</dt><dd><?= e((string)($member['baptismal_name'] ?? '—')) ?></dd>
         </dl>
         <?php else: ?>
-        <div style="font-size:.8rem;color:var(--dim)">No member record linked.</div>
+        <div style="font-size:.8rem;color:var(--dim)">No student record linked.</div>
         <?php endif; ?>
         <?php if (is_array($guardian)): ?>
         <dl class="acm-kv" style="margin-top:.7rem">
@@ -220,7 +220,7 @@ acm_chrome_open('queue', (string)($ticket['ticket_no'] ?? 'Ticket'), 'Activation
 
 <?php if (!empty($ticket['family_links'])): ?>
 <div class="cd">
-    <div class="ct"><i class="fa-solid fa-people-roof"></i> Family links (member ↔ guardians)</div>
+    <div class="ct"><i class="fa-solid fa-people-roof"></i> Family links (student ↔ guardians)</div>
     <div class="tw"><table>
         <thead><tr><th>Guardian</th><th>Relation</th><th>Primary</th><th>Phone</th><th>Status</th></tr></thead>
         <tbody>
@@ -246,7 +246,7 @@ acm_chrome_open('queue', (string)($ticket['ticket_no'] ?? 'Ticket'), 'Activation
         <textarea class="inp" id="acmNote" rows="3" maxlength="2000" placeholder="What did you verify?"></textarea>
     </div>
     <?php if ($canDecide && $hasDupWarnings): ?>
-    <label class="acm-check" style="margin-bottom:.6rem"><input type="checkbox" id="acmVerified"> I physically verified the parent/member ID against these details and accept the duplicate warnings.</label>
+    <label class="acm-check" style="margin-bottom:.6rem"><input type="checkbox" id="acmVerified"> I physically verified the parent/student ID against these details and accept the duplicate warnings.</label>
     <?php endif; ?>
     <div class="acm-btn-row">
         <?php if ($canNote): ?>

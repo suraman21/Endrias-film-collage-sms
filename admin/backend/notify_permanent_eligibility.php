@@ -45,7 +45,7 @@ while ($row = $res->fetch_assoc()) {
     // Create a department task for HR (fires task_assigned notification to hr_dept).
     if (function_exists('createDepartmentTask')) {
         createDepartmentTask($conn, "Promote eligible member to permanent: $name", [
-            'description' => "Member $name has completed 6 months as a temporary member and is eligible for promotion to permanent. Please review and promote.",
+            'description' => "Student $name has completed 6 months as a temporary student and is eligible for promotion to permanent. Please review and promote.",
             'task_type' => 'action',
             'priority' => 'normal',
             'to_dept' => 'hr_dept',
@@ -76,4 +76,4 @@ while ($row = $res->fetch_assoc()) {
     fwrite(STDOUT, "Notified member #$memberId ($name)\n");
 }
 
-fwrite(STDOUT, "Done. $count member(s) notified.\n");
+fwrite(STDOUT, "Done. $count student(s) notified.\n");

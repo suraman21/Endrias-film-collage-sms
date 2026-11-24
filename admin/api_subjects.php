@@ -1938,7 +1938,7 @@ switch ($action) {
             
             // Validate score against the assessment's max
             if ($score !== null && ($score < 0 || $score > $maxScore)) {
-                $errors[] = "Invalid score for member $memberId (max: $maxScore)";
+                $errors[] = "Invalid score for student $memberId (max: $maxScore)";
                 continue;
             }
             
@@ -1965,12 +1965,12 @@ switch ($action) {
                     $successCount++;
                 } else {
                     $errors[] = \App\Services\SubmissionService::memberBelongsToClass($conn, $memberId, (int)$assessment['class_id'])
-                        ? "Could not save the grade for member $memberId."
-                        : "Member $memberId is not enrolled in this class — mark not saved.";
+                        ? "Could not save the grade for student $memberId."
+                        : "Student $memberId is not enrolled in this class — mark not saved.";
                 }
             } catch (Throwable $e) {
                 reportInternalError('Web grade save failed for member ' . $memberId, $e);
-                $errors[] = "Could not save the grade for member $memberId.";
+                $errors[] = "Could not save the grade for student $memberId.";
             }
         }
         

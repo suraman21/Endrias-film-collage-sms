@@ -1,6 +1,6 @@
 <?php
 /**
- * Constant-memory presentation adapters for member reports.
+ * Constant-memory presentation adapters for student reports.
  */
 namespace App\Services;
 
@@ -36,7 +36,7 @@ final class MemberReportRenderer
     ): void {
         self::beginResponse(
             'text/csv; charset=utf-8',
-            'attachment; filename="' . self::safeFilename($filename, 'members.csv') . '"',
+            'attachment; filename="' . self::safeFilename($filename, 'students.csv') . '"',
             false,
             $truncated
         );
@@ -51,7 +51,7 @@ final class MemberReportRenderer
             'Christian Name (የክርስትና ስም)', 'Gender', 'Age Group', 'Phone',
             'Alt Phone', 'Guardian', 'Guardian Ph1', 'Guardian Ph2', 'City',
             'Sub City', 'Woreda', 'Profession', 'Education', 'Reg Type',
-            'Member Type', 'Status',
+            'Student Type', 'Status',
         ]);
 
         $number = 0;
@@ -109,7 +109,7 @@ final class MemberReportRenderer
     ): void {
         self::beginResponse(
             'application/msword; charset=utf-8',
-            'attachment; filename="' . self::safeFilename($filename, 'members.doc') . '"',
+            'attachment; filename="' . self::safeFilename($filename, 'students.doc') . '"',
             true,
             $truncated
         );
@@ -124,7 +124,7 @@ final class MemberReportRenderer
             . 'td{border-bottom:1px solid #e2e8f0;padding:4pt 6pt;font-size:8pt}tr:nth-child(even) td{background:#f0fdf4}'
             . '</style></head><body>';
         echo '<h1>' . self::h($title) . '</h1><p class="meta">Generated: '
-            . self::h($generatedAt) . ' | Matching members: ' . $summary['total'] . '</p>';
+            . self::h($generatedAt) . ' | Matching students: ' . $summary['total'] . '</p>';
         self::truncationNotice($truncated, $summary['total']);
         self::summaryMarkup($summary);
         echo '<table><thead><tr><th>#</th><th>Name</th><th>Code</th><th>Gender</th><th>Age Grp</th>'
@@ -183,7 +183,7 @@ final class MemberReportRenderer
             . '<span style="color:#475569;font-size:11px">In the print dialog, choose “Save as PDF”.</span></div>';
         echo '<div class="header"><h1>' . self::h($title) . '</h1><div class="meta">'
             . self::h($schoolLine) . ' | Generated: ' . self::h($generatedAt)
-            . ' | Matching members: ' . $summary['total'] . '</div></div>';
+            . ' | Matching students: ' . $summary['total'] . '</div></div>';
         self::truncationNotice($truncated, $summary['total']);
         self::summaryMarkup($summary);
         echo '<table><thead><tr><th>#</th><th>Name</th><th>Code</th><th>Gender</th><th>Age Grp</th>'
@@ -250,7 +250,7 @@ final class MemberReportRenderer
         }
         echo '<div class="notice">This printable report shows the first '
             . number_format(MemberReportService::MAX_ROWS) . ' of ' . number_format($total)
-            . ' matching members. Use the Complete CSV export for the entire roster.</div>';
+            . ' matching students. Use the Complete CSV export for the entire roster.</div>';
     }
 
     private static function beginResponse(

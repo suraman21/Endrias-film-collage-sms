@@ -1,6 +1,6 @@
 <?php
 /**
- * Bounded member-report query policy.
+ * Bounded student-report query policy.
  *
  * This service owns filter validation, indexed search construction, summary
  * aggregation, and the unbuffered row cursor. HTTP headers and document markup
@@ -162,19 +162,19 @@ final class MemberReportService
         $filter = self::scalar($input, 'filter', 20, 'all');
         $presets = [
             'all' => null,
-            'active' => ["`status` = ?", ['active'], 'Active Members Report'],
+            'active' => ["`status` = ?", ['active'], 'Active Students Report'],
             'waiting' => [
                 "`registration_type` = ? AND `status` <> ?",
                 ['waiting', 'archived'],
-                'Waiting Members Report',
+                'Waiting Students Report',
             ],
             'no_id' => [
                 "(`id_card_status` IS NULL OR `id_card_status` <> ?) AND `status` <> ?",
                 ['generated', 'archived'],
-                'Members Without ID Card',
+                'Students Without ID Card',
             ],
-            'male' => ["`gender` = ? AND `status` <> ?", ['male', 'archived'], 'Male Members Report'],
-            'female' => ["`gender` = ? AND `status` <> ?", ['female', 'archived'], 'Female Members Report'],
+            'male' => ["`gender` = ? AND `status` <> ?", ['male', 'archived'], 'Male Students Report'],
+            'female' => ["`gender` = ? AND `status` <> ?", ['female', 'archived'], 'Female Students Report'],
         ];
         if (!array_key_exists($filter, $presets)) {
             throw new InvalidArgumentException('Invalid report filter.');
@@ -201,7 +201,7 @@ final class MemberReportService
         $status = self::scalar($input, 'f_status', 30);
         if ($status !== '') {
             if (!in_array($status, ['active', 'warning', 'inactive', 'archived'], true)) {
-                throw new InvalidArgumentException('Invalid member status filter.');
+                throw new InvalidArgumentException('Invalid student status filter.');
             }
             $where = array_values(array_filter(
                 $where,

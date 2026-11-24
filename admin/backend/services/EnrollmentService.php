@@ -258,7 +258,7 @@ class EnrollmentService
             $year = self::activeYear($conn);
         }
         if (!$year) {
-            return ['status' => 'error', 'message' => 'No active academic year. Member saved without a class.'];
+            return ['status' => 'error', 'message' => 'No active academic year. Student saved without a class.'];
         }
         $yearId = (int)$year['id'];
         $enrolledBy = $enrolledBy ?: (int)($_SESSION['admin_id'] ?? 0);
@@ -303,7 +303,7 @@ class EnrollmentService
         $stmt->close();
 
         if (function_exists('autoUpdateMemberClass')) {
-            if (!autoUpdateMemberClass($conn, $memberId, (int)$class['id'], $yearId)) throw new \RuntimeException('Could not update member class.');
+            if (!autoUpdateMemberClass($conn, $memberId, (int)$class['id'], $yearId)) throw new \RuntimeException('Could not update student class.');
         }
 
         return [
@@ -379,7 +379,7 @@ class EnrollmentService
         $ins->close();
 
         if (function_exists('autoUpdateMemberClass')) {
-            if (!autoUpdateMemberClass($conn, $memberId, (int)$toClass['id'], $yearId)) throw new \RuntimeException('Could not update member class.');
+            if (!autoUpdateMemberClass($conn, $memberId, (int)$toClass['id'], $yearId)) throw new \RuntimeException('Could not update student class.');
         }
 
 

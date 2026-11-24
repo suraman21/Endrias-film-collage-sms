@@ -109,7 +109,7 @@ try {
             || ($member['membership_tier'] ?? '') === 'permanent'
         );
     if (!$eligible) {
-        throw new DomainException('The member is not eligible for an ID card.');
+        throw new DomainException('The student is not eligible for an ID card.');
     }
 
     $memberCode = trim((string)($member['member_code'] ?? ''));
@@ -126,7 +126,7 @@ try {
             }
         }
         if ($memberCode === '') {
-            throw new DomainException('This member does not have an identity code yet. Assign an age group or position first.');
+            throw new DomainException('This student does not have an identity code yet. Assign an age group or position first.');
         }
         $statement = $pdo->prepare('UPDATE members SET member_code = ? WHERE id = ?');
         $statement->execute([$memberCode, (int)$memberId]);
@@ -150,7 +150,7 @@ try {
 
     if (!SecurityAuditService::record(
         $pdo,
-        'Member ID Card ' . ($action === 'renew' ? 'Renewed' : 'Generated'),
+        'Student ID Card ' . ($action === 'renew' ? 'Renewed' : 'Generated'),
         ['action' => $action],
         'member',
         (int)$memberId

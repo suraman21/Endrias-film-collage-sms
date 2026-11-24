@@ -92,14 +92,14 @@ class QrFeedback {
       'አልተገኘም!', 'ኮዱ በዚህ መሣሪያ ላይ የለም። በስም ይፈልጉ ወይም ውሂብ ያዘምኑ');
 
   factory QrFeedback.inactive({required String name}) => QrFeedback._(
-      QrFeedbackKind.inactive, 'ንቁ አይደለም!', '$name — የአባልነት ሁኔታው ንቁ አይደለም።');
+      QrFeedbackKind.inactive, 'ንቁ አይደለም!', '$name — የተማሪነት ሁኔታው ንቁ አይደለም።');
 
   /// Member lookup (Phase 9): the scanned code resolved to a member.
   factory QrFeedback.memberFound({required String name}) =>
       QrFeedback._(QrFeedbackKind.ok, '\u1270\u1308\u129d\u1270\u12cd\u120d', name);
 
   factory QrFeedback.invalid() => QrFeedback._(QrFeedbackKind.invalid,
-      'ልክ ያልሆነ ኮድ!', 'ይህ ቁራጽ የአባል መገኛ ኪውአር ኮድ አይደለም። እባክዎ እንደገና ይሞክሩ።');
+      'ልክ ያልሆነ ኮድ!', 'ይህ ቁራጽ የተማሪ መገኛ ኪውአር ኮድ አይደለም። እባክዎ እንደገና ይሞክሩ።');
 
   factory QrFeedback.locked() => QrFeedback._(QrFeedbackKind.locked,
       'ቅጹ ተቆልጓአል!', 'የተላከ/የጸደቀ ቅጽ ነው፤ በስካን መለወጥ አይቻልም።');

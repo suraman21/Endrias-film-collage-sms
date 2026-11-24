@@ -101,7 +101,7 @@
         }
         const label = (st) => ({ present: 'present', absent: 'absent', late: 'late', excused: 'excused' }[st] || st);
         const lines = changes.slice(0, 6).map((r) => {
-            const nm = (typeof nameOf === 'function' && nameOf(r.member_id)) || ('Member #' + r.member_id);
+            const nm = (typeof nameOf === 'function' && nameOf(r.member_id)) || ('Student #' + r.member_id);
             return nm + ': ' + label(saved[r.member_id]) + ' \u2192 ' + label(r.status);
         });
         if (changes.length > 6) lines.push('\u2026and ' + (changes.length - 6) + ' more.');

@@ -205,7 +205,7 @@ if (isset($conn)) {
                 <div class="stat-card">
                     <div class="flex items-center gap-3">
                         <div class="stat-icon bg-rose-100 text-rose-600"><i class="fa-solid fa-users"></i></div>
-                        <div><div class="stat-value"><?= $stats['total_members'] ?></div><div class="stat-label">Group Members</div></div>
+                        <div><div class="stat-value"><?= $stats['total_members'] ?></div><div class="stat-label">Group Students</div></div>
                     </div>
                 </div>
             </div>
@@ -231,7 +231,7 @@ if (isset($conn)) {
                                 <th>Initial (M/F)</th>
                                 <th>Current (M/F)</th>
                                 <th>Leaders</th>
-                                <th>Members</th>
+                                <th>Students</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -406,11 +406,11 @@ if (isset($conn)) {
         </div>
     </div>
 
-    <!-- Member Modal -->
+    <!-- Student Modal -->
     <div id="memberModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="memberModalTitle" class="font-bold text-lg">Add Member</h3>
+                <h3 id="memberModalTitle" class="font-bold text-lg">Add Student</h3>
                 <button onclick="closeMemberModal()" class="action-btn"><i class="fa-solid fa-times"></i></button>
             </div>
             <form id="memberForm" onsubmit="saveMember(event)">
@@ -534,7 +534,7 @@ if (isset($conn)) {
     // Danger confirmation (HIGH). Also sends the CSRF token the API requires.
     async function deleteGroup(id, name) {
         if (!(window.DangerConfirm && window.DangerConfirm.ask)) { alert('The confirmation dialog did not load. Reload the page and try again.'); return; }
-        const dc = await window.DangerConfirm.ask({tier:'high',title:'Delete the group \u201c'+name+'\u201d?',object:name,summary:'The group is removed together with everyone listed in it.',intent:'I want to delete this group',consequences:function(){return fetch(API+'?action=impact_delete_group&id='+id,{credentials:'same-origin'}).then(function(x){return x.json();}).then(function(r){var d=(r&&r.data)||{};if(!(r&&r.success))throw new Error('x');return ['The group \u201c'+name+'\u201d is deleted permanently.', (d.leaders||0)+' leader record(s) are deleted.', (d.members||0)+' member record(s) in this group are deleted.','Group reports and exports no longer include it.'];});},fallbackConsequences:['The group is deleted permanently.','ALL its leader records are deleted.','ALL its member records are deleted.'],keeps:['The people themselves stay in the member database; only their group listing is removed.'],irreversible:true,phrase:'DELETE GROUP',confirmLabel:'Delete group'});
+        const dc = await window.DangerConfirm.ask({tier:'high',title:'Delete the group \u201c'+name+'\u201d?',object:name,summary:'The group is removed together with everyone listed in it.',intent:'I want to delete this group',consequences:function(){return fetch(API+'?action=impact_delete_group&id='+id,{credentials:'same-origin'}).then(function(x){return x.json();}).then(function(r){var d=(r&&r.data)||{};if(!(r&&r.success))throw new Error('x');return ['The group \u201c'+name+'\u201d is deleted permanently.', (d.leaders||0)+' leader record(s) are deleted.', (d.members||0)+' student record(s) in this group are deleted.','Group reports and exports no longer include it.'];});},fallbackConsequences:['The group is deleted permanently.','ALL its leader records are deleted.','ALL its student records are deleted.'],keeps:['The people themselves stay in the student database; only their group listing is removed.'],irreversible:true,phrase:'DELETE GROUP',confirmLabel:'Delete group'});
         if (!dc) return;
         const form = new FormData();
         form.append('action', 'delete_group');
@@ -604,13 +604,13 @@ if (isset($conn)) {
                 
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <h4 class="font-semibold text-slate-700"><i class="fa-solid fa-users text-emerald-500 mr-2"></i>Members (${members.length})</h4>
+                        <h4 class="font-semibold text-slate-700"><i class="fa-solid fa-users text-emerald-500 mr-2"></i>Students (${members.length})</h4>
                         <button onclick="openMemberModal(${id})" class="btn btn-sm btn-primary"><i class="fa-solid fa-plus"></i> Add</button>
                     </div>
                     <table class="text-sm">
                         <thead><tr><th>Name</th><th>Christian Name</th><th>Gender</th><th>Phone</th><th>Address</th><th></th></tr></thead>
                         <tbody>
-                            ${members.length === 0 ? '<tr><td colspan="6" class="text-center text-slate-400 py-4">No members yet</td></tr>' : ''}
+                            ${members.length === 0 ? '<tr><td colspan="6" class="text-center text-slate-400 py-4">No students yet</td></tr>' : ''}
                             ${members.map(m => `<tr>
                                 <td>${m.full_name}</td>
                                 <td>${m.baptismal_name || '-'}</td>
@@ -652,7 +652,7 @@ if (isset($conn)) {
 
     async function deleteLeader(id) {
         if (!(window.DangerConfirm && window.DangerConfirm.ask)) { alert('The confirmation dialog did not load. Reload the page and try again.'); return; }
-        if (!(await window.DangerConfirm.ask({tier:'medium',title:'Remove this leader from the group?',summary:'Only the group listing is removed.',intent:'I want to remove this leader',consequences:['The leader is removed from this group permanently.','Group counts and exports change.'],keeps:['The person stays in the member database and in other groups.','You can add them again later.'],irreversible:true,phrase:'REMOVE LEADER',confirmLabel:'Remove leader'}))) return;
+        if (!(await window.DangerConfirm.ask({tier:'medium',title:'Remove this leader from the group?',summary:'Only the group listing is removed.',intent:'I want to remove this leader',consequences:['The leader is removed from this group permanently.','Group counts and exports change.'],keeps:['The person stays in the student database and in other groups.','You can add them again later.'],irreversible:true,phrase:'REMOVE LEADER',confirmLabel:'Remove leader'}))) return;
         const form = new FormData();
         form.append('action', 'delete_leader');
         form.append('csrf_token', GROUPS_CSRF);
@@ -663,12 +663,12 @@ if (isset($conn)) {
         });
     }
 
-    // Member CRUD
+    // Student CRUD
     function openMemberModal(groupId) {
         document.getElementById('memberForm').reset();
         document.getElementById('memberId').value = '';
         document.getElementById('memberGroupId').value = groupId;
-        document.getElementById('memberModalTitle').textContent = 'Add Member';
+        document.getElementById('memberModalTitle').textContent = 'Add Student';
         document.getElementById('memberModal').classList.add('open');
     }
 
@@ -686,7 +686,7 @@ if (isset($conn)) {
 
     async function deleteMember(id) {
         if (!(window.DangerConfirm && window.DangerConfirm.ask)) { alert('The confirmation dialog did not load. Reload the page and try again.'); return; }
-        if (!(await window.DangerConfirm.ask({tier:'medium',title:'Remove this member from the group?',summary:'Only the group listing is removed.',intent:'I want to remove this member',consequences:['The member is removed from this group permanently.','Group counts and exports change.'],keeps:['The person stays in the member database and in other groups.','You can add them again later.'],irreversible:true,phrase:'REMOVE MEMBER',confirmLabel:'Remove member'}))) return;
+        if (!(await window.DangerConfirm.ask({tier:'medium',title:'Remove this student from the group?',summary:'Only the group listing is removed.',intent:'I want to remove this student',consequences:['The student is removed from this group permanently.','Group counts and exports change.'],keeps:['The person stays in the student database and in other groups.','You can add them again later.'],irreversible:true,phrase:'REMOVE STUDENT',confirmLabel:'Remove student'}))) return;
         const form = new FormData();
         form.append('action', 'delete_member');
         form.append('csrf_token', GROUPS_CSRF);

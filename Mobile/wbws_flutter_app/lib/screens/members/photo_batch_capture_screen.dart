@@ -201,8 +201,8 @@ class _PhotoBatchCaptureScreenState extends State<PhotoBatchCaptureScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('All photos captured'),
         content: Text(
-            'All ${_roster.length} active members now have a photo on this device. '
-            'Return to the Members screen and open Photo Sync to upload them when you have Wi-Fi.'),
+            'All ${_roster.length} active students now have a photo on this device. '
+            'Return to the Students screen and open Photo Sync to upload them when you have Wi-Fi.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
@@ -274,7 +274,7 @@ class _PhotoBatchCaptureScreenState extends State<PhotoBatchCaptureScreen> {
                       child: Padding(
                         padding: EdgeInsets.all(24),
                         child: Text(
-                            'No active members cached on this device yet. '
+                            'No active students cached on this device yet. '
                             'Go online once to sync the roster before capturing photos.',
                             textAlign: TextAlign.center),
                       ),
@@ -525,7 +525,7 @@ class _PhotoBatchCaptureScreenState extends State<PhotoBatchCaptureScreen> {
                           MemberDetailScreen(memberId: row.memberId)));
                 },
                 icon: const Icon(Icons.info_outline, size: 16),
-                label: const Text('View member details',
+                label: const Text('View student details',
                     style: TextStyle(fontSize: 12)),
               ),
             ]),

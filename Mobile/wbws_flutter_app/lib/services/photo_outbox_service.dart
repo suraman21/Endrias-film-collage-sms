@@ -346,7 +346,7 @@ class PhotoOutboxService {
     if (!await hasEnoughSpace(additionalBytes: bytes.lengthInBytes)) {
       throw StateError(
         'Not enough storage space. Delete old synced photos or free up '
-        'space before capturing more members.',
+        'space before capturing more students.',
       );
     }
     final sha = sha256.convert(bytes).toString().toLowerCase();

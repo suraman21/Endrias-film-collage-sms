@@ -93,7 +93,7 @@ class InfoHomeScreenState extends State<InfoHomeScreen> {
           const SizedBox(height: 2),
           Text('Information Department', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 4),
-          Text('Member registration, ID cards & records', style: TextStyle(fontSize: 12, color: Colors.grey.shade300)),
+          Text('Student registration, ID cards & records', style: TextStyle(fontSize: 12, color: Colors.grey.shade300)),
         ]),
       ),
       const SizedBox(height: 16),
@@ -110,7 +110,7 @@ class InfoHomeScreenState extends State<InfoHomeScreen> {
         crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.95,
         children: [
-          FeatureTile(label: 'Members', icon: Icons.people_rounded, color: AppTheme.primary,
+          FeatureTile(label: 'Students', icon: Icons.people_rounded, color: AppTheme.primary,
               onTap: () => Navigator.of(context).push(SmoothPageRoute(page: const MemberListScreen()))),
           // Attendance alerting Phase 2 (Education, close with outcome).
           if (AppUpdateService().featureEnabled('attendance_v2', fallback: false))

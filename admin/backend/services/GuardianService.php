@@ -493,7 +493,7 @@ class GuardianService
         $found = $exists->get_result()->fetch_assoc();
         $exists->close();
         if (!$found) {
-            throw new \InvalidArgumentException('That member is not linked to this guardian.');
+            throw new \InvalidArgumentException('That student is not linked to this guardian.');
         }
         $stmt = $conn->prepare('UPDATE member_guardians SET verified_by = ?, verified_at = NOW() WHERE member_id = ? AND guardian_id = ?');
         if (!$stmt) {
@@ -520,7 +520,7 @@ class GuardianService
         $found = $exists->get_result()->fetch_assoc();
         $exists->close();
         if (!$found) {
-            throw new \InvalidArgumentException('That member is not linked to this guardian.');
+            throw new \InvalidArgumentException('That student is not linked to this guardian.');
         }
         $stmt = $conn->prepare('UPDATE member_guardians SET verified_by = NULL, verified_at = NULL WHERE member_id = ? AND guardian_id = ?');
         if (!$stmt) {
@@ -938,7 +938,7 @@ class GuardianService
         $row = $st->get_result()->fetch_assoc();
         $st->close();
         if (!$row) {
-            throw new \InvalidArgumentException('That member is not linked to this guardian.');
+            throw new \InvalidArgumentException('That student is not linked to this guardian.');
         }
         if (!in_array($relation, ['father', 'mother', 'other'], true)) {
             $relation = (string)$row['relation'];
@@ -948,7 +948,7 @@ class GuardianService
             // demoting the only primary is not allowed; pick another explicitly
             $cnt = (int)$conn->query('SELECT COUNT(*) FROM member_guardians WHERE member_id = ' . (int)$memberId)->fetch_row()[0];
             if ($cnt <= 1) {
-                throw new \InvalidArgumentException('A member must keep one primary guardian. Mark another guardian as primary instead.');
+                throw new \InvalidArgumentException('A student must keep one primary guardian. Mark another guardian as primary instead.');
             }
         }
         self::linkMember($conn, $guardianId, $memberId, $relation, (int)$row['contact_priority'], $primary, false);

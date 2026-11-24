@@ -81,8 +81,8 @@ final class TelegramApprovalReadinessService
             // Escalation marker from the session itself
             if((string)($session['identity_verification_decision']??'')==='escalated')$escalated=1;
         }
-        if($same>0)$blockers[]='At least one high-confidence candidate has been marked as the same person — approve the existing member instead of creating a new one.';
-        if($sameMedium>0)$blockers[]='At least one medium-confidence candidate has been marked as the same person — approve the existing member instead of creating a new one.';
+        if($same>0)$blockers[]='At least one high-confidence candidate has been marked as the same person — approve the existing student instead of creating a new one.';
+        if($sameMedium>0)$blockers[]='At least one medium-confidence candidate has been marked as the same person — approve the existing student instead of creating a new one.';
         if($unresolvedHigh>0)$blockers[]='There are '.$unresolvedHigh.' unresolved high-confidence duplicate candidates. The operator must mark each as "same person" or "different person" before approval.';
         if($duplicate==='likely'){
             // High-candidate evidence present → v2 verdicts above already enforce the
@@ -104,7 +104,7 @@ final class TelegramApprovalReadinessService
         }
 
         $profile=(string)($session['profile_key']??'');
-        if(in_array($profile,['direct','transfer'],true))$warnings[]='Approval will create a permanent member and requires final transactional duplicate enforcement.';
+        if(in_array($profile,['direct','transfer'],true))$warnings[]='Approval will create a permanent student and requires final transactional duplicate enforcement.';
         else $warnings[]='Waiting approval will create only a temporary/waiting record.';
         return ['ready'=>$blockers===[],'blockers'=>$blockers,'warnings'=>$warnings];
     }

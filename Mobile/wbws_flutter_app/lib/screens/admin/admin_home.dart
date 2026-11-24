@@ -126,7 +126,7 @@ class AdminHomeScreenState extends State<AdminHomeScreen> {
 
       // Stats
       Row(children: [
-        Expanded(child: StatCard(label: 'Members', value: '${members['total'] ?? 0}', icon: Icons.people_rounded, color: AppTheme.primary)),
+        Expanded(child: StatCard(label: 'Students', value: '${members['total'] ?? 0}', icon: Icons.people_rounded, color: AppTheme.primary)),
         const SizedBox(width: 10),
         Expanded(child: StatCard(label: 'Active', value: '${members['active'] ?? 0}', icon: Icons.check_circle, color: AppTheme.success)),
         const SizedBox(width: 10),
@@ -147,7 +147,7 @@ class AdminHomeScreenState extends State<AdminHomeScreen> {
         crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.95,
         children: [
-          FeatureTile(label: 'Members', icon: Icons.people_rounded, color: AppTheme.primary,
+          FeatureTile(label: 'Students', icon: Icons.people_rounded, color: AppTheme.primary,
               onTap: () => Navigator.of(context).push(SmoothPageRoute(page: const MemberListScreen()))),
           if (AppUpdateService().featureEnabled('attendance'))
             FeatureTile(label: 'Attendance', icon: Icons.fact_check_rounded, color: AppTheme.warning,

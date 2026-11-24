@@ -416,9 +416,9 @@ final class AttendanceWarningService
                 switch ($event) {
                     case 'auto_deactivated':
                         $priority = 'urgent';
-                        $title = "{$deptEn}: member deactivated after {$n} consecutive absences · አባሉ ኢ-ንቁ ተደርጓል";
+                        $title = "{$deptEn}: student deactivated after {$n} consecutive absences · ተማሪው ኢ-ንቁ ተደርጓል";
                         $msg = "{$member} was automatically set INACTIVE in {$deptEn} after {$n} consecutive absences ({$range}). "
-                             . "HR / Information may reactivate from the member profile.\n"
+                             . "HR / Information may reactivate from the student profile.\n"
                              . "{$member} በ{$deptAm} {$n} ተከታታይ ቀናት በመቅረቱ ({$rangeAm}) በራስ-ሰር ኢ-ንቁ ተደርጓል።";
                         break;
                     default:
