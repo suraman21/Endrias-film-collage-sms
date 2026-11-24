@@ -2,7 +2,7 @@
 /**
  * Department status periods (Attendance alerting — Phase 1).
  *
- * A member is active or inactive PER DEPARTMENT (Education / Mezmur),
+ * A member is active or inactive PER DEPARTMENT (Education),
  * independently of the global `members.status` (which remains a manual
  * HR / Information decision). Periods live in `member_department_periods`:
  *
@@ -30,11 +30,11 @@ require_once __DIR__ . '/AssessmentFollowupService.php';
 
 final class DepartmentStatusService
 {
-    public const DEPARTMENTS = ['edu', 'mezmur'];
+    public const DEPARTMENTS = ['edu'];
     public const STATUSES = ['active', 'inactive'];
     public const SOURCES = ['manual', 'auto', 'rollout'];
     public const TABLE = 'member_department_periods';
-    public const LABELS = ['edu' => 'Education', 'mezmur' => 'Mezmur'];
+    public const LABELS = ['edu' => 'Education'];
 
     /** @var array<int,bool> keyed by spl_object_id of the connection */
     private static array $tableCache = [];
@@ -136,7 +136,7 @@ final class DepartmentStatusService
         $ids = array_values(array_unique(array_filter(array_map('intval', $memberIds), static fn($i) => $i > 0)));
         $out = [];
         foreach ($ids as $id) {
-            $out[$id] = ['edu' => 'active', 'mezmur' => 'active'];
+            $out[$id] = ['edu' => 'active'];
         }
         if ($ids === [] || !self::available($conn)) {
             return $out;

@@ -2,13 +2,13 @@
 /**
  * ════════════════════════════════════════════════════════════
  * HrSubmissionService — submission packets for HR department
- * attendance. Exact workflow clone of MezmurSubmissionService
- * (which itself clones SubmissionService for teachers→education),
+ * attendance. Exact workflow clone of SubmissionService
+ * (the teacher→education workflow),
  * scoped by (attendance_date, section).
  *
  * Product rule (2026-08-28): HR owns this dataset exclusively —
  * its own takers (hr_attendance_taker), its own reviewers
- * (hr_dept), never combined with Education or Mezmur records.
+ * (hr_dept), never combined with Education records.
  * Only the Information department reads it (analytics, later),
  * through the governed read path.
  *

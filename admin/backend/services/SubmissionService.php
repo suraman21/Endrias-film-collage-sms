@@ -751,7 +751,7 @@ class SubmissionService
      * one, …). Shared by the web and mobile review endpoints.
      *
      * 2026-10-02: the rule itself moved to ReviewTransitionPolicy so that
-     * HR and Mezmur enforce the identical state machine without depending
+     * every department enforces the identical state machine without depending
      * on this (Education) service. Messages are unchanged — "list" /
      * "teacher" is Education's vocabulary.
      */
@@ -1547,7 +1547,7 @@ class SubmissionService
 
     /**
      * Paged review list (Phase 3, 2026-10-22). Same filters and order as
-     * list(); returns the Mezmur inbox shape so every client pages alike:
+     * list(); returns the shared inbox shape so every client pages alike:
      * ['items' => rows, 'total', 'page', 'total_pages', 'per_page'].
      * list() itself is unchanged (newest 200) for callers that do not page.
      */

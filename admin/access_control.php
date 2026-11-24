@@ -99,9 +99,6 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'finance.php'       => ['super_admin', 'school_admin', 'finance_dept'],
             'finance_department.php' => ['super_admin', 'school_admin', 'finance_dept'],
             'finance_dept.php'  => ['super_admin', 'school_admin', 'finance_dept'],
-            'mezmur.php'        => ['super_admin', 'school_admin', 'mezmur_dept'],
-            'api_mezmur.php'    => ['super_admin', 'school_admin', 'mezmur_dept'],
-            'mezmur_dept.php'   => ['super_admin', 'school_admin', 'mezmur_dept'],
 
             // ---- Education / academics ----
             // Teachers & attendance-takers legitimately READ these and record
@@ -136,13 +133,13 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'attendance_taker.php'    => ['super_admin', 'school_admin', 'attendance_taker'],
             // Attendance alerting v2 (Phase 1): department status + policy.
             // Writes are restricted further inside each API (HR/Info; School Admin).
-            'api_department_status.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
-            'api_attendance_policy.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
-            'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
-            'attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
+            'api_department_status.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'api_attendance_policy.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
             // Phase 4: shared monthly attendance report (read-only, department-scoped inside the API).
-            'api_attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
-            'attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'],
+            'api_attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
+            'attendance_monthly.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'],
             // Phase 5: assessment follow-ups / make-up queue. Teachers are scoped to
             // their class + subject assignments and HR / Info / admins are read-only INSIDE the API.
             'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'],
@@ -194,8 +191,8 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             'groups.php'     => ['super_admin', 'school_admin', 'hr_dept'],
 
             // ---- P72 Communication Center: every staff role ----
-            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'mezmur_dept', 'hr_dept', 'teacher', 'attendance_taker', 'mezmur_attendance_taker', 'hr_attendance_taker', 'content_editor'],
-            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'mezmur_dept', 'hr_dept', 'teacher', 'attendance_taker', 'mezmur_attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'notifications.php' => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
+            'messages.php'      => ['super_admin', 'school_admin', 'info_dept', 'edu_dept', 'finance_dept', 'material_dept', 'hr_dept', 'teacher', 'attendance_taker', 'hr_attendance_taker', 'content_editor'],
             'groups_api.php' => ['super_admin', 'school_admin', 'hr_dept'],
 
             // ---- Reports & exports (contain all-member data) ----
@@ -271,18 +268,17 @@ if (!defined('ACCESS_CONTROL_LOADED')) {
             // ---- Department-owned attendance takers ----
             // Each department manages ONLY its own taker type; the
             // service layer re-enforces the attribution server-side.
-            'api_dept_takers.php' => ['super_admin', 'school_admin', 'mezmur_dept'],
 
             // ---- HR attendance review console (HR data only) ----
             'api_hr_attendance.php' => ['super_admin', 'school_admin', 'hr_dept'],
             'api_hr_reports.php' => ['super_admin', 'school_admin', 'hr_dept'],
-            // Shared attendance analytics (Education + Mezmur): Info + HR analyse, admins refresh.
+            // Shared attendance analytics (Education): Info + HR analyse, admins refresh.
             'api_info_analytics.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
             'api_info_reports.php' => ['super_admin', 'school_admin', 'info_dept', 'hr_dept'],
 
             // ---- QR roster printing (Phase 8): each department prints
             // ONLY its own carrier; ownership re-checked in the endpoint.
-            'api_qr_roster.php' => ['super_admin', 'school_admin', 'edu_dept', 'mezmur_dept', 'hr_dept'],
+            'api_qr_roster.php' => ['super_admin', 'school_admin', 'edu_dept', 'hr_dept'],
 
             // ---- ID cards ----
             'view_id_card.php'     => ['super_admin', 'school_admin', 'hr_dept'],

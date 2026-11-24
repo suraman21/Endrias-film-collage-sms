@@ -1,6 +1,6 @@
 # FKSS — Sunday School Management System
 
-FKSS is the management system of the Felege Kidusan Sunday School. It replaces spreadsheets and paper records for member registration, education (classes, assessments, report cards, timetable, attendance), the Mezmur (hymn) ministry, communications and reporting. Staff use a PHP web application; teachers and department staff also use an Android app built with Flutter that works offline and synchronises with the server.
+FKSS is the management system of the Felege Kidusan Sunday School. It replaces spreadsheets and paper records for member registration, education (classes, assessments, report cards, timetable, attendance), communications and reporting. Staff use a PHP web application; teachers and department staff also use an Android app built with Flutter that works offline and synchronises with the server.
 
 > **Source baseline (reviewed 2026-10-28):** development main `7209278`. All eight baseline checks passed; the earlier 79-skip failure is resolved. A later change needs its own checks. See [Testing and CI](docs/DEVELOPMENT_AND_TESTING.md#3-current-ci-status).
 > - Delivery is development main → development-server update → owner acceptance → separately authorized production promotion. A merge does not prove deployment. See [Operations](docs/OPERATIONS.md).
@@ -14,11 +14,11 @@ FKSS is the management system of the Felege Kidusan Sunday School. It replaces s
 | Members | Registration (HR), temporary → permanent promotion, guardian/sibling linking ("Family Link"), import/export, ID cards with QR codes, archiving |
 | Education | Classes, subjects, teacher assignments, enrolment, assessments with a maximum score, submission → review/approval workflow, report cards, timetable builder, school calendar (holidays / days off) |
 | Attendance | Class-day attendance (web and mobile), lesson-level sessions, monthly roll-ups, attendance warnings and department status |
-| Mezmur | Hymn catalogue, lyrics with timing, audio stored in object storage, department attendance and submissions |
+
 | Communication | Announcements, notifications, threaded messages (web and mobile) |
 | Reporting | Reporting centre with saved views, Excel/PDF exports, department analytics |
 | Administration | Users and roles, branding, app-release manager (APK distribution and update policy), system health, encrypted database backups, failure intelligence and mobile telemetry |
-| Mobile app | Offline cache and outboxes (attendance, grades, HR, Mezmur, messages), background sync, app lock (PIN/biometric), in-app update from the server |
+| Mobile app | Offline cache and outboxes (attendance, grades, HR, messages), background sync, app lock (PIN/biometric), in-app update from the server |
 
 ## Technology stack
 
@@ -42,7 +42,7 @@ FKSS is the management system of the Felege Kidusan Sunday School. It replaces s
                                 │
                      admin/backend/services/*  (shared domain services)
                                 │
-                     MariaDB  ·  object storage (Mezmur media)  ·  Telegram (alerts)
+                     MariaDB  ·  object storage  ·  Telegram (alerts)
 ```
 
 There are **three API layers**; consolidation is unfinished. Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before changing any endpoint.
@@ -58,7 +58,7 @@ The web server's document root is the repository root (production: `public_html`
 | `admin/` | Staff web application: pages, department dashboards (`dashboards/`), `api_*.php` endpoints, business services (`backend/services/`), ID cards (`id_cards/`), JS/CSS, maintenance tools (`tools/`: backups, health check, data repair) |
 | `api/v1/` | REST API used by the mobile app (`routes/`, `core/`) |
 | `backend/` | Compatibility shims that delegate to `admin/` (`api/`, `auth/`, `core/`, `id_cards/`, `users/`), plus `api/init.php` (dashboard bootstrap) |
-| `frontend/` | Newer router-style pages (`pages/`, `layouts/`, `js/`): dashboard, Mezmur, finance, education assignments and teachers |
+| `frontend/` | Newer router-style pages (`pages/`, `layouts/`, `js/`): dashboard, finance, education assignments and teachers |
 | `app/` | Legacy installable web app (PWA) |
 | `monitor/` | Error and uptime monitor |
 | `themes/` | Shared design system and per-school themes (`fkss/`, `wbss/`) |
@@ -108,7 +108,7 @@ Each item is VERIFIED unless marked otherwise. Detail and evidence: [OPERATIONS.
 | Area | Limitation | Detail |
 |---|---|---|
 | Security boundaries | Web: PHP session, CSRF token and the role guard in `admin/access_control.php`. Mobile: custom HMAC bearer token (not a JWT). No independent security certification exists | [SECURITY.md](docs/SECURITY.md), [API.md](docs/API.md) |
-| Database and migrations | There is no migration ledger and the applied production schema is unverified. `sql/legacy/database_schema.sql` is stale (11 tables). `sql/` cannot be applied linearly to an empty database. Mezmur tables can change at runtime | [DATABASE.md](docs/DATABASE.md) |
+| Database and migrations | There is no migration ledger and the applied production schema is unverified. `sql/legacy/database_schema.sql` is stale (11 tables). `sql/` cannot be applied linearly to an empty database. | [DATABASE.md](docs/DATABASE.md) |
 | Runtime versions | CI behavioral tests use PHP 8.4, with an 8.5 lint job. Production PHP 8.5 and MariaDB 11.4 are dated hosting observations, not fresh runtime verification | [DATABASE.md §1](docs/DATABASE.md#1-engine-and-access) |
 | Deployment | Owner acceptance on development precedes separate production authorization. Historical SFTP instructions do not establish today's cron, file or schema state; rollback rehearsal remains unverified | [OPERATIONS.md](docs/OPERATIONS.md) |
 | Release evidence | Baseline CI is green, but signing, published APKs, device installation and hosted acceptance are separate gates. Source is 1.7.5+42 | [DEVELOPMENT_AND_TESTING.md](docs/DEVELOPMENT_AND_TESTING.md), [OPERATIONS.md](docs/OPERATIONS.md) |

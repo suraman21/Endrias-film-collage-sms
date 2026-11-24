@@ -29,7 +29,7 @@ try {
 }
 // Attendance alerting Phase 2: open Education warnings for the dashboard card.
 $attendanceWarningsAvailable = false;
-$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0], 'mezmur' => ['total' => 0, 'critical' => 0]];
+$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0]];
 try {
     $attendanceWarningsAvailable = \App\Services\AttendanceWarningService::available($conn);
     if ($attendanceWarningsAvailable) {
@@ -226,7 +226,7 @@ main{padding:0!important;background:#fff!important;color:#1a0a0a!important}
 @media screen and (max-width: 768px) {
 
     /* ── 2. MODALS → iOS-STYLE BOTTOM SHEETS (above the nav, always) ──
-       Same pattern approved for the mezmur department in P68. */
+       Same pattern approved in P68. */
     body.page-edu .mo { align-items: flex-end; padding: 0 !important; }
     body.page-edu .mo .mc {
         position: relative;

@@ -25,7 +25,7 @@ class QrRosterEndpointTests(unittest.TestCase):
 
     def test_role_map_covers_departments(self):
         self.assertIn("'api_qr_roster.php' =>", self.acl)
-        for role in ("edu_dept", "mezmur_dept", "hr_dept"):
+        for role in ("edu_dept", "hr_dept"):
             self.assertIn(role, self.acl.split("'api_qr_roster.php'")[1][:200])
 
     def test_governance_layer(self):
@@ -53,7 +53,6 @@ class MobileScanSurfaceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.edu = rd("Mobile/wbws_flutter_app/lib/screens/attendance/attendance_screen.dart")
-        cls.mez = rd("Mobile/wbws_flutter_app/lib/screens/mezmur/mezmur_attendance.dart")
         cls.svc = rd("Mobile/wbws_flutter_app/lib/services/qr_attendance.dart")
         cls.wid = rd("Mobile/wbws_flutter_app/lib/widgets/qr_scan_sheet.dart")
 
@@ -69,17 +68,12 @@ class MobileScanSurfaceTests(unittest.TestCase):
         )
 
     def test_both_live_screens_have_scan_and_autosave(self):
-        # HR attendance was retired (2026-10-07) — its screen is gone;
-        # Education + Mezmur remain the two scan surfaces.
-        for src, save in (
-            (self.edu, "saveAttendanceLocal"),
-            (self.mez, "saveMezmurLocal"),
-        ):
-            self.assertIn("QrScanSheet.open", src)
-            # Attendance exposes the actual callback for runtime regression
-            # tests; Mezmur retains its private name. Verify wiring, not spelling.
-            self.assertRegex(src, r"onScan:\s+_?handleQrScan")
-            self.assertIn("_autoSaveNow", src)
+        # HR attendance was retired (2026-10-07) — its screen is gone.
+        self.assertIn("QrScanSheet.open", self.edu)
+        # Attendance exposes the actual callback for runtime regression
+        # tests. Verify wiring, not spelling.
+        self.assertRegex(self.edu, r"onScan:\s+_?handleQrScan")
+        self.assertIn("_autoSaveNow", self.edu)
             self.assertIn("_scheduleAutoSave", src)
             self.assertIn("packetKind: 'draft'", src)
             self.assertIn(save, src)
@@ -136,7 +130,6 @@ class MobileScanSurfaceTests(unittest.TestCase):
         self.assertNotIn("Icons.church_rounded", login)
 
     def test_stale_backend_banner_removed(self):
-        self.assertNotIn("older version of the mezmur", self.mez)
         self.assertNotIn("_staleServer", self.mez)
 
     def test_offline_resolution_helpers(self):
@@ -149,17 +142,12 @@ class ConsolePrintButtonTests(unittest.TestCase):
     def test_each_console_offers_qr_roster_print(self):
         edu = rd("admin/dashboards/edu_dept.php")
         hr = rd("admin/dashboards/hr-dept.php")
-        mez = rd("frontend/pages/mezmur_dept.php")
-        mezjs = rd("frontend/js/mezmur.js")
         self.assertIn("printQrRoster", edu)
         self.assertIn("api_qr_roster.php?dept=edu", edu)
         # HR's QR-roster button was retired with HR attendance
         # (2026-10-07) — no HR takers scan anymore. The governed
-        # endpoint keeps serving Education and Mezmur.
         self.assertNotIn("printHrQrRoster", hr)
         self.assertNotIn("api_qr_roster.php?dept=hr", hr)
-        self.assertIn("Mezmur.printQrRoster", mez)
-        self.assertIn("api_qr_roster.php?dept=mezmur", mezjs)
 
 
 if __name__ == "__main__":

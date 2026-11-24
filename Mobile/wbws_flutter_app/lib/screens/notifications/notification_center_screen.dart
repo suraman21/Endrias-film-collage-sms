@@ -15,7 +15,6 @@ import '../../widgets/loading_skeleton.dart';
 import '../members/member_detail_screen.dart';
 import '../attendance_warnings/attendance_warning_detail_screen.dart';
 import '../attendance/attendance_screen.dart';
-import '../mezmur/mezmur_attendance.dart';
 import 'messages_screen.dart';
 
 /// P72 — the mobile Notification Center: Alerts + Announcements in
@@ -405,18 +404,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     final sheet = sheetTarget(n);
     if (sheet != null) {
       final date = sheet['date'] as String;
-      if (sheet['department'] == 'mezmur') {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => MezmurAttendanceScreen(
-                initialDate: date.isEmpty ? null : date,
-                initialSection: (sheet['section'] as String).isEmpty ? null : sheet['section'] as String)));
-      } else {
-        final classId = sheet['classId'] as int;
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => AttendanceScreen(
-                initialClassId: classId > 0 ? classId : null,
-                initialDate: date.isEmpty ? null : date)));
-      }
+      final classId = sheet['classId'] as int;
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => AttendanceScreen(
+              initialClassId: classId > 0 ? classId : null,
+              initialDate: date.isEmpty ? null : date)));
       return;
     }
     final memberId = memberTargetId(n);

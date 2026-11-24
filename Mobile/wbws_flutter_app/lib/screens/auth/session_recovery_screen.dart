@@ -355,24 +355,13 @@ class _InventoryCard extends StatelessWidget {
               Text('${inventory.attentionOperations} item(s) need attention'),
             if (inventory.pausedOperations > 0)
               Text('${inventory.pausedOperations} item(s) paused for sign-in'),
-            if (inventory.sharedHymnOperations > 0) ...[
-              const SizedBox(height: 6),
-              Text(
-                '${inventory.sharedHymnOperations} shared hymn operation(s) '
-                'are separate and will be kept.',
-              ),
-            ],
           ],
         ),
       );
 }
 
 String _destructiveWarning(LocalDataInventory inventory) {
-  final shared = inventory.sharedHymnOperations > 0
-      ? '\n\n${inventory.sharedHymnOperations} shared hymn operation(s) are '
-          'separate and will be kept.'
-      : '';
   return 'This permanently removes private local caches, ${inventory.workSummary}, '
       'the local app passcode, and saved credentials. This '
-      'cannot be undone.$shared';
+      'cannot be undone.';
 }

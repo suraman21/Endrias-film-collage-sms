@@ -297,7 +297,7 @@ final class DeviceRefreshProofs
         // mysqli error mode is process-global and mixed across the
         // codebase (silent vs STRICT): normalize every database
         // failure to RuntimeException so the caller has ONE fail-closed
-        // mapping. (MezmurHymnService precedent for the dual check.)
+        // mapping. (Same dual-check precedent as the hymn revision column.)
         try {
             $stmt = $db->prepare(
                 'SELECT pubkey, alg, status FROM acm_devices WHERE id = ? LIMIT 1'

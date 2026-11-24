@@ -6,7 +6,7 @@
  * POST   /members                 — register (Info / School Admin / Super Admin)
  * PUT    /members/{id}            — update (same roles)
  * GET    /members/{id}/attendance — attendance history (assigned class or PII role)
- * GET    /members/{id}/department-status  — Education / Mezmur status (PII roles, HR, Edu, Mezmur)
+ * GET    /members/{id}/department-status  — Education status (PII roles, HR, Edu)
  * POST   /members/{id}/department-status  — change it (HR / Information only; reason required)
  */
 
@@ -376,7 +376,7 @@ if ($method === 'PUT' && is_int($id)) {
 if (is_int($id) && $sub === 'department-status' && ($method === 'GET' || $method === 'POST')) {
     require_once dirname(__DIR__, 3) . '/admin/backend/services/DepartmentStatusService.php';
     $dsWriteRoles = ['hr_dept', 'info_dept'];
-    $dsReadRoles = array_merge(apiRolesPii(), ['hr_dept', 'edu_dept', 'mezmur_dept']);
+    $dsReadRoles = array_merge(apiRolesPii(), ['hr_dept', 'edu_dept']);
     if (!apiRoleIs($auth, $dsReadRoles)) {
         err('You cannot view department status.', 403);
     }
@@ -407,7 +407,7 @@ if (is_int($id) && $sub === 'department-status' && ($method === 'GET' || $method
     $dept = is_string($input['department'] ?? null) ? trim($input['department']) : '';
     $status = is_string($input['status'] ?? null) ? strtolower(trim($input['status'])) : '';
     $reason = is_string($input['reason'] ?? null) ? trim($input['reason']) : '';
-    if (!\App\Services\DepartmentStatusService::isDepartment($dept)) err('department must be edu or mezmur.');
+    if (!\App\Services\DepartmentStatusService::isDepartment($dept)) err('department must be edu.');
     if (!in_array($status, ['active', 'inactive'], true)) err('status must be active or inactive.');
     if (mb_strlen($reason) < 3) err('A reason (at least 3 characters) is required.');
     try {
@@ -436,7 +436,7 @@ if (is_int($id) && $sub === 'department-status' && ($method === 'GET' || $method
     ok([
         'available' => true,
         'changed' => $result['changed'],
-        'message' => $result['changed'] ? ucfirst($dept === 'edu' ? 'Education' : 'Mezmur') . " status set to {$status}." : ($result['message'] ?? 'No change.'),
+        'message' => $result['changed'] ? 'Education' . " status set to {$status}." : ($result['message'] ?? 'No change.'),
         'statuses' => \App\Services\DepartmentStatusService::statuses($conn, $id),
     ]);
 }
@@ -444,7 +444,7 @@ if (is_int($id) && $sub === 'department-status' && ($method === 'GET' || $method
 // ============================================================
 // GET /members/{id}/attendance-risk — the shared risk object per department
 // (Attendance alerting Phase 2). Replaces client-side colouring. Roles:
-// HR / Info / Edu / Mezmur / admins (department-scoped), teachers and
+// HR / Info / Edu / admins (department-scoped), teachers and
 // attendance takers for their own rosters are served through the sheet.
 // ============================================================
 if ($method === 'GET' && is_int($id) && $sub === 'attendance-risk') {

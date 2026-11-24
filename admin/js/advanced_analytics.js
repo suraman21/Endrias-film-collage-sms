@@ -3,7 +3,7 @@
  * Advanced Analytics Center & Visualization Engine (Production-Grade)
  * ============================================================================
  * Designed for High-Density Visual Analytics across School Departments:
- * (Education, HR, Info Dept, Mezmur, Finance).
+ * (Education, HR, Info Dept, Finance).
  *
  * Built with:
  * - Local Chart.js v4.4.1 runtime (zero external CDN dependency)

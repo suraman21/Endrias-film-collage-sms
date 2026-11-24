@@ -36,7 +36,6 @@ class AttTakerHomeScreenState extends State<AttTakerHomeScreen> {
     await _sync.emitCurrentStatus();
     final status = _sync.lastStatus;
     final count = status.privateUnresolvedTotal +
-        status.sharedHymnUnresolvedTotal +
         status.communicationDraftCount;
     if (mounted) setState(() => _pendingCount = count);
   }

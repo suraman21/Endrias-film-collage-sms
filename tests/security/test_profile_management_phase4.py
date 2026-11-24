@@ -32,8 +32,8 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
     page = text(ACCOUNT_PAGE)
     expected_roles = {
         "super_admin", "school_admin", "info_dept", "edu_dept",
-        "finance_dept", "material_dept", "mezmur_dept", "hr_dept",
-        "teacher", "attendance_taker", "mezmur_attendance_taker",
+        "finance_dept", "material_dept", "hr_dept",
+        "teacher", "attendance_taker",
         "hr_attendance_taker", "content_editor",
     }
     declared = set(re.findall(r"^\s+'([a-z_]+)',\s*$", page, re.MULTILINE))
@@ -54,7 +54,6 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
         "material_dept": "admin/dashboards/material_department.php",
         "teacher": "admin/dashboards/teacher.php",
         "attendance_taker": "admin/dashboards/attendance_taker.php",
-        "mezmur_attendance_taker": "admin/dashboards/dept_taker.php",
         "hr_attendance_taker": "admin/dashboards/dept_taker.php",
         "content_editor": "admin/dashboards/content_editor.php",
     }
@@ -76,7 +75,6 @@ def test_every_supported_authenticated_role_reaches_one_common_page():
 
     for role, shell in {
         "finance_dept": "frontend/pages/finance_dept.php",
-        "mezmur_dept": "frontend/pages/mezmur_dept.php",
     }.items():
         shell_source = text(ROOT / shell)
         assert shell_source.count("ssms_app_url('admin/account.php')") == 2, role

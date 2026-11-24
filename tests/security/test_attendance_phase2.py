@@ -78,7 +78,6 @@ class Phase2StaticGuards(unittest.TestCase):
     def test_bell_targets_departments_hr_info_only(self):
         svc = read("admin/backend/services/AttendanceWarningService.php")
         self.assertIn("'edu' => 'edu_dept,hr_dept,info_dept'", svc)
-        self.assertIn("'mezmur' => 'mezmur_dept,hr_dept,info_dept'", svc)
         roles_block = re.search(r"BELL_ROLES = \[(.*?)\];", svc, re.S).group(1)
         self.assertNotIn("school_admin", roles_block)
         self.assertNotIn("super_admin", roles_block)
@@ -122,7 +121,7 @@ class Phase2StaticGuards(unittest.TestCase):
 
     def test_access_control_and_feature_gate_cover_new_endpoints(self):
         ac = read("admin/access_control.php")
-        self.assertIn("'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept']", ac)
+        self.assertIn("'api_attendance_warnings.php' => ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept']", ac)
         self.assertIn("'attendance_warnings.php' =>", ac)
         fg = read("admin/backend/services/FeatureGate.php")
         self.assertIn("'api_attendance_warnings.php' => 'attendance'", fg)
@@ -130,7 +129,7 @@ class Phase2StaticGuards(unittest.TestCase):
 
     def test_close_permissions_in_service_and_apis(self):
         svc = read("admin/backend/services/AttendanceWarningService.php")
-        self.assertIn("CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'info_dept'], 'mezmur' => ['mezmur_dept', 'hr_dept', 'info_dept']]", svc)
+        self.assertIn("CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'info_dept'], 'mezmur' => ['hr_dept', 'info_dept']]", svc)
         self.assertIn("roleMayClose", read("admin/api_attendance_warnings.php"))
         self.assertIn("roleMayClose", read("api/v1/routes/attendance_warnings.php"))
 
@@ -145,7 +144,7 @@ class Phase2StaticGuards(unittest.TestCase):
         self.assertNotIn("$conn->query", page)
 
     def test_dashboards_show_open_warnings_card(self):
-        for rel in ["admin/dashboards/info-dept.php", "admin/dashboards/hr-dept.php", "admin/dashboards/edu_dept.php", "frontend/pages/mezmur_dept.php"]:
+        for rel in ["admin/dashboards/info-dept.php", "admin/dashboards/hr-dept.php", "admin/dashboards/edu_dept.php"]:
             self.assertIn('id="aw-dashboard-card"', read(rel), rel)
         self.assertNotIn("At-risk Students", read("admin/dashboards/info-dept.php"))
         self.assertNotIn("At-risk Students", read("admin/dashboards/hr-dept.php"))
@@ -296,15 +295,10 @@ class Phase2LiveGuards(unittest.TestCase):
             txt = json.dumps(data["items"])
             m = GREG.search(txt)
             self.assertIsNone(m, (role, txt[max(0, (m.start() if m else 0) - 150):(m.end() if m else 0) + 30]))
-        status, data = self.s("mezmur_dept").get_json(f"/admin/api_attendance_warnings.php?action=list&member_id={self.MID}")
-        self.assertEqual(status, 200)
-        self.assertEqual(data["items"], [], "mezmur_dept must not see Education warnings")
-        status, data = self.s("mezmur_dept").get_json("/admin/api_attendance_warnings.php?action=list&department=edu")
-        self.assertEqual(status, 403)
         status, _ = self.s("teacher").get_json("/admin/api_attendance_warnings.php?action=list")
         self.assertEqual(status, 403)
         # admins read-only, other department never
-        for role in ["super_admin", "school_admin", "mezmur_dept"]:
+        for role in ["super_admin", "school_admin"]:
             status, data = self.s(role).post_json("/admin/api_attendance_warnings.php", {"action": "close", "id": wid, "outcome": "contacted"})
             self.assertEqual(status, 403, (role, data))
         self.assertEqual(db(f"SELECT status FROM attendance_warnings WHERE id={wid}"), "open")
@@ -355,9 +349,6 @@ class Phase2LiveGuards(unittest.TestCase):
         self.assertEqual(status, 403, data)
         sup = _mobile_token("super_admin")
         status, data = mobile(sup, "POST", f"/api/v1/attendance/warnings/{wid}/close", {"outcome": "contacted"})
-        self.assertEqual(status, 403, data)
-        mez = _mobile_token("mezmur_dept")
-        status, data = mobile(mez, "GET", f"/api/v1/attendance/warnings/{wid}")
         self.assertEqual(status, 403, data)
 
     # ── 4. mobile submit feeds the engine, drafts do not ──────────

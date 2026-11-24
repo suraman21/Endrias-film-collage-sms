@@ -13,21 +13,17 @@ void main() {
     );
   });
 
-  test('private durable inventory is domain-accurate and excludes hymns', () {
+  test('private durable inventory is domain-accurate', () {
     const inventory = LocalDataInventory(
       attendanceOperations: 2,
       communicationDrafts: 1,
       attentionOperations: 1,
       pausedOperations: 1,
-      sharedHymnOperations: 9,
     );
     // Attention and paused are reporting subsets, not extra operations.
     expect(inventory.privateDurableWork, 3);
     expect(inventory.hasPrivateDurableWork, isTrue);
-    expect(
-      const LocalDataInventory(sharedHymnOperations: 9).hasPrivateData,
-      isFalse,
-    );
+    expect(const LocalDataInventory().hasPrivateData, isFalse);
   });
 
   test('known prior owner blocks another user only for durable private work', () {

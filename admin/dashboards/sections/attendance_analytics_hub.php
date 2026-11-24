@@ -3,8 +3,8 @@
  * Shared Attendance Analytics Hub (Information + HR departments)
  * ----------------------------------------------------------------
  * Read-only analytics over the two independent attendance sources:
- * Education (classes, recorded by teachers) and Mezmur (sections,
- * recorded by Mezmur takers). HR attendance was retired 2026-10-07 —
+ * Education (classes, recorded by teachers).
+ * HR attendance was retired 2026-10-07 —
  * HR analyses the other departments' attendance here instead of
  * recording its own.
  *
@@ -25,7 +25,7 @@ $hubAssetVer = defined('SSMS_ASSET_VER') ? SSMS_ASSET_VER : '1';
                 <span class="w-7 h-7 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600"><i class="fa-solid fa-chart-column"></i></span>
                 <span>Attendance Analytics Hub</span>
             </h3>
-            <p class="text-xs text-slate-500 mt-1">Read-only analytics across Education &amp; Mezmur attendance. Compare departments — their data is never combined.</p>
+            <p class="text-xs text-slate-500 mt-1">Read-only analytics across Education attendance.</p>
         </div>
         <div class="flex items-center gap-2">
             <input id="ihFrom" type="date" onchange="AttendanceHub.reload()" aria-label="From date"
@@ -46,7 +46,7 @@ $hubAssetVer = defined('SSMS_ASSET_VER') ? SSMS_ASSET_VER : '1';
     <!-- Read-only governance notice -->
     <div class="mb-4 px-4 py-3 bg-cyan-50 border border-cyan-100 rounded-2xl text-xs text-cyan-900/80 flex items-start gap-2">
         <i class="fa-solid fa-eye mt-0.5"></i>
-        <span>This hub is <b>view-only</b>: the analysing department compares and exports — it never records or edits attendance. Education and Mezmur keep their own takers and their own data; HR attendance was retired. Last rollup refresh: <b id="ihGeneratedAt">—</b>.</span>
+        <span>This hub is <b>view-only</b>: the analysing department compares and exports — it never records or edits attendance. Education keeps its own teachers and its own data; HR attendance was retired. Last rollup refresh: <b id="ihGeneratedAt">—</b>.</span>
     </div>
 
     <!-- KPI band: one card per source (never merged) -->
@@ -86,7 +86,6 @@ $hubAssetVer = defined('SSMS_ASSET_VER') ? SSMS_ASSET_VER : '1';
             <h4 class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-magnifying-glass-chart mr-1 text-cyan-500"></i> Drill Down</h4>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="AttendanceHub.setSource('edu')" id="ihSrcEdu" class="ih-src px-3 py-1.5 text-xs font-semibold rounded-lg border transition">Education</button>
-                <button type="button" onclick="AttendanceHub.setSource('mezmur')" id="ihSrcMezmur" class="ih-src px-3 py-1.5 text-xs font-semibold rounded-lg border transition">Mezmur</button>
             </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">

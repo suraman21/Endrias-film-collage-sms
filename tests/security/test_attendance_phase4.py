@@ -8,7 +8,7 @@ Static pins (always run) — the formula lives in ONE place:
     (no 90 / 75 / 50 / 0.5 literals), resets rows instead of deleting them and
     is refreshed from AttendanceWarningService::safeEvaluateMany;
   * the API is GET-only, uses READ_ROLES + departmentsForRole, Ethiopian export;
-  * the four dashboards link the report; the Mezmur page stays style-free;
+  * the four dashboards link the report;
   * Reporting Centre bands, Education triage and the Information "At-risk"
     pane no longer carry their own thresholds / formulas.
 
@@ -124,14 +124,12 @@ class Phase4StaticGuards(unittest.TestCase):
 
     def test_four_dashboards_link_the_report(self):
         for rel in ("admin/dashboards/edu_dept.php", "admin/dashboards/hr-dept.php",
-                    "admin/dashboards/info-dept.php", "frontend/pages/mezmur_dept.php"):
+                    "admin/dashboards/info-dept.php"):
             src = read(rel)
             self.assertIn('id="am-dashboard-card"', src, rel)
             self.assertIn("/admin/attendance_monthly.php", src, rel)
-        self.assertEqual(read("frontend/pages/mezmur_dept.php").count("style="), 0)
         for rel in ("admin/dashboards/edu_dept.php", "admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php"):
             self.assertIn("AttendanceMonthRollupService::dashboardCard($conn", read(rel), rel)
-        self.assertIn("api_attendance_monthly.php?action=summary&department=mezmur", read("frontend/js/mezmur.js"))
 
     # ── unification ───────────────────────────────────────────────
 
@@ -140,7 +138,6 @@ class Phase4StaticGuards(unittest.TestCase):
         self.assertIn("require_once dirname(__DIR__) . '/services/AttendanceRiskService.php'", src)
         self.assertIn("AttendanceRiskService::LATE_WEIGHT", src)
         self.assertIn("SQL_ATTENDED_WEIGHTED_EDU", src)
-        self.assertIn("SQL_ATTENDED_WEIGHTED_MEZMUR", src)
         self.assertNotIn("SUM(a.status IN ('present','late')) AS attended", src)
         self.assertNotIn("SUM(x.status IN ('present','late')) AS attended", src)
         for literal in (">= 90 THEN 'excellent'", ">= 75 THEN 'good'", ">= 50 THEN 'fair'", "ea.sessions < 50)"):
@@ -206,7 +203,7 @@ class Phase4StaticGuards(unittest.TestCase):
         for rel in (self.SERVICE, self.API, self.PAGE, "admin/api_attendance_info.php",
                     "admin/backend/reporting/ReportRegistry.php", "admin/backend/services/ReportCardService.php",
                     "admin/backend/services/EducationAnalyticsService.php", "admin/dashboards/edu_dept.php",
-                    "admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php", "frontend/pages/mezmur_dept.php"):
+                    "admin/dashboards/hr-dept.php", "admin/dashboards/info-dept.php"):
             try:
                 r = subprocess.run(["php", "-l", str(ROOT / rel)], capture_output=True, text=True)
             except FileNotFoundError:
@@ -244,9 +241,7 @@ class Phase4LiveGuards(unittest.TestCase):
         dates = "','".join(cls.DATES)
         db(f"DELETE FROM attendance WHERE class_id={cls.CLASS_ID} AND attendance_date IN ('{dates}')")
         db(f"DELETE FROM grade_submissions WHERE submission_type='attendance' AND class_id={cls.CLASS_ID} AND attendance_date IN ('{dates}')")
-        db(f"DELETE FROM mezmur_attendance WHERE member_id={cls.MEZ} AND attendance_date IN ('{dates}')")
-        db(f"DELETE FROM mezmur_submissions WHERE attendance_date IN ('{dates}')")
-        db(f"DELETE FROM attendance_month_rollup WHERE ec_year={cls.EC_YEAR} AND ec_month={cls.EC_MONTH} AND member_id IN ({cls.EDU_A},{cls.EDU_B},{cls.MEZ})")
+        db(f"DELETE FROM attendance_month_rollup WHERE ec_year={cls.EC_YEAR} AND ec_month={cls.EC_MONTH} AND member_id IN ({cls.EDU_A},{cls.EDU_B})")
 
     @classmethod
     def setUpClass(cls):
@@ -261,8 +256,6 @@ class Phase4LiveGuards(unittest.TestCase):
         # packets: day0 submitted, day1 approved, day2 (none → legacy eligible), day3 REJECTED (excluded)
         db(f"INSERT INTO grade_submissions (teacher_id,class_id,academic_year_id,attendance_date,submission_type,status) VALUES "
            f"(3,{cls.CLASS_ID},1,'{d[0]}','attendance','submitted'),(3,{cls.CLASS_ID},1,'{d[1]}','attendance','approved'),(3,{cls.CLASS_ID},1,'{d[3]}','attendance','rejected')")
-        db(f"INSERT INTO mezmur_attendance (member_id,attendance_date,status) VALUES ({cls.MEZ},'{d[0]}','absent'),({cls.MEZ},'{d[1]}','late'),({cls.MEZ},'{d[2]}','absent')")
-
     @classmethod
     def tearDownClass(cls):
         cls._clean()
@@ -300,21 +293,6 @@ class Phase4LiveGuards(unittest.TestCase):
         self.assertEqual(data["summary"]["threshold"], 75.0)
         self.assertEqual(data["summary"]["min_sessions"], 3)
 
-    def test_02_mezmur_rollup_and_rejected_packet(self):
-        status, data = self._list("mezmur_dept", "mezmur")
-        self.assertEqual(status, 200, data)
-        row = {r["member_id"]: r for r in data["items"]}[self.MEZ]
-        self.assertEqual((row["sessions"], row["absent"], row["late"]), (3, 2, 1))
-        self.assertAlmostEqual(row["rate"], 16.67)
-        self.assertEqual(row["band"], "low")
-        self.assertEqual(row["group"], "ህጻናት")
-        # reject day1 sheet for the canonical section → late row disappears
-        db(f"INSERT INTO mezmur_submissions (attendance_date, section, taker_id, status, member_count, present_count, late_count, absent_count, excused_count) VALUES ('{self.DATES[1]}', 'ህጻናት', 8, 'rejected', 0, 0, 0, 0, 0)")
-        status, data = self._list("mezmur_dept", "mezmur")
-        row = {r["member_id"]: r for r in data["items"]}[self.MEZ]
-        self.assertEqual((row["sessions"], row["absent"], row["late"]), (2, 2, 0))
-        self.assertAlmostEqual(row["rate"], 0.0)
-
     def test_03_partial_refresh_resets_members_without_sessions(self):
         db(f"UPDATE grade_submissions SET status='rejected' WHERE class_id={self.CLASS_ID} AND submission_type='attendance' AND attendance_date IN ('{self.DATES[0]}','{self.DATES[1]}')")
         db(f"DELETE FROM attendance WHERE member_id={self.EDU_B} AND class_id={self.CLASS_ID} AND attendance_date='{self.DATES[2]}'")
@@ -335,14 +313,6 @@ class Phase4LiveGuards(unittest.TestCase):
         self.assertEqual(status, 200, data)
 
     def test_04_role_scoping_and_read_only(self):
-        status, data = self.s("edu_dept").get_json("/admin/api_attendance_monthly.php?action=list&department=mezmur")
-        self.assertEqual(status, 403, data)
-        status, data = self.s("mezmur_dept").get_json("/admin/api_attendance_monthly.php?action=list&department=edu")
-        self.assertEqual(status, 403, data)
-        for role in ("hr_dept", "info_dept", "school_admin", "super_admin"):
-            status, data = self.s(role).get_json("/admin/api_attendance_monthly.php?action=months&department=mezmur")
-            self.assertEqual(status, 200, (role, data))
-            self.assertEqual(data["departments"], ["edu", "mezmur"])
         status, data = self.s("teacher").get_json("/admin/api_attendance_monthly.php?action=months")
         self.assertIn(status, (401, 403), data)
         sess = self.s("hr_dept")
@@ -393,9 +363,6 @@ class Phase4LiveGuards(unittest.TestCase):
             self.assertEqual(status, 200, (role, path))
             self.assertIn(needle, text, (role, path))
             self.assertNotIn("Fatal error", text)
-        status, raw = self.s("hr_dept")._open(BASE + "/admin/attendance_monthly.php?department=mezmur")
-        self.assertEqual(status, 200)
-        self.assertIn("window.AM_CONFIG", raw.decode("utf-8", "replace"))
 
 
 if __name__ == "__main__":

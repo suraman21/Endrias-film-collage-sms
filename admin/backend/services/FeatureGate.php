@@ -14,7 +14,6 @@ final class FeatureGate
         'groups' => 'FEATURE_GROUPS',
         'finance' => 'FEATURE_FINANCE',
         'material' => 'FEATURE_MATERIAL',
-        'mezmur' => 'FEATURE_MEZMUR',
         'id_cards' => 'FEATURE_ID_CARDS',
         'attendance' => 'FEATURE_ATTENDANCE',
         'grades' => 'FEATURE_GRADES',
@@ -61,7 +60,7 @@ final class FeatureGate
     public static function mobileCapabilities(): array
     {
         $result = [];
-        foreach (['attendance', 'grades', 'finance', 'material', 'groups', 'id_cards', 'reports', 'mezmur', 'attendance_v2'] as $feature) {
+        foreach (['attendance', 'grades', 'finance', 'material', 'groups', 'id_cards', 'reports', 'attendance_v2'] as $feature) {
             $result[$feature] = self::isEnabled($feature);
         }
         return $result;
@@ -91,9 +90,6 @@ final class FeatureGate
             'api_material.php' => 'material',
             'material.php' => 'material',
             'material_department.php' => 'material',
-            'api_mezmur.php' => 'mezmur',
-            'mezmur.php' => 'mezmur',
-            'mezmur_dept.php' => 'mezmur',
             'api_attendance.php' => 'attendance',
             'attendance.php' => 'attendance',
             'api_attendance_info.php' => 'attendance',
@@ -126,7 +122,6 @@ final class FeatureGate
         return match ($resource) {
             'attendance' => 'attendance',
             'grades' => 'grades',
-            'mezmur' => 'mezmur',
             default => null,
         };
     }
@@ -136,7 +131,6 @@ final class FeatureGate
         return match ($role) {
             'finance_dept' => 'finance',
             'material_dept' => 'material',
-            'mezmur_dept' => 'mezmur',
             'attendance_taker' => 'attendance',
             default => null,
         };

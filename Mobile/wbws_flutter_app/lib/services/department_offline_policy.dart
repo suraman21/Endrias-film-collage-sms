@@ -1,13 +1,11 @@
 /// Department offline capability inventory.
 ///
-/// SSMS has exactly **two** offline attendance scopes:
+/// SSMS has exactly **one** offline attendance scope:
 /// * Education Department attendance — organized by **class**.
-/// * Mezmur Department attendance — organized by **section** (with
-///   `member_department_periods` when `attendance_v2` is enabled).
 ///
-/// Both are served by a single atomic endpoint `GET /attendance/preparation`
+/// It is served by a single atomic endpoint `GET /attendance/preparation`
 /// whose server-side predicate (`classRestricted` + `attendance_v2`) selects
-/// the authorized scope. One endpoint, two scopes — not three. Grades is the
+/// the authorized scope. Grades is the
 /// next department to go offline; all other departments remain online-only
 /// until a separate inventory lands.
 ///
@@ -20,9 +18,6 @@ library;
 enum OfflineDepartment {
   /// Education attendance — class-organized.
   educationAttendance,
-
-  /// Mezmur attendance — section-organized.
-  mezmurAttendance,
 
   /// Grades — to be added (A→B).
   grades,
@@ -45,7 +40,6 @@ class DepartmentOfflinePolicy {
 
   static const Set<OfflineDepartment> offlineEnabledToday = {
     OfflineDepartment.educationAttendance,
-    OfflineDepartment.mezmurAttendance,
     OfflineDepartment.grades,
   };
 

@@ -7,10 +7,9 @@
  * sources:
  *
  *   edu     class-based attendance recorded by teachers
- *   mezmur  section-based attendance recorded by mezmur takers
  *
  * HR attendance was retired on 2026-10-07 (writes 410) and removed as
- * a source on 2026-10-18: HR now analyses Education + Mezmur here.
+ * a source on 2026-10-18: HR now analyses Education here.
  * The hr_* tables stay in the database as a silent archive only.
  *
  * Product rules enforced here (2026-08-28):
@@ -29,11 +28,10 @@ require_once __DIR__ . '/MemberCategory.php';
 
 class InfoAnalyticsService
 {
-    public const SOURCES = ['edu', 'mezmur'];
+    public const SOURCES = ['edu'];
 
     public const SOURCE_LABELS = [
         'edu' => 'Education',
-        'mezmur' => 'Mezmur',
     ];
 
     /** Read budget: analytics queries never page past this. */
@@ -70,7 +68,7 @@ class InfoAnalyticsService
     }
 
     /**
-     * Rebuild attendance_rollup from the two source tables (Education, Mezmur).
+     * Rebuild attendance_rollup from the Education source table.
      * Transactional: the hub either sees the old model or the new
      * one, never a half-built state. Returns summary counts.
      */
@@ -105,61 +103,6 @@ class InfoAnalyticsService
                 $stmt->execute();
                 $inserted += (int)$conn->affected_rows;
                 $stmt->close();
-            }
-
-            // ── Mezmur: section sheets from its own tables (HR source removed 2026-10-18) ──
-            // Mezmur rows carry no section snapshot — the department
-            // derives it from COALESCE(NULLIF(TRIM(mb.current_section), ''), '—') / mb.age_group
-            // (its canonical expression via MemberCategory::sqlSectionExpr).
-            $mezmurSecExpr = MemberCategory::sqlSectionExpr('mb', 'current_section', 'age_group');
-            $subSecExpr = MemberCategory::sqlSectionExpr('s', 'section', 'section');
-
-            foreach ([['mezmur', 'mezmur_attendance', 'mezmur_submissions',
-                       "SELECT ?, m.attendance_date,
-                               $mezmurSecExpr,
-                               0,
-                               COUNT(*),
-                               COALESCE(SUM(m.status = 'present'), 0),
-                               COALESCE(SUM(m.status = 'late'), 0),
-                               COALESCE(SUM(m.status = 'absent'), 0),
-                               COALESCE(SUM(m.status = 'excused'), 0),
-                               0
-                        FROM `mezmur_attendance` m
-                        LEFT JOIN members mb ON mb.id = m.member_id
-                        GROUP BY m.attendance_date, $mezmurSecExpr"]] as [$source, $attTable, $subTable, $selectSql]) {
-                $stmt = $conn->prepare(
-                    "INSERT INTO attendance_rollup
-                        (source, rollup_date, group_key, packets, members_marked,
-                         present_count, late_count, absent_count, excused_count, approved_packets)
-                     $selectSql"
-                );
-                if ($stmt) {
-                    $stmt->bind_param('s', $source);
-                    $stmt->execute();
-                    $inserted += (int)$conn->affected_rows;
-                    $stmt->close();
-                }
-
-                // Packet counters (submissions per date+section).
-                $stmt = $conn->prepare(
-                    "INSERT INTO attendance_rollup
-                        (source, rollup_date, group_key, packets, approved_packets)
-                     SELECT ?, s.attendance_date,
-                            $subSecExpr,
-                            COUNT(*),
-                            COALESCE(SUM(s.status = 'approved'), 0)
-                     FROM `{$subTable}` s
-                     GROUP BY s.attendance_date,
-                              $subSecExpr
-                     ON DUPLICATE KEY UPDATE
-                        packets = VALUES(packets),
-                        approved_packets = VALUES(approved_packets)"
-                );
-                if ($stmt) {
-                    $stmt->bind_param('s', $source);
-                    $stmt->execute();
-                    $stmt->close();
-                }
             }
 
             $conn->commit();

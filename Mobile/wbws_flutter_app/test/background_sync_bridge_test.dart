@@ -26,9 +26,9 @@ import 'package:fkss_app/services/sync_service.dart';
 ///     mocked.
 ///   * No database is opened. `sqflite_common_ffi` is not a dev_dependency
 ///     and pubspec.yaml is frozen by F-19, so [LocalDb] is a fake. The actual
-///     `sync_attempts` row written for a background drain, and the hymn
+///     `sync_attempts` row written for a background drain, and the legacy
 ///     claim's own ledger write, are SQL-level facts proven against real
-///     SQLite by tests/security/test_mobile_hymn_attempt_ledger.py (A.7) and
+///     SQLite by tests/security/test_mobile_attempt_ledger.py (A.7) and
 ///     pinned by the mutation harness. What is proven HERE is that the
 ///     background label arrives at the claim boundary that writes them.
 ///   * Connectivity cannot be simulated (`ConnectivityService` is an
@@ -113,13 +113,7 @@ class _FakeDb implements LocalDb {
   Future<int> getPendingGradesCount() async => 0;
 
   @override
-  Future<int> getPendingMezmurCount() async => 0;
-
-  @override
   Future<int> getPendingHrCount() async => 0;
-
-  @override
-  Future<int> getPendingHymnOpsCount() async => 0;
 
   @override
   Future<OutboxInventory> getOutboxInventory({DateTime? now}) async =>

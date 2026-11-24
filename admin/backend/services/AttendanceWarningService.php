@@ -3,7 +3,7 @@
  * Attendance warnings (Attendance alerting — Phase 2).
  *
  * Idempotent evaluator run after every OFFICIAL attendance write (web sheet
- * save, mobile submit, Education edits, Mezmur submitted sheets, department
+ * save, mobile submit, Education edits, department
  * reactivation) and by the one-off rollout script. It reads the risk object
  * from AttendanceRiskService and the thresholds from AttendancePolicyService
  * and keeps `attendance_warnings` + `attendance_warning_events` in sync:
@@ -54,11 +54,11 @@ final class AttendanceWarningService
     ];
     public const NOTIFICATION_TYPE = 'attendance_warning';
     /** Roles that receive the bell per department (§8: never admins). */
-    public const BELL_ROLES = ['edu' => 'edu_dept,hr_dept,info_dept', 'mezmur' => 'mezmur_dept,hr_dept,info_dept'];
+    public const BELL_ROLES = ['edu' => 'edu_dept,hr_dept,info_dept'];
     /** Roles allowed to close, per department. Admins are read-only (§8). */
-    public const CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'info_dept'], 'mezmur' => ['mezmur_dept', 'hr_dept', 'info_dept']];
-    public const READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'];
-    private const DEPT_AM = ['edu' => 'ትምህርት ክፍል', 'mezmur' => 'መዝሙር ክፍል'];
+    public const CLOSE_ROLES = ['edu' => ['edu_dept', 'hr_dept', 'info_dept']];
+    public const READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'];
+    private const DEPT_AM = ['edu' => 'ትምህርት ክፍል'];
 
     /** @var array<int,bool> */
     private static array $tableCache = [];
@@ -105,8 +105,7 @@ final class AttendanceWarningService
     {
         return match ($role) {
             'edu_dept' => ['edu'],
-            'mezmur_dept' => ['mezmur'],
-            'hr_dept', 'info_dept', 'school_admin', 'super_admin' => ['edu', 'mezmur'],
+            'hr_dept', 'info_dept', 'school_admin', 'super_admin' => ['edu'],
             default => [],
         };
     }
@@ -482,7 +481,7 @@ final class AttendanceWarningService
 
     /**
      * Close with an outcome. $role is enforced here as well as in the API
-     * (edu_dept closes edu, mezmur_dept closes mezmur, hr/info both; admins
+     * (edu_dept closes edu, hr/info close edu; admins
      * never). @return array<string,mixed> the closed warning
      */
     public static function close(\mysqli $conn, int $id, string $outcome, string $note, int $actorId, string $role, ?SecurityAuditActor $auditActor = null): array

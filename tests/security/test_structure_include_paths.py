@@ -59,7 +59,6 @@ DYNAMIC_ALLOWLIST = {
     "api/v1/core/database.php": 4,
     "api/v1/index.php": 1,
     "api/v1/routes/attendance.php": 2,
-    "backend/api/mezmur.php": 3,
     "backend/config/loader.php": 2,
     # 2026-11-13: 5th link is require_once $_telegramEnvPath — a
     # deployment-local candidate secrets file (dirname(__DIR__) .

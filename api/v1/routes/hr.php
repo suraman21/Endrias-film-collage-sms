@@ -9,7 +9,7 @@
  *   2026-10-18  HR attendance history removed everywhere: the read
  *               endpoints (sections / days / sheet / submissions /
  *               submission) are retired too. HR now analyses the
- *               Education + Mezmur attendance through the shared
+ *               Education attendance through the shared
  *               Attendance Analytics Hub on the web dashboard.
  *
  * The hr_* tables stay in the database untouched (silent archive —
@@ -42,5 +42,5 @@ if ($method === 'POST' && $action === 'submission-review') {
 }
 
 // Reads (sections, days, sheet, submissions, submission) and anything else.
-err('HR attendance was retired. HR analyses the Education and Mezmur attendance in the web Analytics Hub instead.', 410,
+err('HR attendance was retired. HR analyses the Education attendance in the web Analytics Hub instead.', 410,
     ['code' => 'HR_ATTENDANCE_RETIRED', 'v' => HR_API_VERSION]);

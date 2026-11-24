@@ -5,8 +5,8 @@ import '../../widgets/notification_bell_button.dart';
 
 /// HR Attendance Taker home — RETIREMENT NOTICE (2026-10-07).
 ///
-/// HR no longer takes attendance: the department reads combined
-/// Education + Mezmur attendance reports on the school web dashboard
+/// HR no longer takes attendance: the department reads Education
+/// attendance reports on the school web dashboard
 /// instead. Existing taker accounts keep working (login, profile,
 /// notifications); the section-attendance screen is gone and the
 /// server answers 410 HR_ATTENDANCE_RETIRED to any old write.
@@ -53,7 +53,7 @@ class _HrTakerHomeScreenState extends State<HrTakerHomeScreen> {
                 const SizedBox(height: 10),
                 Text(
                   'HR no longer takes attendance. Attendance reports from the '
-                  'Education and Mezmur departments are on the school web '
+                  'Education department are on the school web '
                   'dashboard (HR → Attendance Reports). '
                   'Your account stays for signing in — there is no attendance '
                   'sheet to take anymore.',

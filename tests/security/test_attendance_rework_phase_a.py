@@ -1,8 +1,7 @@
 """Static + live-harness regression pins for the Attendance Rework Phase A.
 
 Contract under pin (product decision 2026-10-07, plan §4.2):
-- DRAFT saves (POST /api/v1/attendance, POST /api/v1/mezmur/sheet with
-  kind=draft) accept PARTIAL sheets and MERGE them: upsert only the
+- DRAFT saves (POST /api/v1/attendance) accept PARTIAL sheets and MERGE them: upsert only the
   submitted rows on the existing unique keys; never delete marks the
   payload did not mention. A teacher pausing mid-marking is a normal
   workflow state — the mobile app's instant autosave deliberately
@@ -32,12 +31,6 @@ class AttendanceReworkPhaseATests(unittest.TestCase):
             ROOT / "admin/backend/services/AttendanceRecordService.php"
         ).read_text(encoding="utf-8")
         cls.mobile_api = (ROOT / "api/v1/routes/attendance.php").read_text(
-            encoding="utf-8"
-        )
-        cls.mezmur_service = (
-            ROOT / "admin/backend/services/MezmurAttendanceService.php"
-        ).read_text(encoding="utf-8")
-        cls.mezmur_api = (ROOT / "api/v1/routes/mezmur.php").read_text(
             encoding="utf-8"
         )
         cls.admin_api = (ROOT / "admin/api_attendance.php").read_text(
@@ -125,17 +118,6 @@ echo json_encode($out);
         self.assertIn("DELETE FROM attendance WHERE class_id = ? AND attendance_date = ?", replace_block)
         self.assertIn("INSERT INTO attendance", replace_block)
 
-    def test_merge_lands_on_the_existing_unique_key(self):
-        # Evidence that the upsert has a unique key to land on (sql/013).
-        migration_013 = (ROOT / "sql/013_application_schema_completion.sql").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("uq_att_member_class_date", migration_013)
-        migration_023 = (ROOT / "sql/023_mezmur_date_attendance.sql").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("uq_mezmur_attendance_date_member", migration_023)
-
     # ── Mobile API route: draft merges, submit completes ──────────────────
 
     def test_mobile_api_draft_path_merges_partial_sheets(self):
@@ -165,41 +147,6 @@ echo json_encode($out);
         self.assertGreaterEqual(self.mobile_api.count("$conn->rollback();"), 4)
         self.assertIn("SubmissionService::upsertAttendance", self.mobile_api)
         self.assertNotIn("apiUpsertAttendanceRows", self.mobile_api)
-
-    # ── Mezmur: same split ────────────────────────────────────────────────
-
-    def test_mezmur_drafts_merge_and_submits_replace(self):
-        self.assertIn(
-            "bool $ownTransaction = true, bool $requireComplete = true",
-            self.mezmur_service,
-        )
-        # Foreign members are rejected in both modes.
-        self.assertIn(
-            "array_diff(array_keys($submitted), $roster) !== []",
-            self.mezmur_service,
-        )
-        self.assertIn(
-            "if ($requireComplete\n            && (count($submitted) !== count($roster)",
-            self.mezmur_service,
-        )
-        # Merge write exists and never deletes; delete stays complete-only.
-        self.assertIn("private static function upsertRows(", self.mezmur_service)
-        upsert_block = self.mezmur_service.split("private static function upsertRows(", 1)[1]
-        self.assertIn("ON DUPLICATE KEY UPDATE", upsert_block)
-        self.assertIn("uq_mezmur_attendance_date_member", self.mezmur_service)
-        self.assertIn("if ($requireComplete) {", self.mezmur_service)
-
-    def test_mezmur_route_passes_kind_to_service(self):
-        self.assertIn(
-            "$requireComplete = $packetStatus === MezmurSubmissionService::STATUS_SUBMITTED;",
-            self.mezmur_api,
-        )
-        self.assertIn(
-            "saveSectionSheet($conn, $date, $section, $records, (int)$auth['uid'], false, $requireComplete)",
-            self.mezmur_api,
-        )
-
-    # ── Complete-sheet callers untouched in Phase A ───────────────────────
 
     def test_web_taker_and_education_stay_complete_sheet_editors(self):
         # Web taker UX parity is Phase D; Education batch edits full sheets

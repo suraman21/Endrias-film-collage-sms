@@ -7,7 +7,7 @@
  * GET /sync/state?entity=attendance
  *     Current head revision and retention floor, without pulling rows.
  *
- * Follows the delta contract already proven by /mezmur/hymns/changes:
+ * Follows the delta contract already proven by the hymn changes feed:
  * the envelope is {items, next_cursor, server_time, has_more}. The
  * difference is the cursor — here it is `sync_changes.revision`, a
  * server-generated monotonic integer, so deletions and tables without

@@ -6,7 +6,7 @@ import 'package:fkss_app/screens/reviews/review_inbox_screen.dart';
 import 'package:fkss_app/widgets/paged_list_footer.dart';
 
 /// Phase 3 paging (APK 1.7.3+40): one footer for every capped list,
-/// the review inbox parses every server shape (mezmur sends items),
+/// the review inbox parses every server shape (hr sends items),
 /// and the capped screens ask the server for the next page.
 void main() {
   Widget host(Widget child) =>
@@ -71,7 +71,7 @@ void main() {
       expect(p.totalPages, 2);
     });
 
-    test('mezmur shape: data.items (was read as empty)', () {
+    test('hr shape: data.items (was read as empty)', () {
       final p = parseReviewPage({
         'items': [
           {'id': 9}

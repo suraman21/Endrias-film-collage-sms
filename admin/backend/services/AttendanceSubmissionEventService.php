@@ -5,7 +5,7 @@
  * for attendance submissions (Phase 3 of the attendance alerting
  * plan, requirements §5 "Audit").
  *
- * Why: grade_submissions / mezmur_submissions keep only the LAST
+ * Why: grade_submissions keep only the LAST
  * reviewer decision (reviewed_by / reviewed_at / review_notes) and
  * clear it when the taker resubmits. The requirement asks for "who
  * submitted, who reopened or rejected, when, and the reason" for
@@ -26,7 +26,7 @@ if (!function_exists('gregorian_to_ethiopian')) {
 
 final class AttendanceSubmissionEventService
 {
-    public const DEPARTMENTS = ['edu', 'mezmur'];
+    public const DEPARTMENTS = ['edu'];
 
     /** @var array<string,bool> */
     private static array $tableCache = [];

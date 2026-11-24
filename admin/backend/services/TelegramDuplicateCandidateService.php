@@ -123,7 +123,6 @@ final class TelegramDuplicateCandidateService
                 'age' => $age,
                 'phone_masked' => $phoneDisplay,
                 'education_level' => $eduStatus,
-                'mezmur_status' => '',
                 'current_section' => $secStatus,
                 'status' => (string)$row['status'],
                 'status_label' => $statusLabel,

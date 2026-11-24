@@ -92,8 +92,8 @@ class P1ADbContract(unittest.TestCase):
 
     def test_db_version_tracks_current(self):
         # v31 = P1-F's authorized education subjects-catalog table
-        # (v30 P1-E education classes, v29 P1-D review inbox, v28 P1-C
-        # mezmur days, v27 P1-B notifications). P1-A itself
+        # (v30 P1-E education classes, v29 P1-D review inbox, v27 P1-B
+        # notifications). P1-A itself
         # introduced no version bump or migration (its commit history
         # is unchanged). The current version is centralized in the
         # v34 schema contract and pinned by its migration harness.
@@ -186,7 +186,7 @@ class P1ADoNotTouch(unittest.TestCase):
         self.assertIn('throw StateError(', attendance)
         self.assertNotIn('.delete(', attendance)
         self.assertNotIn('await database', attendance)
-        for name in ('dropPendingGrades', 'dropPendingMezmur', 'dropPendingHr'):
+        for name in ('dropPendingGrades', 'dropPendingHr'):
             body = method_body(self.ldb, f'Future<void> {name}(')
             self.assertIn('sync_error IS NULL', body, name)
         body = method_body(

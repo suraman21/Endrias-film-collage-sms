@@ -31,7 +31,6 @@ NOTIF = os.path.join(APP, 'lib', 'screens', 'notifications',
                      'notification_center_screen.dart')
 MEMBERS = os.path.join(APP, 'lib', 'screens', 'members',
                        'member_list_screen.dart')
-MEZMUR_HOME = os.path.join(APP, 'lib', 'screens', 'mezmur', 'mezmur_home.dart')
 REVIEWS = os.path.join(APP, 'lib', 'screens', 'reviews',
                        'review_inbox_screen.dart')
 EDU_CLASSES = os.path.join(APP, 'lib', 'screens', 'edu_dept',
@@ -114,7 +113,7 @@ class P1FDatabase(unittest.TestCase):
         self.assertNotIn('DROP TABLE cached_edu_subjects', self.ldb)
         # Earlier phases' tables are untouched by the v31 step.
         for t in ('cached_edu_classes', 'cached_edu_class_rosters',
-                  'cached_review_packets', 'cached_mezmur_days',
+                  'cached_review_packets',
                   'cached_notifications'):
             self.assertIn(t, self.ldb)
         # No server migration was smuggled in for a mobile-only change.
@@ -312,7 +311,7 @@ class P1FDoNotTouch(unittest.TestCase):
         self.assertIn('throw StateError(', attendance)
         self.assertNotIn('.delete(', attendance)
         self.assertNotIn('await database', attendance)
-        for name in ('dropPendingGrades', 'dropPendingMezmur', 'dropPendingHr'):
+        for name in ('dropPendingGrades', 'dropPendingHr'):
             body = method_body(self.ldb, f'Future<void> {name}(')
             self.assertIn('sync_error IS NULL', body, name)
         sync = read(SYNC) + read(POLICY)
@@ -321,7 +320,7 @@ class P1FDoNotTouch(unittest.TestCase):
                       'classifyOutboxResponse'):
             self.assertIn(token, sync)
         # The subject cache has no relationship to the outbox.
-        for token in ('pending_mezmur', 'pending_attendance',
+        for token in ('pending_attendance',
                       'pending_grades', 'pending_hr'):
             self.assertNotIn(token, method_body(
                 self.ldb, 'Future<void> replaceCachedEduSubjects('))
@@ -361,14 +360,13 @@ class P1FDoNotTouch(unittest.TestCase):
         # P1-A..P1-E read flows still present and local-first.
         self.assertIn('getCachedNotifications', read(NOTIF))
         self.assertIn('getCachedMembers', read(MEMBERS))
-        self.assertIn('getCachedMezmurDays', read(MEZMUR_HOME))
         self.assertIn('getCachedReviewPackets', read(REVIEWS))
         classes = read(EDU_CLASSES)
         self.assertIn('getCachedEduClasses', classes)
         self.assertIn('getCachedEduClassRoster', classes)
         # Their tables and migration branches still exist.
         for t in ('cached_edu_classes', 'cached_edu_class_rosters',
-                  'cached_review_packets', 'cached_mezmur_days',
+                  'cached_review_packets',
                   'cached_notifications'):
             self.assertIn(t, self.ldb)
         self.assertIn('if (oldVersion < 28)', self.ldb)

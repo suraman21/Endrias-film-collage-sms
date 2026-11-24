@@ -8,8 +8,8 @@
  *                     critical_threshold, auto_deactivate, low_rate_threshold,
  *                     min_sessions}          → school_admin ONLY
  *
- * Reads: School Admin, Super Admin (read-only), HR, Information, Education,
- * Mezmur (so dashboards can show the thresholds in force).
+ * Reads: School Admin, Super Admin (read-only), HR, Information, Education
+ * (so dashboards can show the thresholds in force).
  * Validation: 1 ≤ standard < prolonged < critical ≤ 60, 0 < low-rate ≤ 100,
  * 1 ≤ min sessions ≤ 30. Every change is audited with old/new values.
  * Until FEATURE_ATTENDANCE_V2 is on and sql/071 is applied, `get` answers
@@ -40,7 +40,7 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
 
-const AP_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept', 'mezmur_dept'];
+const AP_READ_ROLES = ['super_admin', 'school_admin', 'hr_dept', 'info_dept', 'edu_dept'];
 const AP_WRITE_ROLES = ['school_admin'];
 if (!in_array($role, AP_READ_ROLES, true)) {
     $fail(403, 'You do not have permission to use this page.');
@@ -102,7 +102,7 @@ if (!$available) {
 }
 $dept = is_string($input['department'] ?? null) ? trim($input['department']) : '';
 if (!in_array($dept, AttendancePolicyService::DEPARTMENTS, true)) {
-    $fail(400, 'department must be edu or mezmur.');
+    $fail(400, 'department must be edu.');
 }
 $clean = [];
 $errors = AttendancePolicyService::validate($input, $clean);

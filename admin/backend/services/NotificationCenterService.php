@@ -40,11 +40,9 @@ final class NotificationCenterService
         'edu_dept'                => 'Education Dept',
         'finance_dept'            => 'Finance Dept',
         'material_dept'           => 'Material Dept',
-        'mezmur_dept'             => 'Mezmur Dept',
         'hr_dept'                 => 'HR Dept',
         'teacher'                 => 'Teacher',
         'attendance_taker'        => 'Attendance Taker',
-        'mezmur_attendance_taker' => 'Mezmur Attendance Taker',
         'hr_attendance_taker'     => 'HR Attendance Taker',
         'content_editor'          => 'Content Editor',
     ];
@@ -60,7 +58,6 @@ final class NotificationCenterService
         'school_admin' => ['*'],
         'edu_dept'     => ['teacher', 'attendance_taker', 'edu_dept'],
         'hr_dept'      => ['hr_attendance_taker', 'hr_dept'],
-        'mezmur_dept'  => ['mezmur_attendance_taker', 'mezmur_dept'],
     ];
 
     /**
@@ -77,8 +74,6 @@ final class NotificationCenterService
         'attendance_taker'        => ['edu_dept', 'school_admin', 'super_admin'],
         'hr_dept'                 => ['hr_attendance_taker', 'hr_dept', 'school_admin', 'super_admin'],
         'hr_attendance_taker'     => ['hr_dept', 'school_admin', 'super_admin'],
-        'mezmur_dept'             => ['mezmur_attendance_taker', 'mezmur_dept', 'school_admin', 'super_admin'],
-        'mezmur_attendance_taker' => ['mezmur_dept', 'school_admin', 'super_admin'],
         'info_dept'               => ['info_dept', 'school_admin', 'super_admin'],
         'finance_dept'            => ['finance_dept', 'school_admin', 'super_admin'],
         'material_dept'           => ['material_dept', 'school_admin', 'super_admin'],

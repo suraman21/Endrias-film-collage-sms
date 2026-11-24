@@ -191,7 +191,7 @@ class _AttendanceWarningDetailScreenState
         Wrap(spacing: 6, runSpacing: 4, children: [
           WarningPill(
               text: warningDepartmentLabel(w),
-              color: '${w['department']}' == 'mezmur' ? const Color(0xFF7C3AED) : AppTheme.info),
+              color: AppTheme.info),
           WarningPill(text: warningStageLabel(w), color: warningStageColor(w)),
           WarningPill(
               text: isOpen ? 'Open' : 'Closed',

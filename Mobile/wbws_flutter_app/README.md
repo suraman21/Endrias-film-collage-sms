@@ -22,7 +22,6 @@ Logout uses `SessionCoordinator`, not unconditional deletion:
 - With durable private work, the dialog offers **Cancel**, **Keep work & sign out** and **Discard permanently**.
 - Preservation enters same-account reauthentication and keeps private work and the app passcode. It does not authorize another user to inherit the work.
 - Explicit discard purges private caches/queues, credentials and passcode through a persisted cleanup state. Cleanup failures remain a protection/recovery condition, not successful erasure.
-- Shared hymn caches and queued hymn operations are deliberately retained for an authorized curator. They are not private-account work.
 - Authorization changes can pause old-scope work with count-only visibility. Restoring sign-in does not automatically make incompatible work writable.
 
 Implementation: [session_logout_dialog.dart](lib/widgets/session_logout_dialog.dart), [session_service.dart](lib/services/session_service.dart), `LocalDb.clearAllUserData()` in [local_db.dart](lib/services/local_db.dart). Detailed user controls and consequences are in [sync and recovery](../../docs/user_manual/SYNC_AND_RECOVERY.md).

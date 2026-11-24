@@ -1,8 +1,7 @@
 """HR attendance domain — RETIRED contract (server phase, 2026-10-07).
 
 Product decision (2026-10-07): HR no longer takes attendance; the
-department reads combined Education + Mezmur attendance reports
-instead. Server retirement (this phase):
+department no longer takes attendance. Server retirement (this phase):
 
   • Every write path returns an honest 410 with code
     HR_ATTENDANCE_RETIRED — recording (POST /api/v1/hr/sheet) and
@@ -81,7 +80,6 @@ class HrDomainContracts(unittest.TestCase):
         self.assertIn("['school_admin', 'super_admin']", self.sub)  # override is admin-only
         # non-approved decisions need a note for the taker
         self.assertIn("Write a short reason so the taker knows what to fix", self.sub)
-        # legacy rows-without-packet read as submitted (mezmur parity)
         self.assertIn("packetHasRows", self.sub)
         # audit wiring on the HR audit table
         self.assertIn("hr_attendance_audit", self.sub)
@@ -100,7 +98,7 @@ class HrDomainContracts(unittest.TestCase):
     # ── canReview is a department capability (2026-08-28 fix) ──
     def test_can_review_uses_review_roles_not_override(self):
         # Regression: canReview() used to delegate to staffCanOverride()
-        # (admin-only), which locked hr_dept / mezmur_dept out of their
+        # (admin-only), which locked hr_dept out of their
         # own review inboxes. Reviewing stays dept+admins; sheet-lock
         # overrides stay admin-only.
         for src in (self.sub,):
@@ -108,11 +106,6 @@ class HrDomainContracts(unittest.TestCase):
             body = src[idx:idx + 700]
             self.assertIn("REVIEW_ROLES", body)
             self.assertNotIn("return self::staffCanOverride", body)
-        mez = (ROOT / "admin/backend/services/MezmurSubmissionService.php").read_text(encoding="utf-8")
-        idx = mez.index("function canReview")
-        body = mez[idx:idx + 700]
-        self.assertIn("REVIEW_ROLES", body)
-        self.assertNotIn("return self::staffCanOverride", body)
 
 
 class HrEndpointContracts(unittest.TestCase):

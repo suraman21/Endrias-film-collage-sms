@@ -138,7 +138,7 @@ class Phase5StaticGuards(unittest.TestCase):
             self.assertIn(f"'{f}' =>", ac)
             self.assertIn(f"'{f}' => 'attendance'", fg)
         self.assertIn("'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept']", ac)
-        self.assertNotIn("'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept', 'mezmur_dept'", ac)
+        self.assertNotIn("'api_assessment_followups.php' => ['super_admin', 'school_admin', 'edu_dept', 'teacher', 'hr_dept', 'info_dept'", ac)
 
     def test_report_card_makeup_precedence_keeps_originals(self):
         src = read("admin/backend/services/ReportCardService.php")
@@ -285,7 +285,7 @@ class Phase5LiveGuards(unittest.TestCase):
             st, d = self.s(role).get_json(f"/admin/api_assessment_followups.php?action=detail&id={fid}")
             self.assertEqual(st, 200, (role, d))
             self.assertEqual(d["can_write"], role == "edu_dept", role)
-        for role in ("mezmur_dept",):
+        for role in ():
             st, d = self.s(role).get_json("/admin/api_assessment_followups.php?action=counts")
             self.assertEqual(st, 403, (role, d))
 
@@ -370,9 +370,6 @@ class Phase5LiveGuards(unittest.TestCase):
         st, d = mobile(ht, "GET", "/api/v1/grades/followups")
         self.assertEqual(st, 200, d)
         self.assertFalse(d["data"]["can_write"])
-        mt = mobile_token("mezmur_dept")
-        st, d = mobile(mt, "GET", "/api/v1/grades/followups")
-        self.assertEqual(st, 403, d)
 
 
 if __name__ == "__main__":

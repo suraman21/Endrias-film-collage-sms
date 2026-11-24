@@ -218,10 +218,10 @@ require_once __DIR__ . '/../backend/services/MemberCategory.php';
 // Attendance alerting Phase 2: open warnings per department (server-side, cheap GROUP BY).
 require_once __DIR__ . '/../backend/services/AttendanceWarningService.php';
 require_once __DIR__ . '/../backend/services/AttendanceMonthRollupService.php';
-// Attendance alerting Phase 4: current EC month roll-up (Education + Mezmur) for the "Monthly Attendance" card.
-$attendanceMonthCard = \App\Services\AttendanceMonthRollupService::dashboardCard($conn, ['edu', 'mezmur']);
+// Attendance alerting Phase 4: current EC month roll-up (Education) for the "Monthly Attendance" card.
+$attendanceMonthCard = \App\Services\AttendanceMonthRollupService::dashboardCard($conn, ['edu']);
 $attendanceWarningsAvailable = false;
-$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0], 'mezmur' => ['total' => 0, 'critical' => 0]];
+$attendanceWarningCounts = ['edu' => ['total' => 0, 'critical' => 0]];
 try {
     $attendanceWarningsAvailable = \App\Services\AttendanceWarningService::available($conn);
     if ($attendanceWarningsAvailable) {
@@ -1000,11 +1000,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         </div>
                         <?php if ($attendanceWarningsAvailable): ?>
                         <div class="mt-2 text-2xl sm:text-3xl font-bold" data-aw-total>
-                            <?= (int)$attendanceWarningCounts['edu']['total'] + (int)$attendanceWarningCounts['mezmur']['total'] ?>
+                            <?= (int)$attendanceWarningCounts['edu']['total'] ?>
                         </div>
                         <div class="mt-1 text-[11px] sm:text-xs opacity-90 flex gap-3 flex-wrap">
                             <span>Education <b data-aw-edu><?= (int)$attendanceWarningCounts['edu']['total'] ?></b><?php if ((int)$attendanceWarningCounts['edu']['critical'] > 0): ?> <span class="opacity-80">(<?= (int)$attendanceWarningCounts['edu']['critical'] ?> critical)</span><?php endif; ?></span>
-                            <span>Mezmur <b data-aw-mezmur><?= (int)$attendanceWarningCounts['mezmur']['total'] ?></b><?php if ((int)$attendanceWarningCounts['mezmur']['critical'] > 0): ?> <span class="opacity-80">(<?= (int)$attendanceWarningCounts['mezmur']['critical'] ?> critical)</span><?php endif; ?></span>
                         </div>
                         <?php else: ?>
                         <div class="mt-2 text-2xl sm:text-3xl font-bold">—</div>
@@ -1024,7 +1023,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <div class="mt-1 text-[11px] sm:text-xs opacity-90 flex gap-3 flex-wrap">
                             <span>below threshold</span>
                             <span>Education <b><?= (int)($attendanceMonthCard['per_dept']['edu']['below'] ?? 0) ?></b></span>
-                            <span>Mezmur <b><?= (int)($attendanceMonthCard['per_dept']['mezmur']['below'] ?? 0) ?></b></span>
                             <?php if ($attendanceMonthCard['avg_rate'] !== null): ?><span>avg <b><?= $attendanceMonthCard['avg_rate'] ?>%</b></span><?php endif; ?>
                         </div>
                         <?php else: ?>
@@ -2480,8 +2478,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             <!-- ATTENDANCE -->
             <!-- ════════════════════════════════════════════════════════
                  ATTENDANCE HISTORY — READ-ONLY. HR attendance was
-                 retired (2026-10-07): HR reads combined Education +
-                 Mezmur reports (Reports section) instead. Everything
+                 retired (2026-10-07): HR reads Education reports
+                 (Reports section) instead. Everything
                  recorded before the retirement stays readable here;
                  nothing can be written or reviewed anymore.
             ═════════════════════════════════════════════════════════ -->
@@ -2489,8 +2487,8 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                         <!-- REPORTS -->
             <section id="section-reports" class="content-section">
                 <!-- ════════════════════════════════════════════════════
-                     ATTENDANCE REPORTS — HR reads combined Education +
-                     Mezmur attendance (HR's own attendance was retired
+                     ATTENDANCE REPORTS — HR reads the Education
+                     attendance (HR's own attendance was retired
                      2026-10-07). Read-only, served by api_hr_reports.php.
                 ════════════════════════════════════════════════════ -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
@@ -2499,11 +2497,11 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <i class="fa-solid fa-calendar-check text-emerald-600"></i> Attendance Reports
                             </h2>
-                            <p class="text-xs text-slate-500 mt-1">HR analyses the attendance recorded by the Education and Mezmur departments — the same Analytics Hub the Information department uses. HR does not take attendance.</p>
+                            <p class="text-xs text-slate-500 mt-1">HR analyses the attendance recorded by the Education department — the same Analytics Hub the Information department uses. HR does not take attendance.</p>
                         </div>
                     </div>
 
-                    <!-- Shared Attendance Analytics Hub (Education + Mezmur) -->
+                    <!-- Shared Attendance Analytics Hub (Education) -->
                     <div class="p-5 sm:p-6">
                         <?php include __DIR__ . '/sections/attendance_analytics_hub.php'; ?>
                     </div>
@@ -4686,9 +4684,9 @@ async function clearCache() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   HrReports — combined Attendance Reports (Education + Mezmur).
+   HrReports — Attendance Reports (Education).
    HR's own attendance was retired (2026-10-07); the department
-   READS attendance taken by the other two departments instead.
+   READS attendance taken by the Education department instead.
    All reads go through the governed api_hr_reports.php endpoint.
 ════════════════════════════════════════════════════════════════ */
 const HrReports = (function () {
@@ -4771,7 +4769,6 @@ const HrReports = (function () {
             const m = d.member;
             const rows = []
                 .concat((d.education || []).map(r => ({ date: r.date, source: 'Education', label: r.class_name || '—', status: r.status })))
-                .concat((d.mezmur || []).map(r => ({ date: r.date, source: 'Mezmur', label: 'Section', status: r.status })))
                 .sort((a, b) => (a.date < b.date ? 1 : -1));
             let html = '<div class="bg-slate-50 rounded-2xl border border-slate-200 p-4">' +
                 '<div class="flex flex-wrap items-center gap-2 mb-3">' +

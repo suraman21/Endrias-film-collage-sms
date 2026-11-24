@@ -79,11 +79,6 @@ function apiClientAttemptId(): string {
 
 /** @return string|false Identical encoding for precommit and wire responses. */
 function apiEncodeJsonResponse(array $response) {
-    // Module version handshake (see routes/mezmur.php): lets clients
-    // detect a stale server and show an actionable update message.
-    if (defined('MEZMUR_API_VERSION') && !isset($response['server_meta'])) {
-        $response['server_meta'] = ['mezmur' => MEZMUR_API_VERSION];
-    }
     return json_encode($response, JSON_UNESCAPED_UNICODE);
 }
 

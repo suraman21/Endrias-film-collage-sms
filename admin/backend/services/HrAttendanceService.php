@@ -3,10 +3,9 @@
  * ════════════════════════════════════════════════════════════
  * HrAttendanceService — HR department section-based attendance.
  *
- * Mechanics clone of MezmurAttendanceService (date + section
- * sheets), on HR's OWN tables. Product rule (2026-08-28): HR
- * owns its takers (hr_attendance_taker) and its data; nothing
- * here is ever combined with Education or Mezmur records.
+ * Mechanics: date + section sheets, on HR's OWN tables. Product rule
+ * (2026-08-28): HR owns its takers (hr_attendance_taker) and its data;
+ * nothing here is ever combined with Education records.
  *
  * Only two role families touch this service:
  *   • hr_attendance_taker (+ hr_dept/admins) — record sheets

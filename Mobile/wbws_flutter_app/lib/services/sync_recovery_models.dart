@@ -6,10 +6,8 @@
 enum SyncRecoveryDomain {
   attendance,
   grades,
-  mezmur,
   hr,
   communication,
-  hymn,
 }
 
 enum SyncRecoveryActionResult {

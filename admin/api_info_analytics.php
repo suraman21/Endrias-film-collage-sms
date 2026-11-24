@@ -5,7 +5,7 @@
  * ════════════════════════════════════════════════════════════
  * The shared READ-ONLY attendance analytics hub (Information + HR
  * departments) over two independent attendance sources (Education
- * classes, Mezmur sections; HR attendance retired 2026-10-07 and
+ * classes; HR attendance retired 2026-10-07 and
  * removed as a source 2026-10-18). This endpoint is the single
  * governed surface for that hub:
  *
@@ -62,7 +62,7 @@ if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
 $adminId = (int)$_SESSION['admin_id'];
 $role = (string)($_SESSION['admin_role'] ?? '');
 // Read-only analytics: Information + HR departments + admins. No other role.
-// (HR analyses Education + Mezmur attendance since 2026-10-18; it never writes.)
+// (HR analyses Education attendance since 2026-10-18; it never writes.)
 if (!in_array($role, ['super_admin', 'school_admin', 'info_dept', 'hr_dept'], true)) {
     http_response_code(403);
     info_an_respond(['status' => 'error', 'message' => 'You do not have permission to view analytics.']);

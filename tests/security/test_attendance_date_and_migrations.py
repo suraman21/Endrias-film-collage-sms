@@ -214,38 +214,6 @@ class MigrationNumbersAreUnique(unittest.TestCase):
                       "(`academic_year_id`, `status`, `member_id`)", text)
         self.assertIn("RENUMBERED", text)
 
-    def test_mezmur_taxonomy_still_owns_030_and_is_still_referenced(self):
-        self.assertTrue((SQL / "030_mezmur_taxonomy.sql").exists())
-        api = (ROOT / "admin/api_mezmur.php").read_text(encoding="utf-8")
-        self.assertIn("sql/030_mezmur_taxonomy.sql", api)
-
-
-class MezmurMigrationOrdering(unittest.TestCase):
-    """Finding G."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.m033 = (SQL / "033_mezmur_single_title.sql").read_text(encoding="utf-8")
-
-    def test_033_declares_its_dependency_on_032(self):
-        self.assertIn("ORDERING REQUIREMENT", self.m033)
-        self.assertIn("032_mezmur_hymn_words.sql", self.m033)
-        self.assertIn("031_mezmur_hymn_title_unique.sql", self.m033)
-
-    def test_the_table_033_clears_is_created_by_032(self):
-        m032 = (SQL / "032_mezmur_hymn_words.sql").read_text(encoding="utf-8")
-        self.assertIn("CREATE TABLE IF NOT EXISTS mezmur_hymn_words", m032)
-        self.assertIn("mezmur_hymn_words", self.m033)
-
-    def test_033_fails_loudly_instead_of_half_applying(self):
-        self.assertIn("information_schema.TABLES", self.m033)
-        self.assertIn("BLOCKER", self.m033)
-        self.assertNotIn("\nDELETE FROM mezmur_hymn_words;", self.m033)
-
-    def test_ordering_is_documented_for_the_operator(self):
-        runbook = (ROOT / "docs/audits/DEPLOYMENT_RUNBOOK.md").read_text(encoding="utf-8")
-        self.assertIn("031 -> 032 -> 033", runbook)
-
 
 class ConditionalUniquesAreVisible(unittest.TestCase):
     """Finding H — safety preserved, silence removed."""
@@ -253,15 +221,13 @@ class ConditionalUniquesAreVisible(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.m018 = (SQL / "018_code_sequences_and_year_uniqueness.sql").read_text(encoding="utf-8")
-        cls.m031 = (SQL / "031_mezmur_hymn_title_unique.sql").read_text(encoding="utf-8")
         cls.pre = (SQL / "preflight/uniqueness_preflight.sql").read_text(encoding="utf-8")
 
     def test_duplicate_data_is_still_never_destroyed(self):
         """The whole point: these files must not resolve duplicates."""
-        for name, text in (("018", self.m018), ("031", self.m031), ("preflight", self.pre)):
+        for name, text in (("018", self.m018), ("preflight", self.pre)):
             with self.subTest(file=name):
                 self.assertNotRegex(text, r"(?i)\bDELETE\s+FROM\s+`?academic_years`?")
-                self.assertNotRegex(text, r"(?i)\bDELETE\s+FROM\s+`?mezmur_hymns`?")
                 self.assertNotRegex(text, r"(?i)\bDROP\s+TABLE\s+`?academic_years`?")
 
     def test_018_no_longer_skips_silently(self):
@@ -269,15 +235,8 @@ class ConditionalUniquesAreVisible(unittest.TestCase):
         self.assertIn("duplicate year_name value(s) exist", self.m018)
         self.assertIn("m018_verification", self.m018)
 
-    def test_031_distinguishes_blocked_from_already_present(self):
-        self.assertNotIn("duplicates present or index already exists", self.m031)
-        self.assertIn("already present", self.m031)
-        self.assertIn("BLOCKER", self.m031)
-        self.assertIn("mz31_verification", self.m031)
-
     def test_both_migrations_end_with_a_deterministic_verdict(self):
-        for name, text, index in (("018", self.m018, "uq_academic_years_year_name"),
-                                  ("031", self.m031, "uq_mezmur_hymns_title")):
+        for name, text, index in (("018", self.m018, "uq_academic_years_year_name"),):
             with self.subTest(file=name):
                 tail = text[text.rindex("SELECT CASE"):]
                 self.assertIn("information_schema", tail.lower())
@@ -289,11 +248,11 @@ class ConditionalUniquesAreVisible(unittest.TestCase):
         self.assertIn("TEMPORARY TABLE", self.pre)
         body = re.sub(r"--[^\n]*", "", self.pre)  # strip comments
         for forbidden in (r"\bUPDATE\s+`?members`?", r"\bINSERT\s+INTO\s+`?academic_years`?",
-                          r"\bDELETE\s+FROM\s+`?mezmur_hymns`?", r"\bALTER\s+TABLE"):
+                          r"\bALTER\s+TABLE"):
             self.assertNotRegex(body, forbidden)
 
     def test_preflight_covers_every_conditional_unique(self):
-        for constraint in ("uq_academic_years_year_name", "uq_mezmur_hymns_title",
+        for constraint in ("uq_academic_years_year_name",
                            "uq_ar_assessment_member", "uq_att_member_class_date"):
             with self.subTest(constraint=constraint):
                 self.assertIn(constraint, self.pre)

@@ -2,11 +2,11 @@
 /**
  * ════════════════════════════════════════════════════════════
  * ReviewTransitionPolicy — the ONE submission-packet review
- * state machine, shared by Education, HR and Mezmur.
+ * state machine, shared by Education and HR.
  *
  * Why this exists (audit 2026-10-02, findings A/B):
  * Education guarded reviewer decisions with
- * SubmissionService::reviewTransitionError(); HR and Mezmur did
+ * SubmissionService::reviewTransitionError(); HR did
  * not, so an already-approved packet could be flipped to
  * rejected (and vice versa) by replaying a review request.
  *
@@ -88,7 +88,7 @@ final class ReviewTransitionPolicy
      * approved one, …).
      *
      * $noun / $actor let each module speak its own vocabulary — Education
-     * reviews a "list" submitted by a "teacher"; HR and Mezmur review a
+     * reviews a "list" submitted by a "teacher"; HR reviews a
      * "packet" submitted by a "taker" — without forking the rule.
      *
      * $target is accepted for call-site clarity and future tightening; as

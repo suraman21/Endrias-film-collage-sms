@@ -352,7 +352,7 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     final n = '${s.subject} ${s.subjectEn ?? ''}'.toLowerCase();
     if (n.contains('bible') || n.contains('መጽሐፍ')) return Icons.menu_book_rounded;
     if (n.contains('liturg') || n.contains('ቅዳሴ')) return Icons.church_rounded;
-    if (n.contains('hymn') || n.contains('mezmur') || n.contains('መዝሙር') || n.contains('music')) {
+    if (n.contains('music') || n.contains('መዝሙር')) {
       return Icons.music_note_rounded;
     }
     if (n.contains('histor') || n.contains('ታሪክ')) return Icons.account_balance_rounded;

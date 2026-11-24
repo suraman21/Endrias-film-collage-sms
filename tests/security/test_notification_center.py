@@ -75,8 +75,8 @@ class NotificationCenterTests(unittest.TestCase):
     def test_service_covers_every_live_role(self):
         roles = re.search(r"ROLE_LABELS = \[(.*?)\];", self.svc, re.S).group(1)
         for role in ["super_admin", "school_admin", "info_dept", "edu_dept", "finance_dept",
-                     "material_dept", "mezmur_dept", "hr_dept", "teacher", "attendance_taker",
-                     "mezmur_attendance_taker", "hr_attendance_taker", "content_editor"]:
+                     "material_dept", "hr_dept", "teacher", "attendance_taker",
+                     "hr_attendance_taker", "content_editor"]:
             self.assertIn(f"'{role}'", roles, f"ROLE_LABELS missing {role} (stale-list bug)")
 
     def test_service_never_touches_session(self):
@@ -94,7 +94,7 @@ class NotificationCenterTests(unittest.TestCase):
         partners = re.search(r"MESSAGE_PARTNERS = \[(.*?)\n    \];", self.svc, re.S).group(1)
         teacher = re.search(r"'teacher'\s*=>\s*\[(.*?)\]", partners, re.S).group(1)
         self.assertNotIn("hr_dept", teacher)
-        self.assertNotIn("mezmur_dept", teacher)
+        self.assertNotIn(teacher)
 
     def test_workflow_delegates_and_keeps_signatures(self):
         for fn in ["function getUnreadNotifications($conn, $limit = 20)",
@@ -241,7 +241,7 @@ class NotificationCenterTests(unittest.TestCase):
         "admin/dashboards/edu_dept.php", "admin/dashboards/material_department.php",
         "admin/dashboards/teacher.php", "admin/dashboards/attendance_taker.php",
         "admin/dashboards/dept_taker.php", "admin/dashboards/content_editor.php",
-        "frontend/pages/finance_dept.php", "frontend/pages/mezmur_dept.php",
+        "frontend/pages/finance_dept.php",
     ]
 
     def test_all_dashboards_include_the_center(self):
@@ -255,11 +255,6 @@ class NotificationCenterTests(unittest.TestCase):
         self.assertNotIn("function toggleNotif", src)
         self.assertNotIn("id=\"notifDrop\"", src)
         self.assertNotIn("id=\"notifBtn\"", src)
-
-    def test_mezmur_shell_stays_pure_html(self):
-        """The mezmur shell pin (zero inline styles) must survive the bell."""
-        shell = (ROOT / "frontend/pages/mezmur_dept.php").read_text(encoding="utf-8")
-        self.assertEqual(shell.count("style="), 0, "bell must use classes, not inline styles")
 
     # ── 6. the two new pages ──────────────────────────────────
     def test_center_pages_exist_and_are_registered(self):
@@ -310,8 +305,7 @@ class NotificationCenterTests(unittest.TestCase):
         homes = ["teacher/teacher_home.dart", "att_taker/att_taker_home.dart",
                  "hr/hr_home.dart", "hr/hr_taker_home.dart", "admin/admin_home.dart",
                  "edu_dept/edu_home.dart", "info_dept/info_home.dart",
-                 "finance/finance_home.dart", "material/material_home.dart",
-                 "mezmur/mezmur_home.dart"]
+                 "finance/finance_home.dart", "material/material_home.dart"]
         for h in homes:
             src = (MOBILE / "screens" / h).read_text(encoding="utf-8")
             self.assertIn("NotificationBellButton", h + ": " + src[:0] if False else src,
@@ -444,7 +438,7 @@ class NotificationCenterTests(unittest.TestCase):
             self.assertIn("$NC_COMM_CTX", src)
 
     # ── 10. P73 Phase 2.1 — component isolation contract ────────
-    # (Incident: the mezmur & finance shells rendered white — the component
+    # (Incident: the finance shell rendered white — the component
     #  fataled on e() because frontend pages buffer their body BEFORE
     #  layouts/base.php loads config.php. Contract below = the fix.)
     def test_component_is_self_bootstrapping(self):
@@ -474,7 +468,7 @@ class NotificationCenterTests(unittest.TestCase):
         """Pin the architectural fact behind the incident: frontend shells
         include the component inside the buffered body, BEFORE requiring
         layouts/base.php — so the component MUST stay self-sufficient."""
-        for page in ("frontend/pages/mezmur_dept.php", "frontend/pages/finance_dept.php"):
+        for page in ("frontend/pages/finance_dept.php",):
             src = (ROOT / page).read_text(encoding="utf-8")
             self.assertLess(
                 src.index("notification_center.php"),
@@ -579,10 +573,10 @@ class CommPhase3Tests(unittest.TestCase):
         self.assertIn(".nc-msg", guard)
 
     def test_phase3_frontend_departments_integrate_the_section(self):
-        """mezmur + finance get the same in-place Communication section:
+        """finance gets the same in-place Communication section:
         one include + a data-comm-open opener, rendered into the page
         buffer before the base layout."""
-        for page in ("frontend/pages/mezmur_dept.php", "frontend/pages/finance_dept.php"):
+        for page in ("frontend/pages/finance_dept.php",):
             src = (ROOT / page).read_text(encoding="utf-8")
             self.assertIn("comm_section.php", src, f"{page} includes the shared section")
             self.assertIn('data-comm-open="inbox"', src, f"{page} exposes an opener")

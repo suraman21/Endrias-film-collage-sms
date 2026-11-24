@@ -11,7 +11,7 @@
  *               submission_detail, days_list, takers_list,
  *               submission_review, …) now answers 410
  *               HR_ATTENDANCE_RETIRED. HR analyses the Education +
- *               Mezmur attendance through the shared Attendance
+ *               Education attendance through the shared Attendance
  *               Analytics Hub (api_info_analytics.php) and the
  *               per-member view (api_hr_reports.php) instead.
  *
@@ -75,5 +75,5 @@ http_response_code(410);
 hr_att_respond([
     'status' => 'error',
     'code' => 'HR_ATTENDANCE_RETIRED',
-    'message' => 'HR attendance was retired. HR analyses the Education and Mezmur attendance in the Attendance Analytics Hub instead.',
+    'message' => 'HR attendance was retired. HR analyses Education attendance in the Attendance Analytics Hub instead.',
 ]);

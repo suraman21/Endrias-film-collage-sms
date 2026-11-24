@@ -58,7 +58,6 @@ def test_account_manual_preserves_explicit_logout_choices_and_scope():
         assert label in body
     assert "does not delete an accepted server record" in body
     assert "same account" in body
-    assert "Shared hymn operations are intentionally retained" in body
 
 
 def test_current_entry_docs_do_not_reintroduce_the_resolved_red_gate():

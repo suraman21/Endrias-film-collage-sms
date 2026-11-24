@@ -1,7 +1,7 @@
 """Information-department analytics hub — Phase C contracts (2026-08-28).
 
-Product rule: THREE independent attendance sources (Education classes,
-Mezmur sections, HR sections). Their data is NEVER combined and their
+Product rule: TWO independent attendance sources (Education classes,
+HR sections). Their data is NEVER combined and their
 takers are NEVER shared. The Information department is the main
 analytics hub but is strictly READ-ONLY: it analyzes, compares and
 exports — it never records or edits attendance.
@@ -32,8 +32,6 @@ ROOT = Path(__file__).resolve().parents[2]
 # source tables owned by the three departments — the hub must never write them
 SOURCE_TABLES = (
     "attendance",            # edu
-    "mezmur_attendance",
-    "mezmur_submissions",
     "hr_attendance",
     "hr_submissions",
 )
@@ -46,7 +44,7 @@ class RollupSchemaContracts(unittest.TestCase):
 
     def test_table_shape(self):
         self.assertIn("CREATE TABLE IF NOT EXISTS `attendance_rollup`", self.sql)
-        self.assertIn("ENUM('edu','mezmur','hr')", self.sql)
+        self.assertIn("ENUM('edu','hr')", self.sql)
         self.assertIn("uq_rollup_source_date_group", self.sql)
         self.assertIn("idx_rollup_source_date", self.sql)
         # source identity preserved on every row — no merged identity
@@ -62,7 +60,7 @@ class InfoAnalyticsServiceContracts(unittest.TestCase):
 
     def test_source_whitelist(self):
         # HR attendance retired 2026-10-07; dropped as a source 2026-10-18.
-        self.assertIn("public const SOURCES = ['edu', 'mezmur'];", self.src)
+        self.assertIn("public const SOURCES = ['edu'];", self.src)
         self.assertNotIn("'hr' => 'HR'", self.src)
         self.assertNotIn("FROM `hr_attendance`", self.src)
 
@@ -83,8 +81,7 @@ class InfoAnalyticsServiceContracts(unittest.TestCase):
                 f"analytics hub must never write `{table}`",
             )
 
-    def test_mezmur_section_derived_from_member_directory(self):
-        # mezmur_attendance has NO section column — derive from members
+    def test_edu_section_derived_from_member_directory(self):
         self.assertIn("COALESCE(NULLIF(TRIM(mb.current_section), ''), '—')", self.src)
 
     def test_edu_excludes_holiday_rows(self):

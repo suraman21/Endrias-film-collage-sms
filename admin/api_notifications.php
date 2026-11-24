@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── P73 Phase 6: rate limiting on WRITE actions (per user; DB-backed
-//    with file fallback — the same guard as mezmur / dept-takers).
+//    with file fallback — the same guard as the other write endpoints).
 //    Deliberately AFTER the CSRF gate (a forged request must not burn a
 //    real user's budget) and deliberately NOT on reads: an idle ETag
 //    poll must stay a zero-write request (see Phase 5).

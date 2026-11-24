@@ -22,7 +22,7 @@ if (in_array($action, ['operation-status', 'capabilities', 'write-context'], tru
 }
 
 // /attendance/warnings[/{id}[/close]] — department attendance warnings
-// (Phase 2). Its own role set (HR / Info / Edu / Mezmur / admins read;
+// (Phase 2). Its own role set (HR / Info / Edu / admins read;
 // department + HR + Info close) — handled before the taker/teacher gate.
 if (($ROUTE['id'] ?? '') === 'warnings') {
     require __DIR__ . '/attendance_warnings.php';

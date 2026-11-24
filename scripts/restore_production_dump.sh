@@ -12,11 +12,7 @@
 # it was not). The dump declares 42 foreign keys and appends them as ALTER
 # TABLE statements at the end, after all rows are loaded.
 #
-# Three of those 42 are violated by data that is actually in the dump:
-#
-#   fk_mhc_hymn      mezmur_hymn_categories.hymn_id     ->  mezmur_hymns.id
-#   fk_mhc_category  mezmur_hymn_categories.category_id ->  mezmur_categories.id
-#   fk_mhz_hymn      mezmur_hymn_zemarians.hymn_id      ->  mezmur_hymns.id
+# Some of those keys may be violated by data that is actually in the dump:
 #
 # A plain `mariadb db < dump.sql` therefore aborts at the first of them and
 # exits 1, having created 87 tables but only 31 of 42 constraints. Eight of
@@ -43,11 +39,10 @@
 # fails with errno 1452 in production, far from the restore that caused it.
 # A clean 39 is more honest than a dirty 42.
 #
-# It does not delete the orphaned rows. Reaching 42/42 requires removing 101
-# rows from mezmur_hymn_categories and 1 from mezmur_hymn_zemarians. Those
-# are retired references left behind by the taxonomy re-seed in sql/030 and
-# sql/034 -- but discarding user-owned records is an owner's decision, not a
-# restore script's. See docs/audits for the evidence and the open question.
+# It does not delete the orphaned rows. Reaching the full declared count
+# requires removing them -- but discarding user-owned records is an owner's
+# decision, not a restore script's. See docs/audits for the evidence and the
+# open question.
 #
 # INPUT FORMAT
 # Written for the phpMyAdmin export this project actually produces, where
@@ -81,15 +76,15 @@ fi
 # mismatch is a signal rather than something to paper over.
 EXPECTED_TABLES=87
 # Two inventories are legitimate, depending on whether the export predates
-# migration 055 (the mezmur orphan-link cleanup, audit finding R-2):
-#   39  export taken BEFORE 055 — three constraints are blocked by 102
-#       orphaned junction rows and are expected to be rejected.
-#   42  export taken AFTER 055 — the orphans are gone and every declared
-#       constraint validates. This is the target state.
+# the orphan-link cleanup (audit finding R-2):
+#   39  export taken BEFORE the cleanup — three constraints are blocked by
+#       102 orphaned junction rows and are expected to be rejected.
+#   42  export taken AFTER the cleanup — the orphans are gone and every
+#       declared constraint validates. This is the target state.
 # Anything else is a signal, not something to accept quietly.
-EXPECTED_FKS_PRE_055=39
-EXPECTED_FKS_POST_055=42
-KNOWN_VIOLATED=("fk_mhc_hymn" "fk_mhc_category" "fk_mhz_hymn")
+EXPECTED_FKS_PRE_CLEANUP=39
+EXPECTED_FKS_POST_CLEANUP=42
+KNOWN_VIOLATED=()
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -163,17 +158,17 @@ status=0
 [[ "$tables" == "$EXPECTED_TABLES" ]] || { echo "    MISMATCH: table count"; status=2; }
 
 case "$fks" in
-  "$EXPECTED_FKS_POST_055")
-    inventory="post-055 (orphan cleanup applied; every declared constraint validates)"
+  "$EXPECTED_FKS_POST_CLEANUP")
+    inventory="post-cleanup (orphan cleanup applied; every declared constraint validates)"
     if [[ "$rejected" -ne 0 ]]; then
       echo "    MISMATCH: 42 constraints present but ${rejected} were rejected"; status=2
     fi
     ;;
-  "$EXPECTED_FKS_PRE_055")
-    inventory="pre-055 (three constraints blocked by orphaned junction rows)"
+  "$EXPECTED_FKS_PRE_CLEANUP")
+    inventory="pre-cleanup (three constraints blocked by orphaned junction rows)"
     ;;
   *)
-    echo "    MISMATCH: expected ${EXPECTED_FKS_PRE_055} (pre-055) or ${EXPECTED_FKS_POST_055} (post-055), got ${fks}"
+    echo "    MISMATCH: expected ${EXPECTED_FKS_PRE_CLEANUP} (pre-cleanup) or ${EXPECTED_FKS_POST_CLEANUP} (post-cleanup), got ${fks}"
     inventory="unrecognised"; status=2
     ;;
 esac
@@ -191,7 +186,7 @@ for n in "${rejected_names[@]:-}"; do
   fi
 done
 
-if [[ "$status" -eq 0 && "$fks" == "$EXPECTED_FKS_POST_055" ]]; then
+if [[ "$status" -eq 0 && "$fks" == "$EXPECTED_FKS_POST_CLEANUP" ]]; then
   cat <<EOF
 
 RESTORE STATUS: PASS
@@ -201,11 +196,10 @@ EOF
 elif [[ "$status" -eq 0 ]]; then
   cat <<EOF
 
-RESTORE STATUS: PASS (expected inventory for a pre-055 export)
+RESTORE STATUS: PASS (expected inventory for a pre-cleanup export)
   87 tables, 39/42 foreign keys, no data modified.
-  3 constraints are absent because the exported data violates them:
-    fk_mhc_hymn, fk_mhc_category, fk_mhz_hymn
-  Apply sql/055_mezmur_orphan_link_cleanup.sql to reach 42/42.
+  Some declared constraints are absent because the exported data violates them.
+  Apply the orphan-link cleanup migration to reach the full count.
 EOF
 else
   echo

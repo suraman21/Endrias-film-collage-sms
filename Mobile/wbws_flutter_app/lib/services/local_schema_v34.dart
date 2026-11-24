@@ -2,7 +2,11 @@
 ///
 /// This file intentionally has no Flutter dependency. The runtime SQLite
 /// migration harness reads these declarations as its schema source of truth.
-const localDatabaseSchemaVersion = 43;
+///
+/// Current device schema version. 44 = v43 + the Mezmur removal cleanup
+/// (see local_schema_v44.dart); later contracts keep their own version
+/// constants and bump this one.
+const localDatabaseSchemaVersion = 44;
 
 const attendancePreparationSnapshotSql = '''
   CREATE TABLE IF NOT EXISTS attendance_preparation_snapshot (
@@ -179,7 +183,6 @@ const localSyncAttemptsV36IndexSql = <String>[
 const legacyOutboxTableSpecs = <LegacyOutboxTableSpec>[
   LegacyOutboxTableSpec('pending_attendance', ['class_id', 'date']),
   LegacyOutboxTableSpec('pending_grades', ['assessment_id']),
-  LegacyOutboxTableSpec('pending_mezmur', ['date', 'section']),
   LegacyOutboxTableSpec('pending_hr', ['date', 'section']),
 ];
 
@@ -202,15 +205,6 @@ const localV34ColumnSpecs = <LocalColumnSpec>[
   LocalColumnSpec('pending_grades', 'failed_at', "TEXT"),
   LocalColumnSpec('pending_grades', 'created_authorization_version', "INTEGER"),
   LocalColumnSpec('pending_grades', 'owner_user_id', 'INTEGER'),
-  LocalColumnSpec('pending_mezmur', 'sync_state', "TEXT NOT NULL DEFAULT 'pending'"),
-  LocalColumnSpec('pending_mezmur', 'attempt_count', "INTEGER NOT NULL DEFAULT 0"),
-  LocalColumnSpec('pending_mezmur', 'next_attempt_at', "TEXT"),
-  LocalColumnSpec('pending_mezmur', 'last_attempt_at', "TEXT"),
-  LocalColumnSpec('pending_mezmur', 'failure_code', "TEXT"),
-  LocalColumnSpec('pending_mezmur', 'failure_http_status', "INTEGER"),
-  LocalColumnSpec('pending_mezmur', 'failed_at', "TEXT"),
-  LocalColumnSpec('pending_mezmur', 'created_authorization_version', "INTEGER"),
-  LocalColumnSpec('pending_mezmur', 'owner_user_id', 'INTEGER'),
   LocalColumnSpec('pending_hr', 'sync_state', "TEXT NOT NULL DEFAULT 'pending'"),
   LocalColumnSpec('pending_hr', 'attempt_count', "INTEGER NOT NULL DEFAULT 0"),
   LocalColumnSpec('pending_hr', 'next_attempt_at', "TEXT"),
@@ -220,17 +214,6 @@ const localV34ColumnSpecs = <LocalColumnSpec>[
   LocalColumnSpec('pending_hr', 'failed_at', "TEXT"),
   LocalColumnSpec('pending_hr', 'created_authorization_version', "INTEGER"),
   LocalColumnSpec('pending_hr', 'owner_user_id', 'INTEGER'),
-  LocalColumnSpec('pending_hymn_ops', 'sync_state', "TEXT NOT NULL DEFAULT 'pending'"),
-  LocalColumnSpec('pending_hymn_ops', 'attempt_count', "INTEGER NOT NULL DEFAULT 0"),
-  LocalColumnSpec('pending_hymn_ops', 'next_attempt_at', "TEXT"),
-  LocalColumnSpec('pending_hymn_ops', 'last_attempt_at', "TEXT"),
-  LocalColumnSpec('pending_hymn_ops', 'failure_code', "TEXT"),
-  LocalColumnSpec('pending_hymn_ops', 'failure_http_status', "INTEGER"),
-  LocalColumnSpec('pending_hymn_ops', 'failed_at', "TEXT"),
-  LocalColumnSpec('pending_hymn_ops', 'created_authorization_version', "INTEGER"),
-  LocalColumnSpec('pending_hymn_ops', 'created_by_user_id', 'INTEGER'),
-  LocalColumnSpec('pending_hymn_ops', 'entity_key', 'TEXT'),
-  LocalColumnSpec('pending_hymn_ops', 'depends_on', 'INTEGER'),
   LocalColumnSpec('comm_outbox', 'last_attempt_at', 'TEXT'),
   LocalColumnSpec('comm_outbox', 'failure_code', 'TEXT'),
   LocalColumnSpec('comm_outbox', 'failure_http_status', 'INTEGER'),
@@ -254,24 +237,12 @@ const localV34IndexSql = <String>[
      ON pending_grades(owner_user_id, sync_state, next_attempt_at)''',
   '''CREATE INDEX IF NOT EXISTS idx_pending_grades_overlay
      ON pending_grades(assessment_id, synced, sync_state)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_mezmur_operation
-     ON pending_mezmur(client_op_id, sync_state, synced)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_mezmur_owner_due
-     ON pending_mezmur(owner_user_id, sync_state, next_attempt_at)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_mezmur_overlay
-     ON pending_mezmur(date, section, synced, sync_state)''',
   '''CREATE INDEX IF NOT EXISTS idx_pending_hr_operation
      ON pending_hr(client_op_id, sync_state, synced)''',
   '''CREATE INDEX IF NOT EXISTS idx_pending_hr_owner_due
      ON pending_hr(owner_user_id, sync_state, next_attempt_at)''',
   '''CREATE INDEX IF NOT EXISTS idx_pending_hr_overlay
      ON pending_hr(date, section, synced, sync_state)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_hymn_operation
-     ON pending_hymn_ops(client_op_id, sync_state, synced)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_hymn_due
-     ON pending_hymn_ops(sync_state, next_attempt_at, id)''',
-  '''CREATE INDEX IF NOT EXISTS idx_pending_hymn_dependency
-     ON pending_hymn_ops(depends_on, sync_state)''',
   '''CREATE INDEX IF NOT EXISTS idx_comm_outbox_owner_due
      ON comm_outbox(owner_user_id, state, next_attempt_at, created_at)''',
   '''CREATE INDEX IF NOT EXISTS idx_comm_outbox_thread_order
