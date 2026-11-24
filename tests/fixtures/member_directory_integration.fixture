@@ -187,13 +187,13 @@ foreach ($idCards['members'] as $member) {
 
 $archive = $service->search([
     'limit' => 50,
-    'archive_type' => 'permanent_archive',
+    'archive_reason' => 'transferred',
 ], 'info_dept', 'archive');
 if (count($archive['members']) !== 50 || $archive['next_cursor'] === null) {
     throw new RuntimeException('Archive directory was not bounded.');
 }
 foreach ($archive['members'] as $member) {
-    if ((int)$member['id'] % 8 !== 7 || !array_key_exists('archive_reason', $member)) {
+    if ((int)$member['id'] % 4 !== 3 || !array_key_exists('archive_reason', $member)) {
         throw new RuntimeException('Archive directory returned an invalid member.');
     }
     if (array_key_exists('phone_number', $member) || array_key_exists('student_photo_path', $member)) {

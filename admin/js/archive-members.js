@@ -6,7 +6,6 @@
     'use strict';
 
     var list = null;
-    var archiveType = '';
 
     var reasonLabels = {
         left_school: 'ከት/ቤት ወጥቷል',
@@ -72,25 +71,11 @@
 
     function getParams() {
         var p = { view: 'archive' };
-        if (archiveType) p.archive_type = archiveType;
+        var reasonFilter = el('archiveReasonFilter');
+        if (reasonFilter && reasonFilter.value) p.archive_reason = reasonFilter.value;
         var search = el('archiveSearch');
         if (search && search.value.trim()) p.q = search.value.trim();
         return p;
-    }
-
-    function switchTab(tabName) {
-        if (!['permanent_archive', 'failed_observation'].includes(tabName)) return;
-        archiveType = tabName;
-        var permanent = el('tab_permanent_archive'), failed = el('tab_failed_observation');
-        if (permanent && failed) {
-            permanent.className = tabName === 'permanent_archive'
-                ? 'px-4 py-2 text-sm font-semibold text-amber-700 border-b-2 border-amber-500'
-                : 'px-4 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-amber-700';
-            failed.className = tabName === 'failed_observation'
-                ? 'px-4 py-2 text-sm font-semibold text-amber-700 border-b-2 border-amber-500'
-                : 'px-4 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-amber-700';
-        }
-        if (list) list.reset();
     }
 
     function init() {
@@ -107,10 +92,8 @@
             pageSize: 50
         });
 
-        archiveType = el('tab_permanent_archive') ? 'permanent_archive' : '';
         window.loadArchivedMembers = function () { if (list) list.reset(); };
         window.filterArchivedMembers = function () { if (list) list.reset(); };
-        window.switchArchiveTab = switchTab;
 
         var search = el('archiveSearch');
         if (search) {

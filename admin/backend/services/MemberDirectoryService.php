@@ -67,7 +67,7 @@ final class MemberDirectoryService
 
     private const ARCHIVE_COLUMNS = [
         'id', 'member_code', 'student_name', 'father_name',
-        'current_section', 'age_group', 'archive_type', 'archive_reason', 'archived_at',
+        'current_section', 'age_group', 'archive_reason', 'archived_at',
     ];
 
     private PDO $connection;
@@ -190,7 +190,7 @@ final class MemberDirectoryService
         return $sections;
     }
 
-    /** @return array{q:string,registration_type:string,member_type:string,status:string,gender:string,age_group:string,current_section:string,city:string,education_level:string,archive_type:string,page:int,limit:int,cursor:int,sort:string,direction:string,include_total:bool,eligible_for_id_card:bool} */
+    /** @return array{q:string,registration_type:string,member_type:string,status:string,gender:string,age_group:string,current_section:string,city:string,education_level:string,archive_reason:string,page:int,limit:int,cursor:int,sort:string,direction:string,include_total:bool,eligible_for_id_card:bool} */
     private static function normalize(array $input): array
     {
         $text = static function ($value, int $max): string {
@@ -217,8 +217,9 @@ final class MemberDirectoryService
             // vs 'high_school') — unknown codes were silently unfiltered.
             // Canonical 12 codes, single-sourced from EducationLabels.
             'education_level' => $enum($input['education_level'] ?? '', EducationLabels::codes()),
-            'archive_type' => $enum($input['archive_type'] ?? '', [
-                'permanent_archive', 'failed_observation',
+            'archive_reason' => $enum($input['archive_reason'] ?? '', [
+                'left_school', 'graduated', 'transferred', 'inactive_long',
+                'failed_observation', 'deceased', 'other',
             ]),
             'membership_tier' => $enum($input['membership_tier'] ?? '', ['temporary', 'permanent']),
             // P0 search engine: ranked ID set from the cascade (array only,
@@ -289,7 +290,7 @@ final class MemberDirectoryService
             'current_section' => 'current_section',
             'city' => 'city',
             'education_level' => 'education_level',
-            'archive_type' => 'archive_type',
+            'archive_reason' => 'archive_reason',
         ];
         foreach ($filters as $key => $column) {
             if ($criteria[$key] !== '') {
