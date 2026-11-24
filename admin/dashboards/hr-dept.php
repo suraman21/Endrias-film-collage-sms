@@ -215,9 +215,11 @@ $e = static function (?string $s): string {
         }
 
         .nav-pill-active {
-            background: rgba(255, 255, 255, 0.20);
-            box-shadow: inset 3px 0 0 #fff;
+            background: rgba(255, 223, 0, 1);
+            color: #064e3b;
         }
+        .nav-pill-active .fa-solid { color: #064e3b; }
+        .nav-pill-active span { color: #064e3b; }
 
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -291,11 +293,11 @@ $e = static function (?string $s): string {
     <aside class="hidden md:flex sidebar-gradient school-sidebar text-white w-64 flex-col py-5 px-4">
         <div class="flex items-center mb-6">
             <div class="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-users-gear text-xl"></i>
+                <i class="fa-solid fa-id-card-clip text-xl"></i>
             </div>
             <div class="ml-3">
                 <div class="text-sm font-bold amharic-text">HR Department</div>
-                <div class="text-[11px] text-emerald-100 amharic-text"><?= SCHOOL_NAME_SHORT_AM ?> — የሰው ሀይል ክፍል</div>
+                <div class="text-[11px] text-emerald-100 amharic-text"><?= SCHOOL_NAME_SHORT_AM ?> የሰው ሀይል አስተዳደር (HR)</div>
             </div>
         </div>
 
@@ -362,29 +364,50 @@ $e = static function (?string $s): string {
             </a>
         </nav>
 
-        <div class="mt-4 pt-4 border-t border-white/15 text-[11px] text-emerald-100/80">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-circle-user"></i>
-                <span class="truncate"><?= e($userName) ?></span>
-            </div>
-            <div class="text-emerald-200/60 mt-0.5"><?= e($userRole) ?></div>
+        <div class="mt-5 space-y-2">
+            <?php
+            require_once __DIR__ . '/../components/sidebar_profile_item.php';
+            renderSidebarUserCard($userName, 'HR Dept', $todayFormatted ?? '', strtoupper(substr($userName, 0, 1)), 'linear-gradient(135deg,#059669,#10b981)');
+            ?>
+            <a href="/admin/logout.php"
+               class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/95 text-white text-xs font-semibold shadow hover:bg-red-600 transition">
+                <span>Logout</span>
+                <i class="fa-solid fa-power-off text-xs"></i>
+            </a>
         </div>
     </aside>
 
     <!-- Main -->
-    <main class="flex-1 min-w-0">
+    <div class="flex-1 flex flex-col">
 
-        <!-- Header (title + bell + user) -->
-        <div class="bg-emerald-800 text-white px-4 py-3 flex items-center justify-between shadow">
-            <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
-                    <i class="fa-solid fa-users-gear"></i>
-                </span>
+        <!-- Mobile top header -->
+        <div class="mobile-sticky-header md:hidden flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/15 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-circle-info text-lg"></i>
+                </div>
                 <div>
-                    <h1 class="text-sm sm:text-base font-bold amharic-text leading-tight">HR Department</h1>
-                    <p class="text-[10px] sm:text-[11px] text-emerald-100 amharic-text leading-tight">የሰው ሀይል ክፍል · ራተኞች</p>
+                    <div class="text-sm font-bold amharic-text">HR Department</div>
+                    <div class="text-[11px] text-emerald-100 amharic-text">የሰው ሀይል ክፍል · ራተኞች</div>
                 </div>
             </div>
+            <div class="text-right text-[11px]">
+                <div class="font-semibold"><?= e($todayFormatted) ?></div>
+                <div class="text-emerald-100"><?= e($userName) ?></div>
+            </div>
+        </div>
+
+        <header class="hidden md:flex bg-emerald-700 text-white px-3 sm:px-6 py-3 sm:py-4 items-center justify-between shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-circle-info text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold amharic-text">HR Department</h1>
+                    <p class="text-[11px] sm:text-xs text-emerald-100 amharic-text">የሰው ሀይል ክፍል · ራተኞች</p>
+                </div>
+            </div>
+
             <div class="flex items-center gap-3">
                 <?php
                 include __DIR__ . '/../components/notification_center.php';
@@ -398,9 +421,9 @@ $e = static function (?string $s): string {
                     <?= strtoupper(substr($userName, 0, 1)) ?>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="content-wrap p-4 sm:p-6 max-w-[1200px] mx-auto">
+        <main class="flex-1 p-3 sm:p-5 space-y-4 sm:space-y-5">
 
             <!-- ══════════════ DASHBOARD ══════════════ -->
             <section id="section-dashboard" class="content-section active">
@@ -748,11 +771,11 @@ $e = static function (?string $s): string {
                 </div>
             </section>
 
-        </div>
-    </main>
+        </main>
+    </div>
 
     <!-- Mobile bottom nav -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-emerald-800 text-white bottom-nav-shadow z-50 flex items-stretch justify-around px-1 py-1.5">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-emerald-700 text-white bottom-nav-shadow z-50 flex items-stretch justify-around px-1 py-1.5">
         <a href="#" data-section="dashboard" class="flex flex-col items-center min-w-[64px] px-2 py-1.5 rounded-xl mobile-touch-target">
             <i class="fa-solid fa-gauge text-sm"></i><span class="text-[9px] font-semibold mt-0.5">Dashboard</span>
         </a>
@@ -899,6 +922,9 @@ function toast(msg, isErr) {
 
 async function hrPost(url, data) {
     const fd = new FormData();
+    // Governed staff APIs (api_hr_staff*.php) validate the CSRF token on every
+    // request — including reads (month_get / list). Send it explicitly.
+    fd.append('csrf_token', CSRF_TOKEN);
     Object.keys(data).forEach(function (k) {
         if (data[k] !== undefined && data[k] !== null) fd.append(k, data[k]);
     });
