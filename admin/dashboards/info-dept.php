@@ -190,21 +190,6 @@ $recentMembers = array_map(function ($row) {
     ];
 }, $recentMembers);
 
-// ------------------------------------------------------------
-// Helpers: next student code (simple illustrative logic)
-// ------------------------------------------------------------
-function generate_next_member_code(mysqli $conn): string
-{
-    $res = db_fetch_all_assoc($conn, "SELECT member_code FROM members WHERE member_code IS NOT NULL AND member_code <> '' ORDER BY id DESC LIMIT 1");
-    $last = $res[0]['member_code'] ?? null;
-    if (!$last) return '0001';
-    $num = preg_replace('/\D/', '', $last);
-    $next = str_pad((int)$num + 1, 4, '0', STR_PAD_LEFT);
-    return $next;
-}
-
-$nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -987,12 +972,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <span>Auto Student ID</span>
                                 </h4>
 
-                                <p class="text-[11px] text-slate-500 mb-1">
-                                    Next Student ID:
-                                    <span id="nextMemberIdDisplay" class="font-semibold text-slate-800"><?= e($nextMemberCode) ?></span>
+                                <p class="text-[11px] text-slate-500">
+                                    Student IDs are random and unguessable — generated
+                                    automatically when the registration is saved.
                                 </p>
-
-                                <input type="hidden" name="student_id" id="studentIdField" value="">
                             </div>
 
                             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4">
@@ -2469,19 +2452,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         const hidden = document.getElementById('registrationTypeField');
         if (hidden) hidden.value = type;
 
-        const idDisplay = document.getElementById('nextMemberIdDisplay');
-        const idField = document.getElementById('studentIdField');
         const signedInput = document.getElementById('docSignedFormField');
-
-        // Waiting list: no ID + signed form not required
-        if (type === 'waiting') {
-            if (idDisplay) idDisplay.textContent = 'Pending';
-            if (idField) idField.value = '';
-        } else {
-            if (idDisplay) idDisplay.textContent = idDisplay.textContent || '<?= e($nextMemberCode) ?>';
-            if (idField) idField.value = idField.value || '<?= e($nextMemberCode) ?>';
-        }
-
         // Signed form required ONLY for transfer or direct
         if (signedInput) signedInput.required = (type === 'transfer' || type === 'direct');
 

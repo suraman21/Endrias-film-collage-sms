@@ -6,7 +6,7 @@
  * Every active member is (re)issued a v2 code:
  *   * prefix recomputed from CURRENT positions (v2 composition) or the
  *     category letter when the member holds none,
- *   * tail is a fresh random unique 5-digit number,
+ *   * tail is a fresh random unique 10-character string,
  *   * old code preserved in legacy_member_code + member_code_migrations,
  *   * QR image regenerated.
  *

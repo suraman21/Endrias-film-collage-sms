@@ -86,14 +86,16 @@ class MemberRegistrationContractTests(unittest.TestCase):
         identity = (
             ROOT / "admin/backend/services/IdentityCodeService.php"
         ).read_text()
-        # FORMAT v2 (ANALYSIS/08): {PREFIX}-{random unique 5-digit tail}.
+        # FORMAT v2 (ANALYSIS/08): {PREFIX}-{random unique 10-character tail}.
         # Uniqueness comes from the members.member_code UNIQUE key with a
         # bounded indexed probe — race-safe at six-figure rosters without
         # locks or sequential scans (which were retired with the old
         # per-category numbers).
         self.assertNotIn("GET_LOCK", identity)
         self.assertNotIn("MAX(CAST(SUBSTRING(member_code, 2) AS UNSIGNED))", identity)
-        self.assertIn("random_int(self::TAIL_MIN, self::TAIL_MAX)", identity)
+        self.assertIn("TAIL_ALPHABET", identity)
+        self.assertIn("self::randomTail()", identity)
+        self.assertNotIn("random_int(self::TAIL_MIN, self::TAIL_MAX)", identity)
         self.assertIn("STUDENT_REGEX", identity)
         self.assertIn("HEAD_MARKER = 'H'", identity)
         self.assertIn("ORDINARY_MARKER = 'N'", identity)

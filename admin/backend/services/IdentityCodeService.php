@@ -1,19 +1,22 @@
 <?php
 /**
- * Identity code allocation — FORMAT v2 (ANALYSIS/08).
+ * Identity code allocation — FORMAT v2, random tails v3.
  *
- * Every member code is `{PREFIX}-{5-digit tail}` where the tail is a
- * RANDOM UNIQUE number (10000-99999). Sequential per-category numbers
- * were retired by leadership decision; random tails never leak internal
- * database ids (the enumeration-safe practice used for public
- * identifiers at Google/Meta-scale products).
+ * Every member code is `{PREFIX}-{tail}` where the tail is a RANDOM
+ * UNIQUE 10-character string over an unambiguous alphabet (A–Z without
+ * I/O, digits 2–7): 30^10 ≈ 5,900,000,000,000,000 combinations, so a
+ * code is unguessable and never leaks internal database ids (the
+ * enumeration-safe practice used for public identifiers at
+ * Google/Meta-scale products). Sequential per-category numbers were
+ * retired by leadership decision; the older 5-digit random tail shape
+ * stays parseable — legacy codes are never renumbered automatically.
  *
- * Students:   {CategoryLetter}-{tail}                 → A-76392
+ * Students:   {CategoryLetter}-{tail}                 → A-K7M3Q4WX2F
  * Staff:      {FREE…}{DEPT}{H|N}{DEPT-POSITIONS}-{tail}
- *             DEDHT-98798  (Director + Education head + Teacher)
- *             DEDH-98798   (Director + Education head)
- *             DT-98798     (Director + Teacher, free positions)
- *             EDHT-83719   (Education head + Teacher)
+ *             DEDHT-K7M3Q4WX2F  (Director + Education head + Teacher)
+ *             DEDH-K7M3Q4WX2F   (Director + Education head)
+ *             DT-K7M3Q4WX2F     (Director + Teacher, free positions)
+ *             EDHT-K7M3Q4WX2F   (Education head + Teacher)
  *
  * Prefix composition order (single source of truth — composePrefix()):
  *   1. FREE positions (department_id NULL) in the order the Super Admin
@@ -45,8 +48,14 @@ require_once __DIR__ . '/MemberCategory.php';
 
 final class IdentityCodeService
 {
-    public const TAIL_MIN = 10000;
-    public const TAIL_MAX = 99999;
+    public const TAIL_LENGTH = 10;
+
+    /**
+     * Unambiguous alphabet (30 chars): A–Z minus I and O, digits 2–7 —
+     * no 0/O or 1/I lookalikes, so printed and dictated codes stay
+     * readable on ID cards.
+     */
+    public const TAIL_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ234567';
     private const MAX_ATTEMPTS = 16;
 
     public const HEAD_MARKER = 'H';
@@ -59,8 +68,14 @@ final class IdentityCodeService
      * FORMAT CONTRACT (the only parser/serializer in the codebase)
      * ================================================================ */
 
-    public const STUDENT_REGEX = '/^[ABC]-[1-9][0-9]{4}$/';
-    public const STAFF_REGEX   = '/^(?:[A-Z]{1,4})+-[1-9][0-9]{4}$/';
+    /**
+     * Two tail shapes are valid: the legacy 5-digit tail (codes issued
+     * before v3) and the current 10-character random tail. Both parse
+     * identically; only new issuances use the 10-character shape.
+     */
+    private const TAIL_PATTERN = '([1-9][0-9]{4}|[2-7A-HJ-NP-Z]{10})';
+    public const STUDENT_REGEX = '/^[ABC]-' . self::TAIL_PATTERN . '$/';
+    public const STAFF_REGEX   = '/^(?:[A-Z]{1,4})+-' . self::TAIL_PATTERN . '$/';
 
     /** Valid single-segment code token: 1-4 uppercase letters. */
     public static function isValidToken(string $token): bool
@@ -136,7 +151,7 @@ final class IdentityCodeService
      * ALLOCATION
      * ================================================================ */
 
-    /** Student code: category letter + random unique 5-digit tail. */
+    /** Student code: category letter + random unique 10-char tail. */
     public static function allocateStudent(\mysqli $conn, string $letter): string
     {
         if (!in_array($letter, MemberCategory::letters(), true)) {
@@ -145,7 +160,7 @@ final class IdentityCodeService
         return self::allocateWithPrefix($conn, $letter);
     }
 
-    /** Staff code: composed prefix + random unique 5-digit tail. */
+    /** Staff code: composed prefix + random unique 10-char tail. */
     public static function allocateStaff(\mysqli $conn, array $segments): string
     {
         $prefix = implode('', $segments);
@@ -153,6 +168,22 @@ final class IdentityCodeService
             throw new RuntimeException('Invalid staff code segments.');
         }
         return self::allocateWithPrefix($conn, $prefix);
+    }
+
+    /**
+     * CSPRNG tail: TAIL_LENGTH chars, each an unbiased pick from
+     * TAIL_ALPHABET (random_int over the exact index range — no
+     * modulo bias). 30^10 ≈ 5.9e14 possibilities: unguessable.
+     */
+    private static function randomTail(): string
+    {
+        $alphabet = self::TAIL_ALPHABET;
+        $last = strlen($alphabet) - 1;
+        $tail = '';
+        for ($i = 0; $i < self::TAIL_LENGTH; $i++) {
+            $tail .= $alphabet[random_int(0, $last)];
+        }
+        return $tail;
     }
 
     private static function allocateWithPrefix(\mysqli $conn, string $prefix): string
@@ -163,7 +194,7 @@ final class IdentityCodeService
         }
         try {
             for ($attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++) {
-                $code = $prefix . '-' . (string)random_int(self::TAIL_MIN, self::TAIL_MAX);
+                $code = $prefix . '-' . self::randomTail();
                 $statement->bind_param('s', $code);
                 if (!$statement->execute()) {
                     throw new RuntimeException('Could not verify code uniqueness.');
