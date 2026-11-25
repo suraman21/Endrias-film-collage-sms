@@ -78,8 +78,11 @@ __pycache__/
 /admin/var/search/*.index-shm
 /admin/var/search/*.index-journal
 
-# --- Composer deps (run composer install on deploy) ---
-/vendor/
+# --- Composer deps ---
+# vendor/ is TRACKED in this repo (not ignored): the project constitution
+# requires the autoloader to be present in every clone (acm/autoload.php
+# requires it unguarded; the FKSS platform repo tracks it the same way).
+# A fresh `git pull` is the only deploy step — no composer on the server.
 
 # --- Patch files / scratch ---
 *.patch
