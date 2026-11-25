@@ -66,7 +66,7 @@ class IdentityCodeIntegrityTests(unittest.TestCase):
 
     # ── M2 (format v2): codes issued via PositionSyncService ──
     # Sequential per-letter allocation was retired (ANALYSIS/08): codes
-    # are {PREFIX}-{random unique 5-digit tail}; uniqueness is enforced
+    # are {PREFIX}-{random unique 10-character tail}; uniqueness is enforced
     # by the members.member_code UNIQUE key with a bounded indexed probe,
     # so no locks/sequences are needed and registration delegates the
     # whole assignment to the single position-sync writer.
@@ -78,7 +78,10 @@ class IdentityCodeIntegrityTests(unittest.TestCase):
     def test_identity_service_v2_contract(self):
         self.assertIn("STUDENT_REGEX", self.identity)
         self.assertIn("STAFF_REGEX", self.identity)
-        self.assertIn("random_int(self::TAIL_MIN, self::TAIL_MAX)", self.identity)
+        # v3 tails: 10-char CSPRNG strings over an unambiguous alphabet
+        self.assertIn("TAIL_ALPHABET", self.identity)
+        self.assertIn("self::randomTail()", self.identity)
+        self.assertNotIn("random_int(self::TAIL_MIN, self::TAIL_MAX)", self.identity)
         self.assertNotIn("GET_LOCK", self.identity)
         self.assertNotIn("allocateStudentHeld", self.identity)
 

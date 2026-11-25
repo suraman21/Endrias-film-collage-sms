@@ -190,21 +190,6 @@ $recentMembers = array_map(function ($row) {
     ];
 }, $recentMembers);
 
-// ------------------------------------------------------------
-// Helpers: next student code (simple illustrative logic)
-// ------------------------------------------------------------
-function generate_next_member_code(mysqli $conn): string
-{
-    $res = db_fetch_all_assoc($conn, "SELECT member_code FROM members WHERE member_code IS NOT NULL AND member_code <> '' ORDER BY id DESC LIMIT 1");
-    $last = $res[0]['member_code'] ?? null;
-    if (!$last) return '0001';
-    $num = preg_replace('/\D/', '', $last);
-    $next = str_pad((int)$num + 1, 4, '0', STR_PAD_LEFT);
-    return $next;
-}
-
-$nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -526,9 +511,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                 
 
             
-
-
-
 
             <button data-section="attendance"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
@@ -907,7 +889,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <option value="direct">Direct</option>
                                 </select>
 
-
                                 <select id="filterStatus"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">Status (All)</option>
@@ -991,12 +972,10 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                     <span>Auto Student ID</span>
                                 </h4>
 
-                                <p class="text-[11px] text-slate-500 mb-1">
-                                    Next Student ID:
-                                    <span id="nextMemberIdDisplay" class="font-semibold text-slate-800"><?= e($nextMemberCode) ?></span>
+                                <p class="text-[11px] text-slate-500">
+                                    Student IDs are random and unguessable — generated
+                                    automatically when the registration is saved.
                                 </p>
-
-                                <input type="hidden" name="student_id" id="studentIdField" value="">
                             </div>
 
                             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4">
@@ -1201,13 +1180,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                         <p class="text-[10px] text-slate-400 mt-1">Separate First, Father, and Grandfather names with spaces</p>
                                     </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Christian Name (የክርስትና ስም)
-                                        </label>
-                                        <input type="text" name="baptismal_name"
-                                               class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-slate-200 text-xs placeholder:text-[11px] focus:ring-emerald-200 focus:border-emerald-400">
-                                    </div>
+                                    
 
                                     <div class="md:col-span-2">
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
@@ -1282,30 +1255,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            <i class="fa-solid fa-cross text-emerald-500 mr-1"></i>
-                                            Spiritual Education (የመንፈሳዊ ትምህርት ደረጃ)
-                                        </label>
-                                        <select name="spiritual_education"
-                                                class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-emerald-200 text-xs focus:ring-emerald-200 focus:border-emerald-400 bg-emerald-50">
-                                            <option value="">Select Level</option>
-                                            <option value="grade_1">1ኛ ክፍል (Grade 1)</option>
-                                            <option value="grade_2">2ኛ ክፍል (Grade 2)</option>
-                                            <option value="grade_3">3ኛ ክፍል (Grade 3)</option>
-                                            <option value="grade_4">4ኛ ክፍል (Grade 4)</option>
-                                            <option value="grade_5">5ኛ ክፍል (Grade 5)</option>
-                                            <option value="grade_6">6ኛ ክፍል (Grade 6)</option>
-                                            <option value="grade_7">7ኛ ክፍል (Grade 7)</option>
-                                            <option value="grade_8">8ኛ ክፍል (Grade 8)</option>
-                                            <option value="grade_9">9ኛ ክፍል (Grade 9)</option>
-                                            <option value="grade_10">10ኛ ክፍል (Grade 10)</option>
-                                            <option value="grade_11">11ኛ ክፍል (Grade 11)</option>
-                                            <option value="grade_12">12ኛ ክፍል (Grade 12)</option>
-                                            <option value="diploma">ዲፕሎማ (Diploma)</option>
-                                            <option value="degree">ዲግሪ (Degree)</option>
-                                        </select>
-                                    </div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -1579,14 +1529,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                                            class="block w-full text-xs text-slate-600">
                                 </div>
 
-                                <div>
-                                    <label class="block font-medium text-slate-700 mb-1">
-                                        Spiritual Education Document
-                                    </label>
-                                    <input type="file" name="doc_spiritual"
-                                           accept=".pdf,.doc,.docx,image/*"
-                                           class="block w-full text-xs text-slate-600">
-                                </div>
+                                
 
                                 <div>
                                     <label class="block font-medium text-slate-700 mb-1">
@@ -1761,8 +1704,6 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
                     <div id="archivedMembersPagination" class="mt-3 flex items-center justify-between gap-3" aria-live="polite"></div>
                 </div>
             </section>
-
-
 
             <!-- GROUPS -->
             <section id="section-groups" class="content-section">
@@ -2511,19 +2452,7 @@ $nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
         const hidden = document.getElementById('registrationTypeField');
         if (hidden) hidden.value = type;
 
-        const idDisplay = document.getElementById('nextMemberIdDisplay');
-        const idField = document.getElementById('studentIdField');
         const signedInput = document.getElementById('docSignedFormField');
-
-        // Waiting list: no ID + signed form not required
-        if (type === 'waiting') {
-            if (idDisplay) idDisplay.textContent = 'Pending';
-            if (idField) idField.value = '';
-        } else {
-            if (idDisplay) idDisplay.textContent = idDisplay.textContent || '<?= e($nextMemberCode) ?>';
-            if (idField) idField.value = idField.value || '<?= e($nextMemberCode) ?>';
-        }
-
         // Signed form required ONLY for transfer or direct
         if (signedInput) signedInput.required = (type === 'transfer' || type === 'direct');
 

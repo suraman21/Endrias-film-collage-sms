@@ -250,21 +250,6 @@ $recentMembers = array_map(function ($row) {
     ];
 }, $recentMembers);
 
-// ------------------------------------------------------------
-// Helpers: next student code (simple illustrative logic)
-// ------------------------------------------------------------
-function generate_next_member_code(mysqli $conn): string
-{
-    $res = db_fetch_all_assoc($conn, "SELECT member_code FROM members WHERE member_code IS NOT NULL AND member_code <> '' ORDER BY id DESC LIMIT 1");
-    $last = $res[0]['member_code'] ?? null;
-    if (!$last) return '0001';
-    $num = preg_replace('/\D/', '', $last);
-    $next = str_pad((int)$num + 1, 4, '0', STR_PAD_LEFT);
-    return $next;
-}
-
-$nextMemberCode = isset($conn) ? generate_next_member_code($conn) : '0001';
-
 $hrClasses = [];
 if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
     try {
@@ -415,7 +400,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             background: #ffffff;
             box-shadow: 0 8px 20px rgba(148, 163, 184, 0.35);
         }
-
 
         /* Family Link workspace */
         .fam-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem}
@@ -716,7 +700,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <span id="famQueueBadge" class="ml-auto hidden text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-900"></span>
             </a>
 
-
             <button data-section="manage"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
@@ -748,10 +731,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </span>
                 <span class="font-semibold">Groups</span>
             </a>
-
-
-
-
 
             <button type="button" onclick="return openDataSyncModal();"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
@@ -1143,7 +1122,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <option value="direct">Direct</option>
                                 </select>
 
-
                                 <select id="filterStatus"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">Status (All)</option>
@@ -1227,12 +1205,10 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <span>Auto Student ID</span>
                                 </h4>
 
-                                <p class="text-[11px] text-slate-500 mb-1">
-                                    Next Student ID:
-                                    <span id="nextMemberIdDisplay" class="font-semibold text-slate-800"><?= e($nextMemberCode) ?></span>
+                                <p class="text-[11px] text-slate-500">
+                                    Student IDs are random and unguessable — generated
+                                    automatically when the registration is saved.
                                 </p>
-
-                                <input type="hidden" name="student_id" id="studentIdField" value="">
                             </div>
 
                             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4 permanent-only">
@@ -1362,54 +1338,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                             </div>
                         </div>
 
-                        <?php
-                        // Identity v2: responsibilities come from the Super
-                        // Admin catalogue (departments + free positions).
-                        require_once __DIR__ . '/../backend/services/PositionSyncService.php';
-                        $idCat = \App\Services\PositionSyncService::catalogue($conn);
-                        ?>
-                        <div id="positionPickerSection"
-                             class="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 mb-4 permanent-only" data-conditional="positions">
-                            <h4 class="text-xs font-semibold text-amber-900 mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-lg bg-amber-200 flex items-center justify-center">
-                                    <i class="fa-solid fa-user-gear text-[10px]"></i>
-                                </span>
-                                <span>Positions &amp; Responsibilities (optional)</span>
-                            </h4>
-                            <p class="text-[11px] text-amber-800 mb-2">
-                                Available for regular and special regular students. Selected positions
-                                build the student's identity code (e.g. <span class="font-mono">DT-48291</span>)
-                                and keep the legacy role flags in sync automatically.
-                            </p>
-                            <?php if (empty($idCat['departments']) && empty($idCat['free'])): ?>
-                                <p class="text-[11px] text-amber-700">No positions defined yet — the Super Admin creates them under Identity &amp; Codes.</p>
-                            <?php else: ?>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-[11px]">
-                                <?php if (!empty($idCat['free'])): ?>
-                                <div class="col-span-full text-[10px] font-semibold text-amber-900 uppercase tracking-wide mt-1">School-wide positions</div>
-                                <?php foreach ($idCat['free'] as $pos): ?>
-                                    <label class="inline-flex items-center gap-2">
-                                        <input type="checkbox" name="position_ids[]" value="<?= (int)$pos['id'] ?>" class="rounded border-amber-300 text-amber-600">
-                                        <span class="eth"><?= htmlspecialchars($pos['title_am']) ?></span>
-                                        <span class="text-amber-600 font-mono">[<?= htmlspecialchars($pos['role_code']) ?>]</span>
-                                    </label>
-                                <?php endforeach; endif; ?>
-                                <?php
-                                $lastDept = null;
-                                foreach ($idCat['departments'] as $pos):
-                                    if ($pos['dept_code'] !== $lastDept):
-                                        $lastDept = $pos['dept_code']; ?>
-                                <div class="col-span-full text-[10px] font-semibold text-amber-900 uppercase tracking-wide mt-1"><?= htmlspecialchars($pos['dept_code']) ?> — <?= htmlspecialchars($pos['dept_am'] ?? '') ?></div>
-                                <?php endif; ?>
-                                    <label class="inline-flex items-center gap-2">
-                                        <input type="checkbox" name="position_ids[]" value="<?= (int)$pos['id'] ?>" class="rounded border-amber-300 text-amber-600">
-                                        <span class="eth"><?= htmlspecialchars($pos['title_am']) ?></span>
-                                        <span class="text-amber-600 font-mono">[<?= htmlspecialchars($pos['role_code']) ?>]</span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
                         <!-- Personal Info -->
                         <div class="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 mb-4">
                             <h4 class="text-xs font-semibold text-slate-800 mb-3 flex items-center gap-2">
@@ -1449,13 +1377,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         <p class="text-[10px] text-slate-400 mt-1">Separate First, Father, and Grandfather names with spaces</p>
                                     </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Christian Name (የክርስትና ስም)
-                                        </label>
-                                        <input type="text" name="baptismal_name"
-                                               class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-slate-200 text-xs placeholder:text-[11px] focus:ring-emerald-200 focus:border-emerald-400">
-                                    </div>
+                                    
 
                                     <div class="md:col-span-2">
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
@@ -1527,30 +1449,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         </select>
                                     </div>
 
-                                    <div class="permanent-only">
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            <i class="fa-solid fa-cross text-emerald-500 mr-1"></i>
-                                            Spiritual Education (የመንፈሳዊ ትምህርት ደረጃ)
-                                        </label>
-                                        <select name="spiritual_education"
-                                                class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-emerald-200 text-xs focus:ring-emerald-200 focus:border-emerald-400 bg-emerald-50">
-                                            <option value="">Select Level</option>
-                                            <option value="grade_1">1ኛ ክፍል (Grade 1)</option>
-                                            <option value="grade_2">2ኛ ክፍል (Grade 2)</option>
-                                            <option value="grade_3">3ኛ ክፍል (Grade 3)</option>
-                                            <option value="grade_4">4ኛ ክፍል (Grade 4)</option>
-                                            <option value="grade_5">5ኛ ክፍል (Grade 5)</option>
-                                            <option value="grade_6">6ኛ ክፍል (Grade 6)</option>
-                                            <option value="grade_7">7ኛ ክፍል (Grade 7)</option>
-                                            <option value="grade_8">8ኛ ክፍል (Grade 8)</option>
-                                            <option value="grade_9">9ኛ ክፍል (Grade 9)</option>
-                                            <option value="grade_10">10ኛ ክፍል (Grade 10)</option>
-                                            <option value="grade_11">11ኛ ክፍል (Grade 11)</option>
-                                            <option value="grade_12">12ኛ ክፍል (Grade 12)</option>
-                                            <option value="diploma">ዲፕሎማ (Diploma)</option>
-                                            <option value="degree">ዲግሪ (Degree)</option>
-                                        </select>
-                                    </div>
+                                    
 
                                     <div class="permanent-only md:col-span-2" data-conditional="class">
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
@@ -1860,14 +1759,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                            class="block w-full text-xs text-slate-600">
                                 </div>
 
-                                <div>
-                                    <label class="block font-medium text-slate-700 mb-1">
-                                        Spiritual Education Document
-                                    </label>
-                                    <input type="file" name="doc_spiritual"
-                                           accept=".pdf,.doc,.docx,image/*"
-                                           class="block w-full text-xs text-slate-600">
-                                </div>
+                                
 
                                 <div>
                                     <label class="block font-medium text-slate-700 mb-1">
@@ -1991,7 +1883,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <div id="famDrawerBody" class="fam-drawer-body"></div>
                 </div>
             </div>
-
 
             <!-- MANAGE (edit, archive) -->
             <section id="section-manage" class="content-section">
@@ -2856,7 +2747,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         if (fullName) setFormField(f, 'full_name_am', fullName);
         // Direct 1:1 mappings (student column -> form field)
         var direct = [
-            ['baptismal_name','baptismal_name'],
             ['gender','gender'],
             ['age_group','age_group'],
             ['current_section','current_section'],
@@ -2875,7 +2765,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             ['block_number','block_number'],
             ['house_number','house_number'],
             ['education_level','education_level'],
-            ['spiritual_education','spiritual_education'],
             ['member_code','student_id']
         ];
         direct.forEach(function (pair) {
@@ -2951,19 +2840,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const hidden = document.getElementById('registrationTypeField');
         if (hidden) hidden.value = type;
 
-        const idDisplay = document.getElementById('nextMemberIdDisplay');
-        const idField = document.getElementById('studentIdField');
         const signedInput = document.getElementById('docSignedFormField');
-
-        // Waiting list: no ID + signed form not required
-        if (type === 'waiting') {
-            if (idDisplay) idDisplay.textContent = 'Pending';
-            if (idField) idField.value = '';
-        } else {
-            if (idDisplay) idDisplay.textContent = idDisplay.textContent || '<?= e($nextMemberCode) ?>';
-            if (idField) idField.value = idField.value || '<?= e($nextMemberCode) ?>';
-        }
-
         // Signed form required ONLY for transfer or direct
         if (signedInput) signedInput.required = (type === 'transfer' || type === 'direct');
 
@@ -2999,12 +2876,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         const tier = (document.getElementById('membershipTierField') || {}).value || 'permanent';
         const isHonorary = (memberType === 'honorary');
         const isTemporary = (tier === 'temporary');
-        // Positions section: only for regular/special_regular AND permanent tier
-        const posSec = document.getElementById('positionPickerSection');
-        if (posSec) {
-            if (isHonorary || isTemporary) posSec.classList.add('hidden');
-            else posSec.classList.remove('hidden');
-        }
         // Class assignment: hidden for honorary (already permanent-only gated for tier)
         document.querySelectorAll('[data-conditional="class"]').forEach(el => {
             if (isHonorary) el.classList.add('hidden');

@@ -144,8 +144,8 @@ foreach (MemberCategory::letters() as $idcLetter) {
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-arrows-rotate"></i> Format v2 renumbering</h3>
             <p style="font-size:.8rem;color:#cbd5e1;margin:.4rem 0 .8rem">
-                Issues the new code shape to every student: students <span class="idc-codechip">A-76392</span>,
-                staff <span class="idc-codechip">DEDHT-98798</span> with a fresh random 5-digit tail.
+                Issues the new code shape to every student: students <span class="idc-codechip">A-K7M3Q4WX2F</span>,
+                staff <span class="idc-codechip">DEDHT-K7M3Q4WX2F</span> with a fresh random 10-character tail (A–Z without I/O, digits 2–7).
                 Old codes are preserved in <span class="idc-codechip" style="font-size:.68rem">legacy_member_code</span>,
                 QR images regenerated. Already-correct codes are skipped (safe to re-run).
             </p>

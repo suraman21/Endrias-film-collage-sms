@@ -1,7 +1,7 @@
 <?php
 /**
  * Format-v2 identity code migration — renumbers every active member to
- * `{PREFIX}-{random 5-digit tail}` and regenerates ID-card QR images.
+ * `{PREFIX}-{random 10-char tail}` and regenerates ID-card QR images.
  *
  * Usage (CLI ONLY, from the deployment root):
  *   php admin/tools/migrate_identity_codes.php --dry-run
