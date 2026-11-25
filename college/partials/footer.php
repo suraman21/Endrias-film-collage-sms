@@ -133,16 +133,42 @@ $EFC_TIER_LINKS = ['tl1', 'tl2', 'tl3', 'tl4', 'tl5', 'tl6'];
                 onScroll();
             }
             // Lightweight scroll-reveal (stands in for framer-motion).
-            var items = document.querySelectorAll('.efc-reveal');
-            if ('IntersectionObserver' in window && items.length) {
-                var io = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (en) {
-                        if (en.isIntersecting) { en.target.classList.add('efc-in'); io.unobserve(en.target); }
-                    });
-                }, { threshold: 0.12 });
-                items.forEach(function (el) { io.observe(el); });
-            } else {
-                items.forEach(function (el) { el.classList.add('efc-in'); });
+            // Content is visible by default; we only hide sections that sit BELOW
+            // the initial viewport, then fade them in on scroll. If anything fails,
+            // nothing stays hidden — the page is never left blank.
+            var revealItems = Array.prototype.slice.call(document.querySelectorAll('.efc-reveal'));
+            if (revealItems.length) {
+                var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (reduceMotion) {
+                    revealItems.forEach(function (el) { el.classList.add('efc-in'); });
+                } else {
+                    var vh = window.innerHeight || document.documentElement.clientHeight;
+                    var toReveal = [];
+                    try {
+                        revealItems.forEach(function (el) {
+                            if (el.getBoundingClientRect().top > vh) { el.classList.add('efc-hidden'); toReveal.push(el); }
+                        });
+                    } catch (e) { toReveal = []; }
+                    if (toReveal.length) {
+                        // Safety net scheduled before observer setup: even if the
+                        // observer throws, no section is ever left hidden.
+                        setTimeout(function () {
+                            toReveal.forEach(function (el) { el.classList.remove('efc-hidden'); el.classList.add('efc-in'); });
+                        }, 1500);
+                        if ('IntersectionObserver' in window) {
+                            var io = new IntersectionObserver(function (entries) {
+                                entries.forEach(function (en) {
+                                    if (en.isIntersecting) {
+                                        en.target.classList.remove('efc-hidden');
+                                        en.target.classList.add('efc-in');
+                                        io.unobserve(en.target);
+                                    }
+                                });
+                            }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+                            toReveal.forEach(function (el) { io.observe(el); });
+                        }
+                    }
+                }
             }
         })();
     </script>

@@ -55,11 +55,16 @@ body { overflow-x: hidden; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Lightweight scroll-reveal (stands in for framer-motion section fades) */
-.efc-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+/* Lightweight scroll-reveal (stands in for framer-motion section fades).
+   Content is visible by default; JS adds .efc-hidden to below-the-fold sections
+   and swaps it for .efc-in as they scroll into view. If JS fails, nothing is
+   ever hidden, so the page can never be left blank. */
+.efc-reveal { transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+.efc-reveal.efc-hidden { opacity: 0; transform: translateY(24px); }
 .efc-reveal.efc-in { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) {
-  .efc-reveal { opacity: 1; transform: none; transition: none; }
+  .efc-reveal { transition: none; }
+  .efc-reveal.efc-hidden { opacity: 1; transform: none; }
 }
 
 /* Gentle vertical float (crest medallion) */
