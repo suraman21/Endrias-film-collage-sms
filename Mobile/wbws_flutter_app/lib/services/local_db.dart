@@ -4669,6 +4669,16 @@ class LocalDb {
     });
   }
 
+  /// Coerces a local SQLite value to [int]. INTEGER columns come back as
+  /// ints, but legacy rows and REAL/TEXT columns can surface other types,
+  /// so parse defensively (null / non-numeric → 0).
+  static int _asIntLocal(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    final parsed = int.tryParse('$value'.trim());
+    return parsed ?? 0;
+  }
+
   static int? _nullablePositiveInt(Object? value) {
     final parsed = _asIntLocal(value);
     return parsed > 0 ? parsed : null;
