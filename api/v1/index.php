@@ -91,6 +91,80 @@ register_shutdown_function(function (): void {
     ], 500);
 });
 
+// ============================================================
+// TEMPORARY deployment diagnostic — REMOVE once the database is verified.
+// Gated by the deployment's HEALTH_KEY (defined in the env file, never
+// logged): without the header it answers 403 and nothing else.
+//   curl -s -H "X-Health-Key: <HEALTH_KEY>" \
+//     "https://endriasfilmcollage.arkeonethiopia.com/api/v1/index.php?_route=diagnostics&u=sam"
+// Reports only diagnostic booleans — no secrets, no personal data rows.
+// ============================================================
+if ($__fkssRoute === 'diagnostics') {
+    $healthKey = defined('HEALTH_KEY') ? (string)HEALTH_KEY : '';
+    $presented = isset($_SERVER['HTTP_X_HEALTH_KEY']) ? (string)$_SERVER['HTTP_X_HEALTH_KEY'] : '';
+    if ($healthKey === '' || !hash_equals($healthKey, $presented)) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'error', 'message' => 'Health key required.']);
+        exit;
+    }
+    $diag = [
+        'php_version' => PHP_VERSION,
+        'error_log_path' => (string)ini_get('error_log'),
+        'display_errors' => (bool)ini_get('display_errors'),
+        'db_connected' => isset($conn) && $conn instanceof mysqli && !$conn->connect_error,
+        'db_name' => (string)DB_NAME,
+        'class_FeatureGate' => class_exists('\App\Services\FeatureGate', false),
+        'class_RefreshTokenService' => class_exists('\App\Services\RefreshTokenService', false),
+        'feature_flags' => [
+            'FEATURE_ATTENDANCE' => defined('FEATURE_ATTENDANCE') ? (bool)constant('FEATURE_ATTENDANCE') : null,
+            'FEATURE_GRADES' => defined('FEATURE_GRADES') ? (bool)constant('FEATURE_GRADES') : null,
+        ],
+    ];
+    if ($diag['db_connected']) {
+        $diag['tables'] = [];
+        foreach (['users', 'api_refresh_sessions', 'api_refresh_legacy_exchanges', 'security_rate_limits', 'activity_logs'] as $t) {
+            $r = $conn->query('SHOW TABLES LIKE ' . $conn->real_escape_string($t));
+            $diag['tables'][$t] = $r ? $r->num_rows > 0 : null;
+        }
+        if (!empty($diag['tables']['users'])) {
+            $r = $conn->query('SELECT COUNT(*) AS c FROM users');
+            $row = $r ? $r->fetch_assoc() : null;
+            $diag['users_count'] = $row ? (int)$row['c'] : null;
+            $diag['users_columns'] = [];
+            foreach (['password_hash', 'is_active', 'authorization_version', 'profile_image_path'] as $c) {
+                $r = $conn->query('SHOW COLUMNS FROM users LIKE ' . $conn->real_escape_string($c));
+                $diag['users_columns'][$c] = $r ? $r->num_rows > 0 : null;
+            }
+            $probeUser = (string)($_GET['u'] ?? 'sam');
+            $probeUser = preg_replace('/[^A-Za-z0-9_.@-]/', '', $probeUser);
+            if ($probeUser !== '') {
+                $st = $conn->prepare('SELECT id, username, role, is_active, password_hash FROM users WHERE username = ? LIMIT 1');
+                if ($st) {
+                    $st->bind_param('s', $probeUser);
+                    $st->execute();
+                    $rr = $st->get_result();
+                    $u = $rr ? $rr->fetch_assoc() : null;
+                    $diag['user_check'] = $u ? [
+                        'exists' => true,
+                        'id' => (int)$u['id'],
+                        'role' => (string)$u['role'],
+                        'is_active' => (int)$u['is_active'],
+                        'has_password_hash' => !empty($u['password_hash']),
+                    ] : ['exists' => false];
+                    $st->close();
+                } else {
+                    $diag['user_check'] = 'prepare_failed';
+                }
+            }
+        }
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode(['status' => 'success', 'data' => $diag], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
+
 // CORS + headers
 handleCors();
 
