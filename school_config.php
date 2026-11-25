@@ -33,7 +33,7 @@ define('SCHOOL_NAME', 'Endrias Film College');
 define('SCHOOL_NAME_SHORT', 'EFC');
 
 // Full Amharic name (shown in landing page, reports, ID cards)
-define('SCHOOL_NAME_AMHARIC', 'የኤኑዹሪያስ ፊልም ኮሌጅ');
+define('SCHOOL_NAME_AMHARIC', 'እንድርያስ የፊልም ኮሌጅ');
 
 // Short Amharic name (shown in sidebar subtitles, compact labels)
 define('SCHOOL_NAME_SHORT_AM', 'ኤኑዹሪያስ');

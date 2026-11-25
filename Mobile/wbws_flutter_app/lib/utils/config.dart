@@ -11,7 +11,7 @@ class AppConfig {
       apiBaseUrl.replaceFirst(RegExp(r'/api/v1$'), '');
 
   static const String appName = 'Endrias FC';
-  static const String appNameAmharic = 'የኤኑዹሪያስ ፊልም ኮሌጅ';
+  static const String appNameAmharic = 'እንድርያስ የፊልም ኮሌጅ';
   // ⚠ SINGLE SOURCE OF TRUTH for the update system: the app compares
   // THESE values against the server's .fkss_app_release.php — pubspec.yaml's
   // version only feeds the Android package version. They MUST stay in sync

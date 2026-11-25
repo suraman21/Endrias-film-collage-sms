@@ -26,6 +26,12 @@ $__attendanceRecordService = __DIR__ . '/../../../admin/backend/services/Attenda
 if (is_file($__attendanceRecordService)) {
     require_once $__attendanceRecordService;
 }
+// Server-authoritative deployment feature capabilities (index.php gates
+// attendance/grades with it on every request — without this require the
+// class is missing and the whole API fatals with a generic 500).
+if (is_file(__DIR__ . '/../../../admin/backend/services/FeatureGate.php')) {
+    require_once __DIR__ . '/../../../admin/backend/services/FeatureGate.php';
+}
 if (is_file(__DIR__ . '/../../../admin/backend/services/AttendanceWarningService.php')) {
     require_once __DIR__ . '/../../../admin/backend/services/AttendanceWarningService.php';
 }

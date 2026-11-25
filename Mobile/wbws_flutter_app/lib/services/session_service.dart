@@ -527,6 +527,25 @@ class SessionCoordinator extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  /// A login failure is one of three things; each gets its own wording:
+  /// network (no route to the server), server 5xx (the server is up but
+  /// crashed — usually setup, and now carries a traceable reference in the
+  /// server's own message), or a normal validation answer (401/403/429...).
+  String _loginFailureMessage(ApiResponse response) {
+    final base = (response.message ?? '').trim();
+    if (response.isNetworkError || response.statusCode == 0) {
+      return 'Could not reach the school server. '
+          'Check your internet connection and try again.';
+    }
+    if (response.statusCode >= 500) {
+      return base.isEmpty
+          ? 'The school server is still setting up (server error). '
+              'Try again in a few minutes.'
+          : '$base';
+    }
+    return base.isEmpty ? 'Login failed.' : base;
+  }
+
   Future<LoginActivationResult> login(
       String username, String password) async {
     if (_busy) {
@@ -551,7 +570,7 @@ class SessionCoordinator extends ChangeNotifier with WidgetsBindingObserver {
       if (!response.success) {
         return LoginActivationResult(
           LoginActivationState.rejected,
-          message: response.message ?? 'Login failed.',
+          message: _loginFailureMessage(response),
         );
       }
       final candidate = _api.bundleFromLoginResponse(response);

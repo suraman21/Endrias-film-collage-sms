@@ -69,8 +69,12 @@ if ($action === 'login' && $method === 'POST') {
     $stmt = $conn->prepare($selectSql);
     if (!$stmt) err('Database error', 500);
     $stmt->bind_param('ss', $username, $username);
-    $stmt->execute();
-    $user = $stmt->get_result()->fetch_assoc();
+    if (!$stmt->execute()) {
+        $stmt->close();
+        err('Database error', 500);
+    }
+    $result = $stmt->get_result();
+    $user = $result ? $result->fetch_assoc() : null;
     $stmt->close();
     
     if (!$user || !password_verify($password, $user['password_hash'])) {

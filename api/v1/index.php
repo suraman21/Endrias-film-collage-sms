@@ -69,16 +69,26 @@ require_once __DIR__ . '/core/middleware.php';
 // Keep infrastructure diagnostics in server logs. Mobile clients always receive
 // a stable JSON contract rather than PHP/MySQL exception text or an HTML error.
 set_exception_handler(function (Throwable $error): void {
-    reportInternalError('Unhandled API v1 exception', $error);
-    apiSendJson(['status' => 'error', 'message' => 'The service could not complete the request.'], 500);
+    $reference = reportInternalError('Unhandled API v1 exception', $error);
+    apiSendJson([
+        'status' => 'error',
+        'message' => 'The service could not complete the request. If the problem persists, share reference ' . $reference . ' with the administrator.',
+        'code' => 'INTERNAL_ERROR',
+        'reference' => $reference,
+    ], 500);
 });
 register_shutdown_function(function (): void {
     $error = error_get_last();
     if (!$error || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
         return;
     }
-    reportInternalError('Fatal API v1 error', $error['message'] ?? 'fatal error');
-    apiSendJson(['status' => 'error', 'message' => 'The service could not complete the request.'], 500);
+    $reference = reportInternalError('Fatal API v1 error', $error['message'] ?? 'fatal error');
+    apiSendJson([
+        'status' => 'error',
+        'message' => 'The service could not complete the request. If the problem persists, share reference ' . $reference . ' with the administrator.',
+        'code' => 'INTERNAL_ERROR',
+        'reference' => $reference,
+    ], 500);
 });
 
 // CORS + headers
@@ -141,7 +151,11 @@ if (!isset($routeMap[$resource])) {
 
 // Feature flags are server-authoritative. Mobile UI filtering is convenience;
 // a disabled module's API remains unavailable even to a crafted client.
-$resourceFeature = \App\Services\FeatureGate::forApiResource($resource);
+// Guarded: a partial deployment missing the service file must degrade to
+// "no module gating" (the env-file default: every module enabled).
+$resourceFeature = class_exists('\App\Services\FeatureGate', false)
+    ? \App\Services\FeatureGate::forApiResource($resource)
+    : null;
 if ($resourceFeature !== null && !\App\Services\FeatureGate::isEnabled($resourceFeature)) {
     err('This feature is not enabled for this deployment.', 403);
 }
