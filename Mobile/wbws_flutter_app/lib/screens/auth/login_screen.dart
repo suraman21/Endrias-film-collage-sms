@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo — the Sunday School emblem (bundled asset).
+                // Logo — the Endrias Film College crest (bundled asset).
                 Container(
                   width: 120,
                   height: 120,
@@ -84,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 100,
                           height: 100,
                           fit: BoxFit.contain,
-                          semanticLabel: 'Spring of Saints Sunday School'),
+                          semanticLabel: 'Endrias Film College'),
                     ),
                   ),
                 ),
@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Spring of Saints Sunday School',
+                  'Endrias Film College',
                   style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                 ),
 

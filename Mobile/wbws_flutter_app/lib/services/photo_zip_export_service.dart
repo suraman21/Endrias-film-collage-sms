@@ -274,9 +274,9 @@ class PhotoZipExportService {
     await Share.shareXFiles(
       [for (final zip in set.zips) XFile(zip.path, mimeType: 'application/zip')],
       subject: set.zips.length == 1
-          ? 'FKSS photos (${p.basename(set.zips.first.path)})'
-          : 'FKSS photos (${set.zips.length} files)',
-      text: 'Offline-captured photos for FKSS Sunday School — import via admin Photo Review.',
+          ? 'Endrias FC photos (${p.basename(set.zips.first.path)})'
+          : 'Endrias FC photos (${set.zips.length} files)',
+      text: 'Offline-captured photos for Endrias Film College — import via admin Photo Review.',
     );
     return ExportedBundles(
       zips: set.zips,

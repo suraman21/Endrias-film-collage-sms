@@ -10,7 +10,7 @@ class UseWebsiteNote extends StatelessWidget {
     super.key,
     this.title = 'Use the website for this',
     this.body =
-        'This job stays on the FKSS website so student records stay in one place.',
+        'This job stays on the Endrias FC website so student records stay in one place.',
   });
 
   @override

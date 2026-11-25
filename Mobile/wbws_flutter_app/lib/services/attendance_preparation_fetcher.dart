@@ -1,4 +1,5 @@
 import 'api_service.dart';
+import '../utils/config.dart';
 import 'attendance_preparation_dataset.dart';
 import 'attendance_preparation_envelope.dart';
 import 'attendance_preparation_store.dart';
@@ -73,7 +74,7 @@ final class AttendancePreparationFetcher {
           authorizationVersion: session.authorizationVersion,
           role: 'teacher',
           familyId: '00' * 32,
-          serverIdentity: 'https://felegekidusan.com/api/v1',
+          serverIdentity: AppConfig.apiBaseUrl,
         ),
         maxPayloadBytes: maxPayloadBytes,
       );

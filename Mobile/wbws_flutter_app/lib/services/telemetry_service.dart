@@ -253,7 +253,7 @@ class TelemetryService {
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
           'Accept': 'application/json',
-          'User-Agent': 'FKSS-App/${AppConfig.appVersion} (${Platform.operatingSystem})',
+          'User-Agent': 'EndriasFC-App/${AppConfig.appVersion} (${Platform.operatingSystem})',
         },
         body: jsonEncode(body),
       ).timeout(const Duration(seconds: 10));

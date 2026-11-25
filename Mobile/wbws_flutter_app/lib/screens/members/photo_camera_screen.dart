@@ -28,7 +28,7 @@ const Color _kCyan = Color(0xFF38BDF8);
 const Color _kGreen = Color(0xFF22C55E);
 const Color _kAmber = Color(0xFFF59E0B);
 const Color _kTextDim = Color(0xFF94A3B8);
-const Color _kGold = Color(0xFFD4AF37);
+const Color _kGold = Color(0xFFFF9000);
 const Color _kDim = Color(0x73000000);
 
 /// FKSS adaptive portrait capture (spec: Adaptive Human-Guided Photo

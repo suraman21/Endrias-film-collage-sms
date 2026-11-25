@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // FKSS Brand Colors
-  static const Color primary = Color(0xFF5A1212); // Deep Maroon
-  static const Color primaryLight = Color(0xFF7A1E1E);
-  static const Color primaryDark = Color(0xFF2E0A0A);
-  static const Color accent = Color(0xFFD4AF37); // Gold
+  // Endrias Brand Colors — conservatory navy + cinema orange (official crest)
+  static const Color primary = Color(0xFF054677); // Conservatory navy
+  static const Color primaryLight = Color(0xFF0A62A0);
+  static const Color primaryDark = Color(0xFF032948);
+  static const Color accent = Color(0xFFFF9000); // Cinema orange
 
   // Status colors
   static const Color success = Color(0xFF059669); // Green

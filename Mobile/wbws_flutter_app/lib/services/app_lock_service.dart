@@ -174,7 +174,7 @@ class AppLockService extends ChangeNotifier {
       final isSupported = await _localAuth.isDeviceSupported();
       if (!canCheck || !isSupported) return false;
       final ok = await _localAuth.authenticate(
-        localizedReason: 'Unlock Felege Kidusan',
+        localizedReason: 'Unlock Endrias FC',
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: true,

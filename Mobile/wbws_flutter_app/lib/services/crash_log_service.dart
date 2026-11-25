@@ -267,7 +267,7 @@ class CrashLogService {
     required String crashLogTail,
   }) {
     final b = StringBuffer();
-    b.writeln('FKSS diagnostic report');
+    b.writeln('Endrias FC diagnostic report');
     b.writeln('App: $appVersion ($appBuild)');
     b.writeln('Server: $server');
     if (device != null) {
