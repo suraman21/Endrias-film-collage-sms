@@ -1,0 +1,73 @@
+/* Endrias Film College — public site custom accents
+   (Tailwind base/utilities come from the Play CDN; this file holds the
+   site-specific decorative classes ported from src/index.css). */
+
+html { scroll-behavior: smooth; font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+body { overflow-x: hidden; }
+
+/* Subtle film grain / cinema perforation accents */
+.cinema-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.ivory-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(5, 70, 119, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(5, 70, 119, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Film sprocket border strip */
+.sprocket-strip {
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(230, 154, 53, 0.32) 0px,
+    rgba(230, 154, 53, 0.32) 10px,
+    transparent 10px,
+    transparent 22px
+  );
+}
+
+/* Viewfinder corner brackets */
+.viewfinder-frame { position: relative; }
+.viewfinder-frame::before,
+.viewfinder-frame::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.viewfinder-frame::before {
+  top: 14px; left: 14px;
+  border-top: 2px solid rgba(255, 144, 0, 0.75);
+  border-left: 2px solid rgba(255, 144, 0, 0.75);
+}
+.viewfinder-frame::after {
+  bottom: 14px; right: 14px;
+  border-bottom: 2px solid rgba(255, 144, 0, 0.75);
+  border-right: 2px solid rgba(255, 144, 0, 0.75);
+}
+
+/* Hide scrollbar for horizontal filter pills */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Lightweight scroll-reveal (stands in for framer-motion section fades) */
+.efc-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+.efc-reveal.efc-in { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .efc-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* Gentle vertical float (crest medallion) */
+@keyframes efc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.efc-float { animation: efc-float 4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .efc-float { animation: none; }
+}
