@@ -61,7 +61,20 @@ $EFC_HEAD_TITLE = $EFC_TITLE !== '' ? ($EFC_TITLE . ' · ' . $EFC_SITENAME) : ($
             }
         };
     </script>
-    <link rel="stylesheet" href="college/css/college.css">
+    <link rel="stylesheet" href="college/css/college.css?v=2">
+    <!-- Fail-safe scroll-reveal styles. Inlined (and kept in sync with
+         college.css) so a cached copy of college.css can never leave page
+         content hidden: content is visible by default, .efc-hidden is only
+         ever added by the footer script. -->
+    <style>
+        .efc-reveal { opacity: 1; transform: none; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .efc-reveal.efc-hidden { opacity: 0; transform: translateY(24px); }
+        .efc-reveal.efc-in { opacity: 1; transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+            .efc-reveal { transition: none; }
+            .efc-reveal.efc-hidden { opacity: 1; transform: none; }
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body class="bg-brand-ivory text-brand-ink antialiased font-sans selection:bg-brand-orange selection:text-brand-midnight">

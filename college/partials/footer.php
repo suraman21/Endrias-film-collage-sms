@@ -132,7 +132,13 @@ $EFC_TIER_LINKS = ['tl1', 'tl2', 'tl3', 'tl4', 'tl5', 'tl6'];
                 window.addEventListener('scroll', onScroll, { passive: true });
                 onScroll();
             }
-            // Lightweight scroll-reveal (stands in for framer-motion).
+        })();
+    </script>
+    <script>
+        // Lightweight scroll-reveal (stands in for framer-motion). Kept in its
+        // own <script> block so an error in the code above can never prevent
+        // content from being revealed.
+        (function () {
             // Content is visible by default; we only hide sections that sit BELOW
             // the initial viewport, then fade them in on scroll. If anything fails,
             // nothing stays hidden — the page is never left blank.
