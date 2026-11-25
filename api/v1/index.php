@@ -159,6 +159,33 @@ if ($__fkssRoute === 'diagnostics') {
             }
         }
     }
+    // This host's error_log sink is not in the usual log dirs, so surface the
+    // API's own structured error lines (the reference the app banner shows)
+    // in the same response. Only SSMS:/Fatal lines are included by design of
+    // reportInternalError: no request input, no credentials. Capped: 10 lines,
+    // 400 chars each, last 256KB of the file only.
+    $apiLogLines = [];
+    foreach (array_values(array_unique(array_filter([
+        (string)ini_get('error_log'),
+        dirname(__DIR__) . '/error.log',
+    ]))) as $lp) {
+        if ($lp === '' || !is_file($lp) || !is_readable($lp)) continue;
+        $fh = @fopen($lp, 'rb');
+        if (!$fh) continue;
+        $size = (int)(@fstat($fh)['size'] ?? 0);
+        @fseek($fh, max(0, $size - 262144));
+        $chunk = (string)@stream_get_contents($fh);
+        fclose($fh);
+        $hits = array_values(array_filter(
+            preg_split('/\R/', $chunk) ?: [],
+            static function ($l) { return strpos((string)$l, 'SSMS:') !== false || strpos((string)$l, 'Fatal API') !== false; }
+        ));
+        if ($hits) {
+            $apiLogLines = array_map(static function ($l) { return mb_substr((string)$l, 0, 400); }, array_slice($hits, -10));
+            break;
+        }
+    }
+    $diag['recent_api_errors'] = $apiLogLines;
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
     echo json_encode(['status' => 'success', 'data' => $diag], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
