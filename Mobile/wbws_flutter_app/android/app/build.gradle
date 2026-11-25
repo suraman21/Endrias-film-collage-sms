@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    ndkVersion = "27.0.12077973"
+
     namespace = "com.arkeonethiopia.fkss"
     compileSdk = flutter.compileSdkVersion
     // Use the valid installed NDK for this workstation. The 27.0.12077973

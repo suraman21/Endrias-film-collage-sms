@@ -1648,6 +1648,35 @@ class ApiService {
   }
 
   // ============================================================
+  // HR ATTENDANCE — RETIRED ON THE SERVER (2026-10-07)
+  // ============================================================
+
+  /// HR attendance sheet. The server endpoint answers 410
+  /// HR_ATTENDANCE_RETIRED for any POST /hr/sheet (HR stopped taking
+  /// attendance). Kept so legacy outbox packets drain with the server's
+  /// exact machine code — the outbox classifier marks them "needs
+  /// attention" instead of failing silently or breaking the build.
+  Future<ApiResponse> saveHrSheet(
+          String date, List<Map<String, dynamic>> records,
+          {String section = '',
+          String kind = 'draft',
+          String? clientOpId,
+          String? attemptUid,
+          int? attemptNumber,
+          String? executionSource}) =>
+      post('/hr/sheet',
+          body: {
+            'date': date,
+            'section': section,
+            'kind': kind,
+            'records': records,
+          },
+          idempotencyKey: clientOpId,
+          attemptUid: attemptUid,
+          attemptNumber: attemptNumber,
+          executionSource: executionSource);
+
+  // ============================================================
   // GRADES
   // ============================================================
 

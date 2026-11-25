@@ -83,7 +83,6 @@ Future<void> runBootstrap() async {
     // Device-global services may start independently. Account-scoped workers
     // are started only by SessionCoordinator after active owner reconciliation.
     ConnectivityService().startMonitoring();
-    LyricsReaderSettings.instance.boot();
     DeviceTierService.instance.boot().then((_) async {
       await TelemetryService.instance.boot();
       try {
@@ -102,6 +101,7 @@ Future<void> runBootstrap() async {
         }
       } catch (_) {}
     });
+  });
 }
 
 /// Appends the real error to a log inside the app sandbox and returns a
