@@ -26,7 +26,7 @@ $EFC_HEAD_TITLE = $EFC_TITLE !== '' ? ($EFC_TITLE . ' · ' . $EFC_SITENAME) : ($
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $e($EFC_HEAD_TITLE) ?></title>
-    <meta name="description" content="<?= $e($EFC_SITENAME) ?> (<?= $EFC_SITENAME_AM ?>) — Addis Ababa's sole dedicated accredited TVET Film College (Levels I–IV Diploma & Short-Term Certificates) at 4 Kilo, Arada Sub-City. From Imagination to Screen.">
+    <meta name="description" content="<?= $e($EFC_SITENAME) ?> (<?= $EFC_SITENAME_AM ?>) — AAETQAA-accredited TVET Film Conservatory (Levels I–IV Diploma & Short-Term Certificates) at 4 Kilo, Arada Sub-City. From Imagination to Screen.">
     <link rel="icon" type="image/png" href="college/assets/brand/logo-seal.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -445,7 +445,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF600000),
+                      color: const Color(0xFF054677),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     constraints: const BoxConstraints(minWidth: 16),

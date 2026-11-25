@@ -606,12 +606,12 @@ class _PhotoCameraScreenState extends State<PhotoCameraScreen>
                   'assets/logo_school.png',
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
-                    color: const Color(0xFF600000),
+                    color: const Color(0xFF054677),
                     alignment: Alignment.center,
                     child: const Text(
                       'F',
                       style: TextStyle(
-                        color: Color(0xFFF0C000),
+                        color: Color(0xFFFF9000),
                         fontWeight: FontWeight.w800,
                         fontSize: 22,
                       ),
@@ -627,7 +627,7 @@ class _PhotoCameraScreenState extends State<PhotoCameraScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'FKSS',
+                    'Endrias FC',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

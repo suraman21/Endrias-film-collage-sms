@@ -197,7 +197,7 @@ $EFC_DAILY_SHIFTS = [
 // ── Home page copy (HomePage.tsx) ──────────────────────────────────────────
 $EFC_HOME = [
 
-    'hero_pill' => ['en' => 'Addis Ababa’s Sole Dedicated Accredited TVET Film College', 'am' => 'በአዲስ አበባ ብቸኛው በፊልም ሙያ ሙሉ ዕውቅና ያለው ኮሌጅ'],
+    'hero_pill' => ['en' => 'AAETQAA-Accredited TVET Film Conservatory · 4 Kilo, Addis Ababa', 'am' => 'በፊልም ጥበብ ሙሉ ዕውቅና ያለው ሌጅ · 4 ኪሎ'],
     'hero_head1' => ['en' => 'From Imagination ', 'am' => 'ከምናብ ወደ '],
     'hero_head2' => ['en' => 'to the Cinema Screen.', 'am' => 'ታላቁ የሲኒማ ስክሪን።'],
     'hero_lead' => ['en' => 'Located at 4 Kilo Roundabout in Addis Ababa, Endrias Film College PLC delivers government-accredited TVET Level I–IV Diplomas and 1-month to 1-year studio certificates—combining Blackmagic 6K Pro production sets, AAU/Gondar university-caliber faculty, and zero-commission career placement.', 'am' => 'በአዲስ አበባ 4 ኪሎ አደባባይ የሚገኘው እንድርያስ የፊልም ኮሌጅ፤ ከ1 ወር እስከ 2 ዓመት ከሰርተፍኬት እስከ ደረጃ 4 (ዲፕሎማ) በዘመናዊ የሲኒማ ግብዓቶችና በከፍተኛ ዩኒቨርሲቲ መምህራን በተግባር ያሰለጥናል።'],
@@ -273,7 +273,7 @@ $EFC_UI = [
 
     'apply_now' => ['en' => 'Apply Now', 'am' => 'አሁኑኑ ይመዝገቡ'],
     'student_portal' => ['en' => 'Student Portal', 'am' => 'የተማሪ ጎዳኝ'],
-    'ann_tagline' => ['en' => 'AAETQAA Accredited TVET Film Conservatory · 4 Kilo, Addis Ababa', 'am' => 'በአዲስ አበባ ብቸኛው በፊልም ጥበብ ሙሉ ዕውቅና ያለው ኮሌጅ · 4 ኪሎ'],
+    'ann_tagline' => ['en' => 'AAETQAA Accredited TVET Film Conservatory · 4 Kilo, Addis Ababa', 'am' => 'በፊልም ጥበብ ሙሉ ዕውቅና ያለው ሌጅ · 4 ኪሎ'],
     'foot_accredit' => ['en' => 'AAETQAA Master Registry Row #68 & Permit #32', 'am' => 'በትምህርትና ስልጠና ጥራት ቁጥጥር ባለስልጣን ዕውቅና የተሰጠው'],
     'foot_motto' => ['en' => '“From Imagination to Screen — Let’s create the world with film art!” Addis Ababa’s dedicated accredited institution for TVET Level I–IV Filmmaking Diplomas and practical studio certificates.', 'am' => '«ከምናብ እስከ ገቢር — በፊልም ጥበብ ዓለምን እንስራ!» በአዲስ አበባ ከተማ አስተዳደር ከደረጃ 1–4 (ዲፕሎማ) እና በአጫጭር ፕሮግራሞች ሙሉ ዕውቅና ያለው የፊልም ኮሌጅ።'],
     'foot_head_cons' => ['en' => 'Conservatory', 'am' => 'የኮሌጁ ገፆች'],
@@ -400,7 +400,7 @@ $EFC_TIMELINE = [
 
     ['year' => '2017 / 2018 (2010 E.C.)', 'titleEn' => 'Founding of Filmmaking Training Operations', 'titleAm' => 'የፊልም ስልጠና መጀመር (እንድርያስ የፊልም አካዳሚ)', 'descEn' => 'Launched structured practical filmmaking training in Addis Ababa out of the Endrias Film Production / Endrias Film Company ecosystem to close Ethiopia’s cinema skill gap.', 'descAm' => 'በኢትዮጵያ የፊልም ኢንዱስትሪ ውስጥ ያለውን የሰለጠነ የሰው ኃይል ክፍተት ለመሙላት በእንድርያስ ፊልም ፕሮዳክሽን ጥላ ስር ስልጠና መስጠት ጀመረ።'],
     ['year' => 'Feb 2019 – July 2021', 'titleEn' => '4 Kilo Campus Growth & Digital Hub Launch', 'titleAm' => 'በ4 ኪሎ ካምፓስ መስፋፋት እና የዲጂታል ቻናል መከፈት', 'descEn' => 'Registered in East Africa media directories (Feb 2019) at Holy Trinity University Building (3rd Floor), aired 2013 E.C. TV commercials, and launched the official @endifilm hub in July 2021.', 'descAm' => 'በ4 ኪሎ ቅድስት ሥላሴ ዩኒቨርሲቲ ህንፃ 3ኛ ፎቅ በመሆን ተማሪዎችን ማፍራት ቀጠለ፤ ሐምሌ 2013 ዓ.ም ኦፊሻል የቴሌግራም ቻናሉን ከፈተ።'],
-    ['year' => 'Feb – Oct 2023 (2015–2016 E.C.)', 'titleEn' => 'AAETQAA TVET Level I–IV College Accreditation', 'titleAm' => 'ከደረጃ 1–4 (ዲፕሎማ) የኮሌጅ ዕውቅና ማግኘት', 'descEn' => 'Accredited by the Addis Ababa Education & Training Quality Assurance Authority (Row #68 & Row #32 — sole dedicated film college cleared in 2016 E.C.), convening AAU & University of Gondar scholars to inaugurate Diploma classes.', 'descAm' => 'በየካቲት 2015 ዓ.ም ሙሉ የኮሌጅነትና የደረጃ 1–4 ዲፕሎማ ዕውቅና አገኘ፤ ከአዲስ አበባና ጎንደር ዩኒቨርሲቲ ምሁራን ጋር በመምከር መደበኛ ዲፕሎማ አስጀመረ።'],
+    ['year' => 'Feb – Oct 2023 (2015–2016 E.C.)', 'titleEn' => 'AAETQAA TVET Level I–IV College Accreditation', 'titleAm' => 'ከደረጃ 1–4 (ዲፕሎማ) የኮሌጅ ዕውቅና ማግኘት', 'descEn' => 'Accredited by the Addis Ababa Education & Training Quality Assurance Authority (Row #68 & Row #32 — accredited in 2016 E.C.), convening AAU & University of Gondar scholars to inaugurate Diploma classes.', 'descAm' => 'በየካቲት 2015 ዓ.ም ሙሉ የኮሌጅነትና የደረጃ 1–4 ዲፕሎማ ዕውቅና አገኘ፤ ከአዲስ አበባና ጎንደር ዩኒቨርሲቲ ምሁራን ጋር በመምከር መደበኛ ዲፕሎማ አስጀመረ።'],
     ['year' => 'Nov 2024 & Dec 2024 (2017 E.C.)', 'titleEn' => 'Alem Cinema 256-Graduate Ceremony & Guma Award Quota', 'titleAm' => 'የ256 ተማሪዎች ምርቃት በአለም ሲኒማ እና የጉማ አዋርድ ኮታ', 'descEn' => 'Graduated 256 trainees at Alem Cinema, honored pioneer Ermias Woldeamlak at the Endi Award, and secured a 3-film direct institutional competition quota with Ethiopia’s prestigious Guma Award.', 'descAm' => 'በአለም ሲኒማ 256 ሰልጣኞችን አስመረቀ፤ ከታላቁ «ጉማ አዋርድ» ጋር በየዓመቱ 3 አጫጭር ፊልሞችን በቀጥታ የማወዳደር ስምምነት ፈፀመ።'],
     ['year' => '2025 – Nov 2026 (2018–2019 E.C.)', 'titleEn' => 'AI Curriculum, European Workshops & Addis Cinema Complex Graduation', 'titleAm' => 'የAI ስርዓተ-ትምህርት፣ ዓለም አቀፍ ወርክሾፖች እና የ2018 ዓ.ም ታላቅ ምርቃት', 'descEn' => 'Introduced AI for Filmmaking & Portfolio Branding, hosted German & French conservatory workshops, graduated 250+ students at Addis Cinema Complex (Feb 2026), and unveiled the renewed 2026 crest.', 'descAm' => 'AI ለፊልም ስራና ፖርትፎሊዮ ብራንዲንግ ኮርሶችን አካተተ፣ ከ250 በላይ ተማሪዎችን በአዲስ ሲኒማ ኮምፕሌክስ አስመረቀ፣ አዲሱን ዓርማውንም በ2026 ይፋ አደረገ።'],
 ];
@@ -409,11 +409,11 @@ $EFC_TIMELINE = [
 $EFC_ABOUT = [
 
     'hero_eyebrow' => ['en' => 'HERITAGE, ACCREDITATION & STUDIOS', 'am' => 'ታሪክ፣ ህጋዊ ዕውቅና እና ስቱዲዮዎች'],
-    'hero_h1' => ['en' => 'Addis Ababa’s Dedicated Accredited Home for Cinema Education', 'am' => 'በአዲስ አበባ ብቸኛው ራሱን የቻለ ዕውቅና ያለው የፊልም ኮሌጅ'],
+    'hero_h1' => ['en' => 'Addis Ababa’s Dedicated Accredited Home for Cinema Education', 'am' => 'ራሱን የቻለ ዕውቅና ያለው የፊልም ኮሌጅ'],
     'hero_lead' => ['en' => 'Registered as Endrias Film College PLC (እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ), our institution bridges rigorous university-caliber film scholarship with practical studio production at 4 Kilo, Addis Ababa.', 'am' => 'እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ፤ በ4 ኪሎ አደባባይ በመገኘት የከፍተኛ ትምህርት ንድፈ-ሀሳብን ከዘመናዊ የሲኒማ ፕሮዳክሽን ተግባር ጋር አዋህዶ የሚያስተምር ተቋም ነው።'],
     's1_eyebrow' => ['en' => 'Official Regulatory Verification', 'am' => 'የመንግስት የዕውቅና ማረጋገጫ መረጃ'],
     's1_h2' => ['en' => 'Verified on the Addis Ababa Quality Assurance Registry', 'am' => 'በአዲስ አበባ ትምህርትና ስልጠና ጥራት ቁጥጥር ባለስልጣን የተረጋገጠ'],
-    's1_lead' => ['en' => 'Out of 121 accredited public and private colleges across Addis Ababa on the Authority’s master registry (educoc.gov.et), Endrias Film College is the sole standalone, single-purpose accredited film college—and the only film institution among the 38 colleges cleared to register new regular trainees in 2016 E.C.', 'am' => 'በአዲስ አበባ ትምህርትና ስልጠና ጥራት ቁጥጥር ባለስልጣን መዝገብ ከሚገኙ 121 የመንግስትና የግል ኮሌጆች መካከል፣ ሙሉ በሙሉ በፊልም ጥበብ ብቻ ራሱን ችሎ ዕውቅና ያለው ብቸኛው ኮሌጅ እንድርያስ የፊልም ኮሌጅ ነው።'],
+    's1_lead' => ['en' => 'Out of 121 accredited public and private colleges across Addis Ababa on the Authority’s master registry (educoc.gov.et), Endrias Film College is a standalone, single-purpose accredited film college—one of the 38 colleges cleared to register new regular trainees in 2016 E.C.', 'am' => 'በአዲስ አበባ ትምህርትና ስልጠና ጥራት ቁጥጥር ባለስልጣን መዝገብ ከሚገኙ 121 የመንግስትና የግል ኮሌጆች መካከል፣ ሙሉ በሙሉ በፊልም ጥበብ ብቻ ራሱን ችሎ ዕውቅና ያለው ኮሌጅ እንድርያስ የፊልም ኮሌጅ ነው።'],
     'dossier_title' => ['en' => 'AAETQAA / EDUCOC Official Accreditation Dossier', 'am' => 'የአዲስ አበባ ትምህርትና ስልጠና ጥራት ቁጥጥር ባለስልጣን መዝገብ'],
     's2_eyebrow' => ['en' => 'Symbolism of Our Crest', 'am' => 'የኮሌጁ ዓርማ ትርጓሜ'],
     's2_h2' => ['en' => 'Where Academic Rigor Meets Ethiopian Cinema Craft', 'am' => 'የአካዳሚክ ልህቀትና የፊልም ጥበብ ውህደት'],

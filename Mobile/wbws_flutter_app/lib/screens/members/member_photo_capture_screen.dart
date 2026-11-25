@@ -12,8 +12,8 @@ import 'photo_camera_screen.dart';
 /// Mobile theme.dart is app-wide blue; photo screens use the school
 /// maroon+gold so they visually cohere with the printed ID product.
 class _AppThemePhoto {
-  static const Color maroon = Color(0xFF600000);
-  static const Color gold = Color(0xFFF0C000);
+  static const Color maroon = Color(0xFF054677);
+  static const Color gold = Color(0xFFFF9000);
 }
 
 // Shorthand alias for the capture-screen widgets below.

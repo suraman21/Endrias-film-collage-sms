@@ -20,6 +20,7 @@ final class AppReleaseManager
     public const KNOWN_PACKAGES = [
         'com.arkeonethiopia.fkss' => 'FKSS',
         'com.arkeonethiopia.fkss.beta' => 'FKSS Beta',
+        'com.arkeonethiopia.endriasfc' => 'Endrias FC',
     ];
 
     /**

@@ -197,7 +197,7 @@ class TeacherHomeScreenState extends State<TeacherHomeScreen> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('FKSS',
+                  const Text('Endrias FC',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   Text(

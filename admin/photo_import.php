@@ -81,7 +81,7 @@ ul.errors{margin:8px 0 0 18px;padding:0;font-size:12px;}
   <div class="hero">
     <div>
       <h1><i class="fa-solid fa-file-zipper"></i> Import Photos (ZIP Airlock)</h1>
-      <p>Upload a ZIP exported from the FKSS mobile app. Photos flow into the same review queue as online syncs.</p>
+      <p>Upload a ZIP exported from the Endrias FC mobile app. Photos flow into the same review queue as online syncs.</p>
     </div>
     <a href="/admin/photo_review.php" class="btn btn-gold"><i class="fa-solid fa-gavel"></i> Review conflicts</a>
   </div>
