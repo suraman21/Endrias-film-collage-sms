@@ -1,6 +1,6 @@
 /* Common authenticated account page. Uses deployment theme tokens with safe fallbacks. */
 :root {
-    --ssms-maroon: #800000;
+    --ssms-maroon: #032948;
     --ssms-maroon-dark: #5c0606;
     --ssms-gold: #f59e0b;
     --ssms-gold-dark: #d97706;
@@ -95,7 +95,7 @@
 }
 .account-back-link:hover {
     background: #e2e8f0;
-    color: #800000;
+    color: #032948;
 }
 .account-header-identity { justify-self: end; overflow: hidden; }
 .account-header-identity > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

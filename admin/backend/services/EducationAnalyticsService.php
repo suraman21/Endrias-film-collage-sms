@@ -577,22 +577,22 @@ body{font-family:'DM Sans',sans-serif;color:#1e293b;background:#fff;margin:0;pad
   .page{width:100%;min-height:auto;padding:0;margin:0;page-break-after:always}
   .no-print{display:none!important}
 }
-.header{border-bottom:2px solid #600000;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.header{border-bottom:2px solid #054677;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .logo-title{display:flex;align-items:center;gap:12px}
 .logo{width:56px;height:56px;object-fit:contain}
-.school-am{font-size:16px;font-weight:700;color:#600000;line-height:1.2}
+.school-am{font-size:16px;font-weight:700;color:#054677;line-height:1.2}
 .school-en{font-size:12px;font-weight:600;color:#334155}
 .doc-title{font-size:13px;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-top:4px}
 .meta-box{text-align:right;font-size:10px;color:#64748b}
 .meta-box strong{color:#1e293b}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.kpi-card{background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #600000;padding:10px;border-radius:6px}
+.kpi-card{background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #054677;padding:10px;border-radius:6px}
 .kpi-val{font-size:20px;font-weight:800;color:#1e293b;line-height:1.2}
 .kpi-lbl{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase}
 .kpi-sub{font-size:9px;color:#94a3b8;margin-top:2px}
 
-.sec-head{font-size:13px;font-weight:700;color:#600000;border-bottom:1.5px solid #e2e8f0;padding-bottom:4px;margin:16px 0 8px;display:flex;justify-content:space-between}
+.sec-head{font-size:13px;font-weight:700;color:#054677;border-bottom:1.5px solid #e2e8f0;padding-bottom:4px;margin:16px 0 8px;display:flex;justify-content:space-between}
 table.rpt-tbl{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:14px}
 table.rpt-tbl th{background:#f1f5f9;color:#334155;font-weight:700;text-align:left;padding:6px 8px;border:1px solid #cbd5e1}
 table.rpt-tbl td{padding:5px 8px;border:1px solid #e2e8f0}
@@ -610,7 +610,7 @@ table.rpt-tbl tr:nth-child(even){background:#fafafa}
 .sig-box .am-title{font-size:10px;color:#64748b}
 
 .action-bar{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:50px;box-shadow:0 10px 25px rgba(0,0,0,.2);display:flex;gap:12px;z-index:9999}
-.action-btn{background:#600000;color:#fff;border:none;padding:8px 16px;border-radius:25px;font-weight:700;cursor:pointer}
+.action-btn{background:#054677;color:#fff;border:none;padding:8px 16px;border-radius:25px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>

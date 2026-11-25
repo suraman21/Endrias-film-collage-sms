@@ -50,8 +50,8 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
       flex-direction: column;
       padding: 1.25rem;
       background:
-        radial-gradient(circle at 15% 15%, rgba(240,192,0,0.12), transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(240,192,0,0.08), transparent 40%),
+        radial-gradient(circle at 15% 15%, rgba(255, 144, 0,0.12), transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(255, 144, 0,0.08), transparent 40%),
         linear-gradient(150deg, var(--maroon-dark), var(--maroon) 55%, #4a1208);
       position: relative;
       overflow-y: auto;
@@ -64,7 +64,7 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
       position: fixed;
       width: 280px;
       height: 280px;
-      border: 2px solid rgba(240,192,0,0.18);
+      border: 2px solid rgba(255, 144, 0,0.18);
       border-radius: 50%;
       pointer-events: none;
     }
@@ -103,7 +103,7 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 18px rgba(96,0,0,0.18);
+      box-shadow: 0 6px 18px rgba(5, 70, 119,0.18);
       border: 3px solid var(--gold);
       padding: 6px;
     }
@@ -193,7 +193,7 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
 
     .form-group input:focus {
       border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(240,192,0,0.18);
+      box-shadow: 0 0 0 3px rgba(255, 144, 0,0.18);
       background: #fff;
     }
 
@@ -238,14 +238,14 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
       cursor: pointer;
       color: var(--maroon-dark);
       background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-      box-shadow: 0 8px 20px rgba(240,192,0,0.35);
+      box-shadow: 0 8px 20px rgba(255, 144, 0,0.35);
       transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
       letter-spacing: 0.3px;
     }
 
     .btn-primary:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 26px rgba(240,192,0,0.45);
+      box-shadow: 0 12px 26px rgba(255, 144, 0,0.45);
       filter: brightness(1.03);
     }
     .btn-primary:active { transform: translateY(0); }

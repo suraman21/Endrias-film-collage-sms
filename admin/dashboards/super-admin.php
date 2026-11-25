@@ -644,9 +644,9 @@ if (!in_array($activeSection, $saAllowedSections, true)) {
                 <li><button class="nav-link <?= $activeSection === 'failure_intelligence' ? 'active' : '' ?>" data-section="failure_intelligence"><i class="fa-solid fa-triangle-exclamation"></i> Failure Intelligence</button></li>
                 <li><button class="nav-link <?= $activeSection === 'health' ? 'active' : '' ?>" data-section="health"><i class="fa-solid fa-heart-pulse"></i> Site Health</button></li>
                 <li><a href="/admin/telegram_registration.php" class="nav-link" style="text-decoration:none"><i class="fa-brands fa-telegram"></i> Telegram Registration</a></li>
-                <li><a href="/admin/dashboards/photo_dept.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-camera-retro" style="color:#F0C000"></i> Photo Dept Dashboard</a></li>
-                <li><a href="/admin/photo_import.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-file-zipper" style="color:#F0C000"></i> Photo Import (ZIP)</a></li>
-                <li><a href="/admin/photo_review.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-images" style="color:#F0C000"></i> Photo Review</a></li>
+                <li><a href="/admin/dashboards/photo_dept.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-camera-retro" style="color:#FF9000"></i> Photo Dept Dashboard</a></li>
+                <li><a href="/admin/photo_import.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-file-zipper" style="color:#FF9000"></i> Photo Import (ZIP)</a></li>
+                <li><a href="/admin/photo_review.php" class="nav-link" style="text-decoration:none"><i class="fa-solid fa-images" style="color:#FF9000"></i> Photo Review</a></li>
                 <li><button class="nav-link <?= $activeSection === 'settings' ? 'active' : '' ?>" data-section="settings"><i class="fa-solid fa-gear"></i> Settings</button></li>
                 <li><button class="nav-link <?= $activeSection === 'branding' ? 'active' : '' ?>" data-section="branding"><i class="fa-solid fa-palette"></i> Branding</button></li>
             </ul>
@@ -701,8 +701,8 @@ if (!in_array($activeSection, $saAllowedSections, true)) {
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Active</div><div class="stat-icon" style="background:rgba(16,185,129,.15);color:#34d399"><i class="fa-solid fa-user-check"></i></div></div><div class="stat-value"><?= $activeMembers ?></div><div class="stat-label">Active now</div></div>
                 </div>
                 <?php if ($testSeedEnabled): ?>
-                <div class="card" id="testSeedCard" style="margin-bottom:1rem;border:1px solid rgba(240,192,0,.35);background:rgba(96,0,0,.18)">
-                    <h3 class="card-title"><i class="fa-solid fa-vial" style="color:#F0C000"></i> Practice students (full system test)</h3>
+                <div class="card" id="testSeedCard" style="margin-bottom:1rem;border:1px solid rgba(255, 144, 0,.35);background:rgba(5, 70, 119,.18)">
+                    <h3 class="card-title"><i class="fa-solid fa-vial" style="color:#FF9000"></i> Practice students (full system test)</h3>
                     <p style="font-size:.8rem;color:#cbd5e1;margin:.35rem 0 .75rem">
                         <?= (int)($testSeedInfo['loaded'] ?? 0) ?> of <?= (int)($testSeedInfo['expected'] ?? 224) ?> practice children are on the website.
                         They are marked <strong>TEST-FKSS</strong> so we can delete only them when you finish.
@@ -711,7 +711,7 @@ if (!in_array($activeSection, $saAllowedSections, true)) {
                     <?php if (!empty($testSeedInfo['auto']['message'])): ?>
                     <p style="font-size:.78rem;color:#86efac;margin:0 0 .75rem"><?= e($testSeedInfo['auto']['message']) ?></p>
                     <?php endif; ?>
-                    <div id="testSeedMsg" style="font-size:.78rem;color:#F0C000;margin:0 0 .75rem;min-height:1.1em"></div>
+                    <div id="testSeedMsg" style="font-size:.78rem;color:#FF9000;margin:0 0 .75rem;min-height:1.1em"></div>
                     <div style="display:flex;flex-wrap:wrap;gap:.6rem">
                         <button type="button" class="btn btn-primary" id="testSeedLoadBtn" onclick="dcTestSeed('load')"><i class="fa-solid fa-cloud-arrow-up"></i> Load all 224 now</button>
                         <button type="button" class="btn btn-outline" id="testSeedClearBtn" onclick="dcTestSeed('clear')"><i class="fa-solid fa-trash"></i> Remove practice students</button>
@@ -1139,7 +1139,7 @@ if (!in_array($activeSection, $saAllowedSections, true)) {
                         'seal'      => ['label' => 'Seal / Stamp',       'icon' => 'fa-certificate',    'gradient' => 'linear-gradient(135deg,#f59e0b,#d97706)', 'accent' => '#d97706'],
                         'sig_head'  => ['label' => 'Head Signature',     'icon' => 'fa-signature',      'gradient' => 'linear-gradient(135deg,#059669,#10b981)', 'accent' => '#10b981'],
                         'sig_admin' => ['label' => 'Director Signature', 'icon' => 'fa-file-signature', 'gradient' => 'linear-gradient(135deg,#0ea5e9,#3b82f6)', 'accent' => '#3b82f6'],
-                        'card_bg'   => ['label' => 'Card background',    'icon' => 'fa-image',          'gradient' => 'linear-gradient(135deg,#600000,#8B2030)', 'accent' => '#600000'],
+                        'card_bg'   => ['label' => 'Card background',    'icon' => 'fa-image',          'gradient' => 'linear-gradient(135deg,#054677,#0A62A0)', 'accent' => '#054677'],
                     ];
                     foreach ($brandCards as $key => $card): ?>
                     <div class="card" style="padding:0;overflow:hidden;border:2px solid transparent;transition:border-color .3s" id="brandCard_<?= $key ?>">

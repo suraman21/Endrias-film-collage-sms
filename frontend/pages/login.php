@@ -13,6 +13,9 @@ if (!empty($_SESSION['admin_logged_in'])) {
 $csrfToken = function_exists('generateCsrfToken') ? generateCsrfToken() : '';
 $theme = defined('ACTIVE_THEME') ? ACTIVE_THEME : 'wbss';
 $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url() : ('/themes/' . $theme . '/assets/logos/school_logo.png');
+// The login card is a colored gradient — prefer a transparent-background logo when the theme ships one.
+$_logoTransparent = '/themes/' . $theme . '/assets/logos/school_logo_transparent.png';
+if (file_exists(__DIR__ . '/../../' . ltrim($_logoTransparent, '/'))) { $schoolLogoUrl = $_logoTransparent; }
 ?>
 <!DOCTYPE html>
 <html lang="<?= defined('SITE_LANG') ? SITE_LANG : 'en' ?>">

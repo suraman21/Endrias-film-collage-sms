@@ -2327,8 +2327,8 @@ class ReportCardService
             'logo' => function_exists('ssms_school_logo_url')
                 ? ssms_school_logo_url()
                 : (defined('SCHOOL_LOGO_PATH') ? SCHOOL_LOGO_PATH : '/themes/fkss/assets/logos/school_logo.png'),
-            'primary' => defined('THEME_PRIMARY') ? THEME_PRIMARY : '#600000',
-            'accent' => defined('THEME_ACCENT') ? THEME_ACCENT : '#F0C000',
+            'primary' => defined('THEME_PRIMARY') ? THEME_PRIMARY : '#054677',
+            'accent' => defined('THEME_ACCENT') ? THEME_ACCENT : '#FF9000',
             'sig_head' => defined('ID_CARD_SIG_HEAD_AM') ? ID_CARD_SIG_HEAD_AM : 'የሰንበት ት/ቤቱ ሃላፊ ስምና ፊርማ',
             'sig_admin' => defined('ID_CARD_SIG_ADMIN_AM') ? ID_CARD_SIG_ADMIN_AM : 'የደብሩ አስተዳደር ስምና ፊርማ',
         ];

@@ -176,16 +176,16 @@ define('DEPT_GROUPS_NAME_EN', 'Groups Management');
 // │  Primary, accent, and sidebar gradient colors               │
 // └─────────────────────────────────────────────────────────────┘
 
-// FKSS palette — gold + maroon, extracted from the official logo
-// Gold: #F0C000 / #E0B020 · Maroon: #600000 / #500000 / #702000
-define('THEME_PRIMARY', '#600000');        // Deep maroon — primary brand color
-define('THEME_PRIMARY_LIGHT', '#8B2030');  // Lighter maroon for hovers
-define('THEME_PRIMARY_DARK', '#400000');   // Darkest maroon
-define('THEME_ACCENT', '#F0C000');         // Gold — primary accent
-define('THEME_ACCENT_2', '#E0B020');       // Darker gold — secondary accent
-define('THEME_SIDEBAR_TOP', '#400000');    // Sidebar gradient: dark maroon →
-define('THEME_SIDEBAR_MID', '#600000');    //   mid maroon →
-define('THEME_SIDEBAR_BOTTOM', '#702000'); //   warm maroon-brown
+// Endrias palette — conservatory navy + cinema orange, from the official crest
+// Navy: #054677 / #032948 / #031525 · Orange: #FF9000 / #E69A35
+define('THEME_PRIMARY', '#054677');        // Conservatory navy — primary brand color
+define('THEME_PRIMARY_LIGHT', '#0A62A0');  // Lighter navy for hovers
+define('THEME_PRIMARY_DARK', '#032948');   // Darkest navy
+define('THEME_ACCENT', '#FF9000');         // Cinema orange — primary accent
+define('THEME_ACCENT_2', '#E69A35');       // Amber — secondary accent
+define('THEME_SIDEBAR_TOP', '#031525');    // Sidebar gradient: midnight →
+define('THEME_SIDEBAR_MID', '#032948');    //   navy dark →
+define('THEME_SIDEBAR_BOTTOM', '#054677'); //   conservatory navy
 
 
 // ┌─────────────────────────────────────────────────────────────┐

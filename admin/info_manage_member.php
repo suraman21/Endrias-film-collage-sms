@@ -448,8 +448,8 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 /* ============================================================
    EFC Student Profile — on-brand maroon + gold
    Uses the design-system CSS variables (themes/fkss/theme.css):
-     --school-primary (#600000 maroon), --school-primary-light (#8B2030),
-     --school-primary-dark (#400000), --school-accent (#F0C000 gold),
+     --school-primary (#054677 maroon), --school-primary-light (#0A62A0),
+     --school-primary-dark (#032948), --school-accent (#FF9000 gold),
      --school-bg, --school-surface, --school-border, --school-text,
      --school-text-dim, --school-text-muted, --school-success/warning/danger,
      --school-primary-a10/a20, --school-shadow-md/lg.
@@ -472,27 +472,27 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 .mm-hero{
     position:relative;
     background:
-        radial-gradient(900px 200px at 85% -20%, rgba(240,192,0,.25), transparent 60%),
-        radial-gradient(700px 220px at 10% -10%, rgba(139,32,48,.30), transparent 60%),
-        linear-gradient(135deg, var(--school-primary-dark, #400000) 0%, var(--school-primary, #600000) 55%, var(--school-primary-light, #8B2030) 100%);
+        radial-gradient(900px 200px at 85% -20%, rgba(255, 144, 0,.25), transparent 60%),
+        radial-gradient(700px 220px at 10% -10%, rgba(10, 98, 160,.30), transparent 60%),
+        linear-gradient(135deg, var(--school-primary-dark, #032948) 0%, var(--school-primary, #054677) 55%, var(--school-primary-light, #0A62A0) 100%);
     color:#fff;
     padding:22px 22px 18px;
 }
 .mm-hero::after{
     content:'';position:absolute;left:0;right:0;bottom:-1px;height:5px;
-    background:linear-gradient(90deg,var(--school-accent,#F0C000) 0%,#fde68a 50%,var(--school-accent,#F0C000) 100%);
+    background:linear-gradient(90deg,var(--school-accent,#FF9000) 0%,#fde68a 50%,var(--school-accent,#FF9000) 100%);
 }
 .mm-hero-row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
 .mm-photo-stack{display:flex;gap:10px;flex-shrink:0;}
 .mm-photo{
     width:104px;height:130px;border-radius:10px;background:rgba(255,255,255,.10);
-    border:3px solid rgba(240,192,0,.45);overflow:hidden;cursor:pointer;
+    border:3px solid rgba(255, 144, 0,.45);overflow:hidden;cursor:pointer;
     display:flex;align-items:center;justify-content:center;position:relative;
     transition:transform .15s, box-shadow .15s, border-color .15s;
     box-shadow: 0 8px 22px rgba(0,0,0,.35);
 }
 .mm-photo.guard{width:68px;height:85px;align-self:flex-end;border-radius:8px;border-color:rgba(255,255,255,.35);box-shadow:0 6px 16px rgba(0,0,0,.25);}
-.mm-photo:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.45);border-color:var(--school-accent,#F0C000);}
+.mm-photo:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.45);border-color:var(--school-accent,#FF9000);}
 .mm-photo img{width:100%;height:100%;object-fit:cover;}
 .mm-photo i{font-size:36px;color:rgba(255,255,255,.55);}
 .mm-photo-label{
@@ -507,14 +507,14 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     border-radius:999px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;
     margin-bottom:8px;transition:background .15s;
 }
-.mm-back-btn:hover{background:var(--school-accent,#F0C000);color:#400000;border-color:var(--school-accent,#F0C000);}
+.mm-back-btn:hover{background:var(--school-accent,#FF9000);color:#032948;border-color:var(--school-accent,#FF9000);}
 .mm-name{font-size:23px;font-weight:800;letter-spacing:-.01em;line-height:1.25;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,.3);}
 .mm-name .eth{font-weight:700;}
 .mm-sub{
     display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
     font-size:12.5px;opacity:.95;margin-bottom:10px;
 }
-.mm-sub i{width:12px;text-align:center;opacity:.85;margin-right:4px;color:var(--school-accent,#F0C000);}
+.mm-sub i{width:12px;text-align:center;opacity:.85;margin-right:4px;color:var(--school-accent,#FF9000);}
 .mm-sub a{color:#fff;}
 .mm-pills{display:flex;flex-wrap:wrap;gap:6px;}
 .mm-pill{
@@ -530,7 +530,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 .mm-pill.status-archived{background:#f1f5f9;color:#334155;border-color:#cbd5e1;}
 .mm-pill.tier-permanent{background:#fef3c7;color:#78350f;border-color:#fcd34d;}
 .mm-pill.tier-temporary{background:#ffedd5;color:#7c2d12;border-color:#fdba74;}
-.mm-pill.gold{background:var(--school-accent,#F0C000);color:#400000;border-color:var(--school-accent,#F0C000);}
+.mm-pill.gold{background:var(--school-accent,#FF9000);color:#032948;border-color:var(--school-accent,#FF9000);}
 .mm-hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .mm-ha{
     display:inline-flex;align-items:center;gap:6px;
@@ -538,9 +538,9 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);
     cursor:pointer;transition:all .15s;text-decoration:none;
 }
-.mm-ha:hover{background:#fff;color:var(--school-primary,#600000);border-color:#fff;transform:translateY(-1px);}
-.mm-ha.primary{background:var(--school-accent,#F0C000);color:#400000;border-color:var(--school-accent,#F0C000);font-weight:800;}
-.mm-ha.primary:hover{background:#fde68a;color:#400000;}
+.mm-ha:hover{background:#fff;color:var(--school-primary,#054677);border-color:#fff;transform:translateY(-1px);}
+.mm-ha.primary{background:var(--school-accent,#FF9000);color:#032948;border-color:var(--school-accent,#FF9000);font-weight:800;}
+.mm-ha.primary:hover{background:#fde68a;color:#032948;}
 
 /* ── Quick facts strip ───────────────────────────────────── */
 .mm-facts{
@@ -551,12 +551,12 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     background:var(--school-surface,#fff);padding:12px 14px;display:flex;flex-direction:column;gap:2px;
     border-bottom:3px solid transparent;transition:border-color .15s;
 }
-.mm-fact:hover{border-bottom-color:var(--school-accent,#F0C000);}
+.mm-fact:hover{border-bottom-color:var(--school-accent,#FF9000);}
 .mm-fact-label{font-size:10px;font-weight:800;color:var(--school-text-dim,#64748b);text-transform:uppercase;letter-spacing:.08em;}
 .mm-fact-value{font-size:13.5px;font-weight:700;color:var(--school-text,#0f172a);word-break:break-word;}
 .mm-fact-value.muted{color:var(--school-text-muted,#94a3b8);font-weight:500;font-style:italic;}
 .mm-fact-value a{color:inherit;text-decoration:none;}
-.mm-fact-value a:hover{color:var(--school-primary-light,#8B2030);text-decoration:underline;}
+.mm-fact-value a:hover{color:var(--school-primary-light,#0A62A0);text-decoration:underline;}
 
 /* ── Standalone bar ──────────────────────────────────────── */
 .mm-standalone-bar{display:flex;gap:14px;align-items:center;background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;font-size:12px;padding:8px 14px;}
@@ -573,10 +573,10 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     font-size:13.5px;font-weight:700;background:transparent;border:none;cursor:pointer;
     border-bottom:3px solid transparent;color:var(--school-text-dim,#64748b);transition:all .15s;
 }
-.mm-tab:hover{background:var(--school-primary-a10,rgba(96,0,0,.06));color:var(--school-primary,#600000);}
+.mm-tab:hover{background:var(--school-primary-a10,rgba(5, 70, 119,.06));color:var(--school-primary,#054677);}
 .mm-tab.active{
-    border-bottom-color:var(--school-primary,#600000);color:var(--school-primary,#600000);
-    background:linear-gradient(to bottom, var(--school-primary-a10,rgba(96,0,0,.06)), transparent);
+    border-bottom-color:var(--school-primary,#054677);color:var(--school-primary,#054677);
+    background:linear-gradient(to bottom, var(--school-primary-a10,rgba(5, 70, 119,.06)), transparent);
 }
 .mm-tab i{font-size:14px;opacity:.9;}
 
@@ -612,14 +612,14 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     width:34px;height:34px;border-radius:9px;
     display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
 }
-.mm-icon-maroon{background:var(--school-primary-a10,rgba(96,0,0,.10));color:var(--school-primary,#600000);}
+.mm-icon-maroon{background:var(--school-primary-a10,rgba(5, 70, 119,.10));color:var(--school-primary,#054677);}
 .mm-icon-gold{background:#fef3c7;color:#92400e;}
 .mm-icon-green{background:rgba(34,197,94,.12);color:#15803d;}
 .mm-icon-blue{background:rgba(59,130,246,.12);color:#1d4ed8;}
 .mm-icon-purple{background:rgba(124,58,237,.12);color:#6d28d9;}
 .mm-icon-red{background:rgba(220,38,38,.12);color:#b91c1c;}
 .mm-icon-amber{background:#fef3c7;color:#b45309;}
-.mm-icon-slate{background:var(--school-primary-a10,rgba(96,0,0,.08));color:var(--school-text-dim,#475569);}
+.mm-icon-slate{background:var(--school-primary-a10,rgba(5, 70, 119,.08));color:var(--school-text-dim,#475569);}
 .mm-card-title{font-size:14px;font-weight:800;color:var(--school-text,#0f172a);letter-spacing:-.01em;}
 .mm-card-subtitle{font-size:11px;color:var(--school-text-muted,#94a3b8);margin-top:1px;font-weight:500;}
 .mm-card-body{padding:14px 16px;}
@@ -646,7 +646,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 .mm-info-label{font-size:10.5px;font-weight:800;color:var(--school-text-dim,#64748b);text-transform:uppercase;letter-spacing:.07em;}
 .mm-info-value{font-size:13.5px;color:var(--school-text,#0f172a);font-weight:600;word-break:break-word;line-height:1.45;}
 .mm-info-value.muted{color:var(--school-text-muted,#94a3b8);font-weight:500;font-style:italic;}
-.mm-info a.mm-info-value{color:var(--school-primary-light,#8B2030);text-decoration:none;}
+.mm-info a.mm-info-value{color:var(--school-primary-light,#0A62A0);text-decoration:none;}
 .mm-info a.mm-info-value:hover{text-decoration:underline;}
 .mm-info-value .sub{font-size:11px;color:var(--school-text-dim,#64748b);font-weight:500;display:block;margin-top:1px;}
 
@@ -656,7 +656,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;
     font-size:11px;font-weight:700;background:var(--school-surface-hover,#f8fafc);color:var(--school-text,#334155);border:1px solid var(--school-border,#e2e8f0);
 }
-.mm-chip.maroon{background:var(--school-primary-a10,rgba(96,0,0,.08));color:var(--school-primary,#600000);border-color:var(--school-primary-a20,rgba(96,0,0,.18));}
+.mm-chip.maroon{background:var(--school-primary-a10,rgba(5, 70, 119,.08));color:var(--school-primary,#054677);border-color:var(--school-primary-a20,rgba(5, 70, 119,.18));}
 .mm-chip.green{background:rgba(34,197,94,.1);color:#15803d;border-color:rgba(34,197,94,.25);}
 .mm-chip.blue{background:rgba(59,130,246,.1);color:#1d4ed8;border-color:rgba(59,130,246,.25);}
 .mm-chip.amber{background:#fef3c7;color:#92400e;border-color:#fde68a;}
@@ -671,7 +671,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     border:2px dashed var(--school-border,#cbd5e1);overflow:hidden;cursor:pointer;
     display:flex;align-items:center;justify-content:center;position:relative;transition:all .15s;
 }
-.mm-photo-wrap .ph:hover{border-color:var(--school-accent,#F0C000);box-shadow:0 8px 20px rgba(240,192,0,.20);transform:translateY(-2px);}
+.mm-photo-wrap .ph:hover{border-color:var(--school-accent,#FF9000);box-shadow:0 8px 20px rgba(255, 144, 0,.20);transform:translateY(-2px);}
 .mm-photo-wrap .ph img{width:100%;height:100%;object-fit:cover;}
 .mm-photo-wrap .ph .ph-empty{display:flex;flex-direction:column;align-items:center;color:var(--school-text-muted,#94a3b8);}
 .mm-photo-wrap .ph .ph-empty i{font-size:30px;margin-bottom:4px;}
@@ -696,7 +696,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     width:46px;height:46px;border-radius:10px;background:var(--school-surface,#fff);margin:0 auto 8px;
     display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--school-text-dim,#64748b);
 }
-.mm-doc.has .ic{background:var(--school-primary,#600000);color:#fff;}
+.mm-doc.has .ic{background:var(--school-primary,#054677);color:#fff;}
 .mm-doc .nm{font-size:11.5px;font-weight:700;color:var(--school-text,#334155);margin-bottom:3px;}
 .mm-doc .st{font-size:10.5px;color:var(--school-text-dim,#64748b);font-weight:600;}
 .mm-doc.has .st{color:#78350f;}
@@ -709,7 +709,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 }
 .mm-role.on{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d;}
 .mm-role i{font-size:18px;color:var(--school-text-muted,#94a3b8);margin-bottom:4px;display:block;}
-.mm-role.on i{color:var(--school-primary,#600000);}
+.mm-role.on i{color:var(--school-primary,#054677);}
 .mm-role span{font-size:11px;font-weight:700;color:var(--school-text-dim,#64748b);}
 .mm-role.on span{color:#78350f;}
 
@@ -718,21 +718,21 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 .mm-fam-g:last-child{border-bottom:none;}
 .mm-fam-g .av{
     width:38px;height:38px;border-radius:50%;flex-shrink:0;
-    background:linear-gradient(135deg,var(--school-primary,#600000),var(--school-primary-light,#8B2030));color:#fff;font-weight:800;
+    background:linear-gradient(135deg,var(--school-primary,#054677),var(--school-primary-light,#0A62A0));color:#fff;font-weight:800;
     display:flex;align-items:center;justify-content:center;font-size:14px;
 }
 .mm-fam-g .who{min-width:0;flex:1;}
 .mm-fam-g .nm{font-weight:700;color:var(--school-text,#0f172a);font-size:13px;}
 .mm-fam-g .meta{font-size:11px;color:var(--school-text-dim,#64748b);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:2px;}
 .mm-fam-tag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
-    color:var(--school-primary,#600000);background:var(--school-primary-a10,rgba(96,0,0,.10));border-radius:999px;padding:1px 7px;}
+    color:var(--school-primary,#054677);background:var(--school-primary-a10,rgba(5, 70, 119,.10));border-radius:999px;padding:1px 7px;}
 .mm-fam-tag.soft{color:var(--school-text-dim,#475569);background:var(--school-surface-hover,#f1f5f9);}
 .mm-fam-btn{
     display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
-    color:var(--school-primary,#600000);background:var(--school-primary-a10,rgba(96,0,0,.08));border:1px solid var(--school-primary-a20,rgba(96,0,0,.18));border-radius:8px;
+    color:var(--school-primary,#054677);background:var(--school-primary-a10,rgba(5, 70, 119,.08));border:1px solid var(--school-primary-a20,rgba(5, 70, 119,.18));border-radius:8px;
     padding:5px 10px;cursor:pointer;white-space:nowrap;text-decoration:none;transition:all .15s;
 }
-.mm-fam-btn:hover{background:var(--school-primary,#600000);color:#fff;border-color:var(--school-primary,#600000);}
+.mm-fam-btn:hover{background:var(--school-primary,#054677);color:#fff;border-color:var(--school-primary,#054677);}
 .mm-fam-empty{
     font-size:12px;color:var(--school-text-dim,#64748b);background:var(--school-surface-hover,#f8fafc);border:1px dashed var(--school-border,#e2e8f0);
     border-radius:10px;padding:12px;
@@ -743,9 +743,9 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     background:var(--school-surface-hover,#f8fafc);border:1px solid var(--school-border,#e2e8f0);border-radius:999px;text-decoration:none;color:inherit;
     transition:all .15s;
 }
-.mm-sib:hover{background:var(--school-primary-a10,rgba(96,0,0,.08));border-color:var(--school-primary-a20,rgba(96,0,0,.2));color:var(--school-primary,#600000);}
+.mm-sib:hover{background:var(--school-primary-a10,rgba(5, 70, 119,.08));border-color:var(--school-primary-a20,rgba(5, 70, 119,.2));color:var(--school-primary,#054677);}
 .mm-sib .av{
-    width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--school-primary,#600000),var(--school-accent,#F0C000));
+    width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--school-primary,#054677),var(--school-accent,#FF9000));
     color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;
 }
 .mm-sib .nm{font-size:12px;font-weight:700;color:inherit;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -784,7 +784,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     font-size:13.5px;background:var(--school-surface-hover,#fbfdff);transition:all .15s;color:var(--school-text,#0f172a);
     font-family:inherit;
 }
-.mm-input:focus{outline:none;border-color:var(--school-primary,#600000);background:var(--school-surface,#fff);box-shadow:0 0 0 3px var(--school-primary-a10,rgba(96,0,0,.12));}
+.mm-input:focus{outline:none;border-color:var(--school-primary,#054677);background:var(--school-surface,#fff);box-shadow:0 0 0 3px var(--school-primary-a10,rgba(5, 70, 119,.12));}
 .mm-input::placeholder{color:var(--school-text-muted,#cbd5e1);}
 .mm-input:read-only,.mm-input:disabled{background:var(--school-surface-hover,#f1f5f9);color:var(--school-text-dim,#64748b);cursor:not-allowed;}
 .mm-help{font-size:11px;color:var(--school-text-muted,#94a3b8);margin-top:5px;line-height:1.45;}
@@ -796,10 +796,10 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     display:flex;align-items:flex-start;gap:10px;padding:10px 12px;
     background:var(--school-surface-hover,#f8fafc);border-radius:10px;cursor:pointer;border:1.5px solid transparent;transition:all .15s;
 }
-.mm-check:hover{background:var(--school-primary-a10,rgba(96,0,0,.06));}
-.mm-check input{width:18px;height:18px;accent-color:var(--school-primary,#600000);margin-top:2px;flex-shrink:0;}
-.mm-check input:checked ~ span{color:var(--school-primary,#600000);font-weight:700;}
-.mm-check:has(input:checked){background:var(--school-primary-a10,rgba(96,0,0,.08));border-color:var(--school-primary-a20,rgba(96,0,0,.25));}
+.mm-check:hover{background:var(--school-primary-a10,rgba(5, 70, 119,.06));}
+.mm-check input{width:18px;height:18px;accent-color:var(--school-primary,#054677);margin-top:2px;flex-shrink:0;}
+.mm-check input:checked ~ span{color:var(--school-primary,#054677);font-weight:700;}
+.mm-check:has(input:checked){background:var(--school-primary-a10,rgba(5, 70, 119,.08));border-color:var(--school-primary-a20,rgba(5, 70, 119,.25));}
 .mm-check span{font-size:12.5px;color:var(--school-text,#334155);line-height:1.4;}
 .mm-file-ok{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#15803d;font-weight:700;margin-bottom:6px;background:rgba(34,197,94,.10);padding:3px 9px;border-radius:999px;}
 
@@ -813,12 +813,12 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
     z-index:20;
 }
 .mm-save{
-    flex:1;padding:13px 18px;background:linear-gradient(135deg,var(--school-primary,#600000),var(--school-primary-light,#8B2030));
+    flex:1;padding:13px 18px;background:linear-gradient(135deg,var(--school-primary,#054677),var(--school-primary-light,#0A62A0));
     color:#fff;font-size:14px;font-weight:800;border:none;border-radius:10px;
     cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:all .15s;
-    box-shadow:0 4px 14px var(--school-primary-a20,rgba(96,0,0,.3));
+    box-shadow:0 4px 14px var(--school-primary-a20,rgba(5, 70, 119,.3));
 }
-.mm-save:hover{transform:translateY(-1px);box-shadow:0 6px 18px var(--school-primary-a20,rgba(96,0,0,.4));background:linear-gradient(135deg,var(--school-primary-light,#8B2030),var(--school-primary,#600000));}
+.mm-save:hover{transform:translateY(-1px);box-shadow:0 6px 18px var(--school-primary-a20,rgba(5, 70, 119,.4));background:linear-gradient(135deg,var(--school-primary-light,#0A62A0),var(--school-primary,#054677));}
 .mm-save:disabled{opacity:.6;cursor:not-allowed;transform:none;}
 .mm-savebar .sec{font-size:11px;color:var(--school-text-dim,#64748b);}
 .mm-savebar .mm-fam-btn{padding:10px 14px;}
@@ -829,7 +829,7 @@ $fullName = trim($m['student_name'] . ' ' . $m['father_name'] . ' ' . $m['grandf
 
 /* Copy button */
 .mm-copy{display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;color:inherit;cursor:pointer;font:inherit;padding:2px 5px;border-radius:4px;}
-.mm-copy:hover{background:rgba(240,192,0,.25);}
+.mm-copy:hover{background:rgba(255, 144, 0,.25);}
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media(max-width:768px){
@@ -1122,8 +1122,8 @@ $mmRoles = [
                                 $addrParts = array_filter([$m['house_number'] ?? '', $m['mender'] ?? '', $m['woreda'] ?? '', $m['sub_city'] ?? '', $cityMap[$m['city'] ?? ''] ?? ($m['city'] ?? '')]);
                                 if ($addrParts):
                             ?>
-                            <div style="margin-top:10px;padding:10px 12px;background:var(--school-surface-hover,#f8fafc);border-radius:9px;font-size:12px;color:var(--school-text-dim,#475569);border-left:3px solid var(--school-accent,#F0C000);">
-                                <i class="fas fa-location-dot" style="color:var(--school-primary,#600000);margin-right:6px"></i>
+                            <div style="margin-top:10px;padding:10px 12px;background:var(--school-surface-hover,#f8fafc);border-radius:9px;font-size:12px;color:var(--school-text-dim,#475569);border-left:3px solid var(--school-accent,#FF9000);">
+                                <i class="fas fa-location-dot" style="color:var(--school-primary,#054677);margin-right:6px"></i>
                                 <?= e(implode(', ', $addrParts)) ?>
                             </div>
                             <?php endif; ?>
@@ -1418,8 +1418,8 @@ $mmRoles = [
                                         </select>
                                     </div>
                                     <div class="mm-form-group">
-                                        <label class="mm-label" style="color:var(--school-primary,#600000)">✝ Spiritual Education</label>
-                                        <select name="spiritual_education" class="mm-input" style="border-color:var(--school-accent,#F0C000);background:#fefce8;">
+                                        <label class="mm-label" style="color:var(--school-primary,#054677)">✝ Spiritual Education</label>
+                                        <select name="spiritual_education" class="mm-input" style="border-color:var(--school-accent,#FF9000);background:#fefce8;">
                                             <option value="" <?= sel($m['spiritual_education']??'','') ?>>— Select —</option>
                                             <?php foreach ($spEduMap as $v=>$lbl): if ($v === '') continue; ?>
                                             <option value="<?= e($v) ?>" <?= sel($m['spiritual_education']??'',$v) ?>><?= e($lbl) ?></option>

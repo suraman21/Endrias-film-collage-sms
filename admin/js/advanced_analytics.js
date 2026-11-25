@@ -27,8 +27,8 @@
   }
 
   const PALETTE = {
-    brandPrimary: '#600000',
-    brandAccent: '#F0C000',
+    brandPrimary: '#054677',
+    brandAccent: '#FF9000',
     mastery: '#059669',       // Emerald (Score >= 85, Att >= 80)
     masteryBg: '#ecfdf5',
     proficient: '#0284c7',    // Sky (Score 70-84, Att >= 70)

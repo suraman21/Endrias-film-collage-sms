@@ -165,7 +165,7 @@ body{font-family:'Poppins',sans-serif;background:#f8fafc;margin:0}
 @media print{
 .sb,.bn,.no-print,.wbws-bnav,.wbws-mob-header,#ai-fab,#ai-win,#impersonateBar,aside,header,nav,.mo{display:none!important;visibility:hidden!important}
 main{padding:0!important;background:#fff!important;color:#1a0a0a!important}
-#sec-reportcards .sc,#sec-reportcards .rc-stat{background:#fff!important;color:#1a0a0a!important;border:2px solid #600000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#sec-reportcards .sc,#sec-reportcards .rc-stat{background:#fff!important;color:#1a0a0a!important;border:2px solid #054677!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #sec-reportcards .sc div,#sec-reportcards .sc span{color:#1a0a0a!important;opacity:1!important}
 }
 </style>
@@ -840,13 +840,13 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
 <div>
 <h2 style="font-size:1.25rem;font-weight:800;color:#1e293b;display:flex;align-items:center;gap:.5rem">
-  <span style="width:34px;height:34px;border-radius:10px;background:#600000;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1rem"><i class="fa-solid fa-chart-pie"></i></span>
+  <span style="width:34px;height:34px;border-radius:10px;background:#054677;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1rem"><i class="fa-solid fa-chart-pie"></i></span>
   <span>Education Analytics &amp; Intelligence Hub</span>
 </h2>
 <p style="font-size:.75rem;color:#64748b" class="amharic">የትምህርት ክፍል መረጃ ትንተና፣ የመምህራን ፈተና አቀራረብ ክትትል፣ የክፍሎች ደረጃ እና የ5-ገጽ አመራር ሪፖርት ማዕከል</p>
 </div>
 <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-<button class="btn btn-s" type="button" style="background:#600000;color:#fff;border:none" onclick="window.open('/admin/export_executive_report_pdf.php?' + (window.EduHubInstance ? window.EduHubInstance.buildQs().replace(/^&/, '') : ''), '_blank')"><i class="fa-solid fa-file-pdf"></i> Executive PDF</button>
+<button class="btn btn-s" type="button" style="background:#054677;color:#fff;border:none" onclick="window.open('/admin/export_executive_report_pdf.php?' + (window.EduHubInstance ? window.EduHubInstance.buildQs().replace(/^&/, '') : ''), '_blank')"><i class="fa-solid fa-file-pdf"></i> Executive PDF</button>
 <button class="btn btn-s" type="button" style="background:#059669;color:#fff;border:none" onclick="window.location='/admin/export_executive_report_excel.php?' + (window.EduHubInstance ? window.EduHubInstance.buildQs().replace(/^&/, '') : '')"><i class="fa-solid fa-file-excel"></i> Excel Pack (.xlsx)</button>
 <button class="btn btn-o btn-xs" type="button" onclick="if(window.EduHubInstance) window.EduHubInstance.load()"><i class="fa-solid fa-rotate"></i> Refresh</button>
 </div>
@@ -936,7 +936,7 @@ renderSidebarUserCard($userName, 'Education Dept', $todayFormatted, $initials, '
 
 <div class="crd" style="padding:0;overflow:hidden">
 <div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
-<div style="font-weight:700;font-size:.9rem;color:#1e293b"><i class="fa-solid fa-list-check" style="color:#600000"></i> Filtered Student Records (<span id="hubStudentCountBadge">0</span>)</div>
+<div style="font-weight:700;font-size:.9rem;color:#1e293b"><i class="fa-solid fa-list-check" style="color:#054677"></i> Filtered Student Records (<span id="hubStudentCountBadge">0</span>)</div>
 <div style="font-size:.72rem;color:#64748b">Showing ranked students under active criteria</div>
 </div>
 <div class="tw"><table class="dt"><thead><tr><th>#</th><th>Student</th><th>Code</th><th>Class</th><th>Gender</th><th>Grade Average</th><th>Attendance</th><th class="no-print">Actions</th></tr></thead><tbody id="hubStudentTableBody"></tbody></table></div>
@@ -1222,7 +1222,7 @@ Classes with low curriculum recorded percentages indicate pending exam score sub
 <div class="en" id="rcPrintBannerMeta"></div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
-<div><h2 style="font-size:1.2rem;font-weight:700;color:#1e293b"><i class="fa-solid fa-file-lines" style="color:#600000"></i> Report Cards</h2><p style="font-size:.75rem;color:#64748b" class="amharic">የተማሪ ሪፖርት ካርድ — totals, average, rank, print</p></div>
+<div><h2 style="font-size:1.2rem;font-weight:700;color:#1e293b"><i class="fa-solid fa-file-lines" style="color:#054677"></i> Report Cards</h2><p style="font-size:.75rem;color:#64748b" class="amharic">የተማሪ ሪፖርት ካርድ — totals, average, rank, print</p></div>
 </div>
 <div class="crd no-print" style="padding:1rem;margin-bottom:1rem">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.65rem;align-items:end">
@@ -3930,7 +3930,7 @@ function renderRcTable(){
         const attR=s.attendance_rate||0;
         const obt=(s.total_obtained!=null&&s.total_max!=null)?(`${s.total_obtained} / ${s.total_max}`):'—';
         return `<tr>
-            <td><span style="display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;${s.rank&&s.rank<=3?'background:#F0C000;color:#600000':'background:#f1f5f9;color:#64748b'}">${s.rank||'—'}${s.tied?'=':''}</span></td>
+            <td><span style="display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;${s.rank&&s.rank<=3?'background:#FF9000;color:#054677':'background:#f1f5f9;color:#64748b'}">${s.rank||'—'}${s.tied?'=':''}</span></td>
             <td style="font-weight:600;font-size:.82rem">${esc(s.student_name||'')} ${esc(s.father_name||'')}${s.christian_name?`<div style="font-size:.62rem;color:#94a3b8">Christian name: ${esc(s.christian_name)}</div>`:''}</td>
             <td><span class="ch ch-i" style="font-size:.65rem">${esc(s.member_code||'')}</span></td>
             <td style="font-size:.8rem">${esc(obt)}</td>
