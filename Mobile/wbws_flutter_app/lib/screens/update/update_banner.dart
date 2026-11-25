@@ -69,7 +69,7 @@ class _UpdateBannerState extends State<UpdateBanner> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'New FKSS version ${cfg.latestVersion} is available',
+                      'New Endrias FC version ${cfg.latestVersion} is available',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

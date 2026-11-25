@@ -159,7 +159,7 @@ class _OfflineDataProtectionFailureAppState
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FKSS',
+      title: 'Endrias FC',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       scrollBehavior: const SmoothScrollBehavior(),
@@ -335,7 +335,7 @@ class _FKSSAppState extends State<FKSSApp> {
     }
 
     return MaterialApp(
-      title: 'FKSS',
+      title: 'Endrias FC',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

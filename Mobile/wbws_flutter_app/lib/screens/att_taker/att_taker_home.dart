@@ -92,7 +92,7 @@ class AttTakerHomeScreenState extends State<AttTakerHomeScreen> {
           slivers: [
             SliverAppBar(floating: true, automaticallyImplyLeading: false,
               title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('FKSS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const Text('Endrias FC', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 Text('ቅጥረት ያዥ • Attendance Taker', style: TextStyle(fontSize: 11, color: Colors.white70)),
               ]),
               actions: [

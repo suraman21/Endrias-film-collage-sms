@@ -58,7 +58,7 @@ class InfoHomeScreenState extends State<InfoHomeScreen> {
           slivers: [
             SliverAppBar(floating: true, automaticallyImplyLeading: false,
               title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('FKSS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const Text('Endrias FC', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 Text('የመረጃ ክፍል • Info Department', style: TextStyle(fontSize: 11, color: Colors.white70)),
               ]),
               actions: [const NotificationBellButton(color: Colors.white), IconButton(icon: const Icon(Icons.refresh_rounded, size: 22), onPressed: _load)],

@@ -11,8 +11,8 @@ import 'photo_camera_screen.dart';
 
 /// FKSS maroon+gold brand palette for photo workflows.
 class _PhotoBrand {
-  static const maroon = Color(0xFF600000);
-  static const gold = Color(0xFFF0C000);
+  static const maroon = Color(0xFF054677);
+  static const gold = Color(0xFFFF9000);
   static const ink = Color(0xFF1e1b19);
   static const muted = Color(0xFF6b6360);
   static const surface = Color(0xFFfaf6f2);
@@ -313,12 +313,12 @@ class _PhotoBatchCaptureScreenState extends State<PhotoBatchCaptureScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF600000).withOpacity(.08),
+                color: const Color(0xFF054677).withOpacity(.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text('$_missing missing',
                   style: const TextStyle(
-                      color: Color(0xFF600000),
+                      color: Color(0xFF054677),
                       fontSize: 11,
                       fontWeight: FontWeight.w700)),
             ),

@@ -175,7 +175,7 @@ class _PhotoSyncPanelScreenState extends State<PhotoSyncPanelScreen> {
         content: Text(
             '$files ready (${bundle.photoCount} photos, $kb KB) — $where'),
         duration: const Duration(seconds: 5),
-        backgroundColor: const Color(0xFF600000),
+        backgroundColor: const Color(0xFF054677),
       ));
     } catch (e) {
       if (!mounted) return;
@@ -381,8 +381,8 @@ class _FailedCard extends StatelessWidget {
 }
 
 class _Colors {
-  static const maroon = Color(0xFF600000);
-  static const gold = Color(0xFFF0C000);
+  static const maroon = Color(0xFF054677);
+  static const gold = Color(0xFFFF9000);
 }
 
 class _Banner extends StatelessWidget {
