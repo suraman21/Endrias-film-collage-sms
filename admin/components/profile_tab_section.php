@@ -3,7 +3,7 @@
  * Universal Profile Tab Component — School Management System
  *
  * Renders an in-dashboard profile view & editor styled strictly with the official
- * SSMS Brand Design System: Clean background, Deep Maroon accents (#800000), and Warm Gold/Yellow (#f59e0b).
+ * SSMS Brand Design System: Clean background, Deep Maroon accents (#032948), and Warm Gold/Yellow (#f59e0b).
  * Adapts dynamically to light, dark, and toggleable dashboard color schemes.
  *
  * Embedded directly inside any dashboard (<main>) as a first-class tab.
@@ -77,7 +77,7 @@ if (!function_exists('renderProfileTabSection')) {
                 <div>
                     <span style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#d97706;display:block;margin-bottom:.2rem">Self-Service Account</span>
                     <h2 style="font-size:1.35rem;font-weight:700;color:var(--pt-text);margin:0;display:flex;align-items:center;gap:.5rem">
-                        <i class="fa-solid fa-user-gear" style="color:#800000"></i> My Profile
+                        <i class="fa-solid fa-user-gear" style="color:#032948"></i> My Profile
                     </h2>
                     <p style="font-size:.78rem;color:var(--pt-muted);margin-top:.2rem">Manage your personal information, live profile photo, and security credentials.</p>
                 </div>

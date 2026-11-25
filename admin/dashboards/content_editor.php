@@ -52,7 +52,7 @@ $schoolLogoUrl = function_exists('ssms_school_logo_url') ? ssms_school_logo_url(
 body{background:var(--bg);color:var(--text);min-height:100vh}
 
 /* Topbar */
-.topbar{background:linear-gradient(135deg,var(--maroon-dark),var(--maroon));color:#fff;padding:0.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(96,0,0,0.2)}
+.topbar{background:linear-gradient(135deg,var(--maroon-dark),var(--maroon));color:#fff;padding:0.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(5, 70, 119,0.2)}
 .topbar-brand{display:flex;align-items:center;gap:0.7rem}
 .topbar-logo{width:40px;height:40px;border-radius:50%;background:#fff;border:2px solid var(--gold);padding:3px;display:flex;align-items:center;justify-content:center}
 .topbar-logo img{width:100%;height:100%;object-fit:contain}
@@ -85,7 +85,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 
 /* Buttons */
 .btn{padding:0.55rem 1rem;border-radius:0.5rem;border:none;font-size:0.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;transition:all 0.12s;text-decoration:none}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--maroon-dark);box-shadow:0 4px 12px rgba(240,192,0,0.3)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--maroon-dark);box-shadow:0 4px 12px rgba(255, 144, 0,0.3)}
 .btn-gold:hover{transform:translateY(-1px)}
 .btn-maroon{background:var(--maroon);color:#fff}
 .btn-maroon:hover{background:var(--maroon-light)}
@@ -99,7 +99,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .grid{display:grid;gap:1rem}
 .grid-cards{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:0.85rem;overflow:hidden;transition:box-shadow 0.15s}
-.card:hover{box-shadow:0 6px 20px rgba(96,0,0,0.08)}
+.card:hover{box-shadow:0 6px 20px rgba(5, 70, 119,0.08)}
 .card-body{padding:0.9rem}
 .card-title{font-weight:600;font-size:0.9rem;color:var(--maroon-dark)}
 .card-meta{font-size:0.75rem;color:var(--text-dim);margin-top:2px}

@@ -354,7 +354,7 @@
       tbody.innerHTML = list.map(c => `
         <tr>
           <td style="text-align:center;font-weight:700;color:#64748b">
-            <span style="display:inline-flex;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;background:${c.class_rank === 1 ? '#F0C000;color:#600000;font-weight:800' : '#f1f5f9;color:#64748b'}">${c.class_rank}</span>
+            <span style="display:inline-flex;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;background:${c.class_rank === 1 ? '#FF9000;color:#054677;font-weight:800' : '#f1f5f9;color:#64748b'}">${c.class_rank}</span>
           </td>
           <td style="font-weight:700;font-size:.85rem" class="amharic">
             ${esc(c.class_name)}
@@ -392,13 +392,13 @@
 
       container.innerHTML = `
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
-          <div style="font-weight:700;font-size:1rem;color:#1e293b;margin-bottom:.5rem"><i class="fa-solid fa-file-shield" style="color:#600000"></i> Executive Brief Generation Ready</div>
+          <div style="font-weight:700;font-size:1rem;color:#1e293b;margin-bottom:.5rem"><i class="fa-solid fa-file-shield" style="color:#054677"></i> Executive Brief Generation Ready</div>
           <p style="font-size:.78rem;color:#475569;line-height:1.5;margin:0 0 1rem">
             The active academic dataset contains <strong>${s.total || 0}</strong> analyzed students across <strong>${(this.data.class_benchmarks || []).length}</strong> classes with an overall grade average of <strong>${s.avg_grade || 0}%</strong> and exam delivery completeness of <strong>${gov.delivery_rate || 0}%</strong>.
             <strong>${triage.length}</strong> students have been identified for academic or attendance triage intervention.
           </p>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-            <a href="/admin/export_executive_report_pdf.php?${this.buildQs().replace(/^&/, '')}" target="_blank" class="btn btn-p" style="background:#600000;color:#fff">
+            <a href="/admin/export_executive_report_pdf.php?${this.buildQs().replace(/^&/, '')}" target="_blank" class="btn btn-p" style="background:#054677;color:#fff">
               <i class="fa-solid fa-file-pdf"></i> Download Official 5-Page PDF Report
             </a>
             <a href="/admin/export_executive_report_excel.php?${this.buildQs().replace(/^&/, '')}" class="btn btn-s" style="background:#059669;color:#fff">

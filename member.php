@@ -53,7 +53,7 @@ function renderUnavailableNotice($retryAfterSeconds) {
         . '<style>body{font-family:sans-serif;background:#faf7f0;display:flex;'
         . 'align-items:center;justify-content:center;min-height:100vh;margin:0}'
         . '.card{background:#fff;border:1px solid #f0e2c8;border-radius:16px;'
-        . 'padding:32px;max-width:380px;text-align:center;box-shadow:0 10px 30px rgba(96,0,0,.12)}'
+        . 'padding:32px;max-width:380px;text-align:center;box-shadow:0 10px 30px rgba(5, 70, 119,.12)}'
         . 'h1{font-size:18px;color:#5b1414;margin:12px 0 8px}p{color:#6b7280;font-size:14px;line-height:1.5}</style>'
         . '</head><body><div class="card">'
         . '<div style="font-size:34px">&#9888;&#65039;</div>'
@@ -170,13 +170,13 @@ function getMemberLabel($type) {
         body {
             font-family: 'Poppins', 'Noto Serif Ethiopic', sans-serif;
             background:
-              radial-gradient(circle at 12% 12%, rgba(240,192,0,0.10), transparent 40%),
+              radial-gradient(circle at 12% 12%, rgba(255, 144, 0,0.10), transparent 40%),
               linear-gradient(160deg, #faf7f0, #f3ece0);
             min-height: 100vh;
         }
         .amharic { font-family: 'Noto Serif Ethiopic', serif; }
         .verify-card {
-            box-shadow: 0 20px 55px rgba(96,0,0,0.18);
+            box-shadow: 0 20px 55px rgba(5, 70, 119,0.18);
         }
         .header-maroon {
             background: linear-gradient(150deg, var(--maroon-dark), var(--maroon) 60%, #4a1208);
@@ -188,7 +188,7 @@ function getMemberLabel($type) {
             position: absolute;
             top: -60px; right: -60px;
             width: 180px; height: 180px;
-            border: 2px solid rgba(240,192,0,0.18);
+            border: 2px solid rgba(255, 144, 0,0.18);
             border-radius: 50%;
         }
         .gold-ring { border-color: var(--gold) !important; }

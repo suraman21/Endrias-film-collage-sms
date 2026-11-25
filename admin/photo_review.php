@@ -35,13 +35,13 @@ body {
   background: #faf6f2; color: #1e1b19; -webkit-font-smoothing: antialiased;
 }
 :root {
-  --maroon: #600000; --gold: #F0C000; --ink: #1e1b19; --muted: #6b6360;
-  --surface: #fff; --surface2: #faf6f2; --border: rgba(96,0,0,.12);
+  --maroon: #054677; --gold: #FF9000; --ink: #1e1b19; --muted: #6b6360;
+  --surface: #fff; --surface2: #faf6f2; --border: rgba(5, 70, 119,.12);
 }
 .pr-nav {
   background: var(--maroon); color: #fff; padding: 12px 20px;
   display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 2px 8px rgba(96,0,0,.2);
+  box-shadow: 0 2px 8px rgba(5, 70, 119,.2);
 }
 .pr-nav a { color: var(--gold); text-decoration: none; font-weight: 600; }
 .pr-nav .user { opacity: .85; font-size: 13px; }
@@ -50,7 +50,7 @@ body {
   background: linear-gradient(135deg, var(--maroon) 0%, #7b1414 100%);
   color: #fff; border-radius: 14px; padding: 24px 28px;
   display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 8px 24px rgba(96,0,0,.15); margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(5, 70, 119,.15); margin-bottom: 20px;
 }
 .hero h1 { margin: 0; font-size: 22px; }
 .hero p { margin: 6px 0 0; opacity: .85; font-size: 13px; }
@@ -90,10 +90,10 @@ body {
 .thumb.new .thumb-label { color: var(--maroon); font-weight: 700; }
 .actions { display: flex; flex-direction: column; gap: 8px; }
 .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.badge-cur { background: rgba(240,192,0,.18); color: #7a5a00;
+.badge-cur { background: rgba(255, 144, 0,.18); color: #7a5a00;
   font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 700;
   display: inline-block; margin-top: 4px; }
-.badge-new { background: rgba(96,0,0,.08); color: var(--maroon);
+.badge-new { background: rgba(5, 70, 119,.08); color: var(--maroon);
   font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 700;
   display: inline-block; margin-top: 4px; }
 .card[data-resolved="1"] { opacity: .4; transition: opacity .3s; }

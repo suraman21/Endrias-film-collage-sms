@@ -210,7 +210,7 @@ function pct(int $part, int $total): int {
     return $total > 0 ? (int) round(($part / $total) * 100) : 0;
 }
 
-$DEPT_COLOR = '#800000';    // maroon (brand primary)
+$DEPT_COLOR = '#032948';    // maroon (brand primary)
 $DEPT_ACCENT = '#f59e0b';   // gold  (brand accent)
 $DEPT_DARK   = '#5c0000';
 $DEPT_LIGHT  = '#a01010';

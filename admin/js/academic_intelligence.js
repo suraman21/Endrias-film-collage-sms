@@ -35,7 +35,7 @@
   var OPTIONS_ENDPOINT = '/admin/api_education.php?action=get_academic_intelligence_options';
 
   var PALETTE = {
-    brand: '#600000',
+    brand: '#054677',
     primary: '#7c3aed',
     ok: '#059669',
     warn: '#f59e0b',

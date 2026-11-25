@@ -84,10 +84,10 @@ if (!defined('DEPT_GROUPS_NAME'))       define('DEPT_GROUPS_NAME', 'ቡድኖች
 if (!defined('DEPT_GROUPS_NAME_EN'))    define('DEPT_GROUPS_NAME_EN', 'Groups');
 
 // ── Theme colours (member.php & landing rely on these) ────────
-if (!defined('THEME_PRIMARY'))          define('THEME_PRIMARY', '#600000');
+if (!defined('THEME_PRIMARY'))          define('THEME_PRIMARY', '#054677');
 if (!defined('THEME_PRIMARY_LIGHT'))    define('THEME_PRIMARY_LIGHT', '#7a1010');
-if (!defined('THEME_PRIMARY_DARK'))     define('THEME_PRIMARY_DARK', '#400000');
-if (!defined('THEME_ACCENT'))           define('THEME_ACCENT', '#F0C000');
+if (!defined('THEME_PRIMARY_DARK'))     define('THEME_PRIMARY_DARK', '#032948');
+if (!defined('THEME_ACCENT'))           define('THEME_ACCENT', '#FF9000');
 if (!defined('THEME_ACCENT_2'))         define('THEME_ACCENT_2', '#B8860B');
 if (!defined('THEME_SIDEBAR_TOP'))      define('THEME_SIDEBAR_TOP', THEME_PRIMARY_DARK);
 if (!defined('THEME_SIDEBAR_MID'))      define('THEME_SIDEBAR_MID', THEME_PRIMARY);

@@ -72,7 +72,7 @@ class IdCardLayout
                 'id' => 'bar_front', 'label' => 'Front maroon bar', 'side' => 'front',
                 'controls' => [
                     ['k' => 'bar_front_height', 'label' => 'Height', 'type' => 'int', 'min' => 8, 'max' => 80, 'def' => 38],
-                    ['k' => 'bar_front_color', 'label' => 'Bar colour', 'type' => 'color', 'def' => '#600000'],
+                    ['k' => 'bar_front_color', 'label' => 'Bar colour', 'type' => 'color', 'def' => '#054677'],
                     ['k' => 'bar_front_gold', 'label' => 'Gold line', 'type' => 'int', 'min' => 0, 'max' => 12, 'def' => 4],
                     ['k' => 'bar_front_gold_color', 'label' => 'Gold colour', 'type' => 'color', 'def' => '#B8860B'],
                 ],
@@ -149,11 +149,11 @@ class IdCardLayout
                 'controls' => [
                     ['k' => 'bar_back_text', 'label' => 'Bar text', 'type' => 'text', 'def' => 'የአባል መረጃና የአደጋ ጊዜ ተጠሪ'],
                     ['k' => 'bar_back_height', 'label' => 'Height', 'type' => 'int', 'min' => 8, 'max' => 80, 'def' => 38],
-                    ['k' => 'bar_back_color', 'label' => 'Bar colour', 'type' => 'color', 'def' => '#600000'],
+                    ['k' => 'bar_back_color', 'label' => 'Bar colour', 'type' => 'color', 'def' => '#054677'],
                     ['k' => 'bar_back_gold', 'label' => 'Gold line', 'type' => 'int', 'min' => 0, 'max' => 12, 'def' => 4],
                     ['k' => 'bar_back_gold_color', 'label' => 'Gold colour', 'type' => 'color', 'def' => '#B8860B'],
                     ['k' => 'bar_back_label_size', 'label' => 'Bar text size', 'type' => 'int', 'min' => 10, 'max' => 40, 'def' => 22],
-                    ['k' => 'bar_back_label_color', 'label' => 'Bar text colour', 'type' => 'color', 'def' => '#F0C000'],
+                    ['k' => 'bar_back_label_color', 'label' => 'Bar text colour', 'type' => 'color', 'def' => '#FF9000'],
                 ],
             ],
             $row('phone', 'Phone', 'back'),
@@ -202,10 +202,10 @@ class IdCardLayout
             'code_size' => 32,
             'title_size' => 24,
             'parish_size' => 26,
-            'label_color' => '#600000',
-            'title_color' => '#600000',
+            'label_color' => '#054677',
+            'title_color' => '#054677',
             'gold_color' => '#B8860B',
-            'bar_color' => '#600000',
+            'bar_color' => '#054677',
             'value_color' => '#1A0A0A',
         ];
     }
@@ -224,7 +224,7 @@ class IdCardLayout
                     $out[$c['k']] = $out[$c['def_from']];
                     continue;
                 }
-                $out[$c['k']] = ($c['type'] ?? '') === 'color' ? '#600000' : 0;
+                $out[$c['k']] = ($c['type'] ?? '') === 'color' ? '#054677' : 0;
             }
         }
         // Keep legacy keys used by older CSS / preview helpers
