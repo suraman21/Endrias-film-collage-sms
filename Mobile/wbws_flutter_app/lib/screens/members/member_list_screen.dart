@@ -579,7 +579,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                             interactive: true,
                             thickness: 5,
                             radius: const Radius.circular(3),
-                            thumbColor: const Color(0x595A1212),
+                            thumbColor: const Color(0x59054677),
                             child: RefreshIndicator(
                               onRefresh: () => _loadMembers(),
                               // Phase 3: fixed-extent rows (fast) + a
@@ -653,7 +653,7 @@ class _MemberListScreenState extends State<MemberListScreen>
 
   // Precomputed tint colors — withOpacity() allocates a new Color on every
   // row build; during a fast fling that is thousands of avoidable allocations.
-  static const Color _avatarBg = Color(0x265A1212);
+  static const Color _avatarBg = Color(0x26054677);
   static const Map<String, Color> _chipBg = {
     'active': Color(0x26059669),
     'warning': Color(0x26D97706),

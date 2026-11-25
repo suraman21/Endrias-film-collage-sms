@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// FKSS App — Configuration Constants
+/// Endrias FC App — Configuration Constants
 class AppConfig {
-  static const String apiBaseUrl = 'https://felegekidusan.com/api/v1';
+  static const String apiBaseUrl = 'https://endriasfilmcollage.arkeonethiopia.com/api/v1';
 
   /// Site root (apiBaseUrl without the /api/v1 suffix) — the origin that
   /// serves RELATIVE upload URLs (for example member photo renditions).
@@ -10,8 +10,8 @@ class AppConfig {
   static String get siteOrigin =>
       apiBaseUrl.replaceFirst(RegExp(r'/api/v1$'), '');
 
-  static const String appName = 'FKSS';
-  static const String appNameAmharic = 'ፈለገ ቅዱሳን ሰንበት ት/ቤት';
+  static const String appName = 'Endrias FC';
+  static const String appNameAmharic = 'የኤኑዹሪያስ ፊልም ኮሌጅ';
   // ⚠ SINGLE SOURCE OF TRUTH for the update system: the app compares
   // THESE values against the server's .fkss_app_release.php — pubspec.yaml's
   // version only feeds the Android package version. They MUST stay in sync
@@ -19,8 +19,8 @@ class AppConfig {
   // drifting is what hid updates from phones before P65).
   // Mirrored from pubspec.yaml and pinned by the release-gate test because
   // API headers and update decisions need these values before package lookup.
-  static const String appVersion = '1.8.5';
-  static const int appBuild = 48;
+  static const String appVersion = '1.9.0';
+  static const int appBuild = 49;
   static const String tokenKey = 'fkss_token';
   static const String refreshTokenKey = 'fkss_refresh_token';
   static const String userDataKey = 'fkss_user';

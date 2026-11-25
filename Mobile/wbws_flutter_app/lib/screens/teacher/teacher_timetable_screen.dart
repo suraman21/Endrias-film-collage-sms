@@ -350,19 +350,31 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
   IconData _subjectIcon(_Slot s) {
     if (s.isMakeup) return Icons.event_repeat_rounded;
     final n = '${s.subject} ${s.subjectEn ?? ''}'.toLowerCase();
-    if (n.contains('bible') || n.contains('መጽሐፍ')) return Icons.menu_book_rounded;
-    if (n.contains('liturg') || n.contains('ቅዳሴ')) return Icons.church_rounded;
-    if (n.contains('music') || n.contains('መዝሙር')) {
+    if (n.contains('film') || n.contains('cinema') || n.contains('movie') ||
+        n.contains('ፊልም') || n.contains('ሲኒማ')) {
+      return Icons.movie_creation_rounded;
+    }
+    if (n.contains('edit') || n.contains('montage') || n.contains('post')) {
+      return Icons.video_library_rounded;
+    }
+    if (n.contains('sound') || n.contains('audio') || n.contains('music') || n.contains('መዝሙር')) {
       return Icons.music_note_rounded;
     }
-    if (n.contains('histor') || n.contains('ታሪክ')) return Icons.account_balance_rounded;
-    if (n.contains('doctrin') || n.contains('faith') || n.contains('ሃይማኖት') || n.contains('ዶግማ')) {
-      return Icons.auto_stories_rounded;
+    if (n.contains('photo') || n.contains('camera')) return Icons.photo_camera_rounded;
+    if (n.contains('animat') || n.contains('vfx') || n.contains('graphic') || n.contains('motion')) {
+      return Icons.animation_rounded;
     }
-    if (n.contains('ge\'ez') || n.contains('geez') || n.contains('ግዕዝ') || n.contains('language') || n.contains('ቋንቋ')) {
-      return Icons.translate_rounded;
+    if (n.contains('direct') || n.contains('script') || n.contains('story') || n.contains('act')) {
+      return Icons.theater_comedy_rounded;
     }
-    if (n.contains('ethic') || n.contains('ሥነ') || n.contains('moral')) return Icons.favorite_rounded;
+    if (n.contains('histor') || n.contains('ታሪ') || n.contains('criticism')) {
+      return Icons.account_balance_rounded;
+    }
+    if (n.contains('makeup') || n.contains('make-up') || n.contains('costume') || n.contains('wardrobe')) {
+      return Icons.face_retouching_natural_rounded;
+    }
+    if (n.contains('light')) return Icons.lightbulb_rounded;
+    if (n.contains('language') || n.contains('ቋንቋ')) return Icons.translate_rounded;
     if (n.contains('math') || n.contains('ሒሳብ')) return Icons.calculate_rounded;
     if (n.contains('science') || n.contains('ሳይንስ')) return Icons.science_rounded;
     if (n.contains('art') || n.contains('ሥዕል')) return Icons.palette_rounded;

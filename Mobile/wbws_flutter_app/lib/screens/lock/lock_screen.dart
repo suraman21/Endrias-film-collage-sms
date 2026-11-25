@@ -210,7 +210,7 @@ class _LockScreenState extends State<LockScreen>
                 Icon(Icons.lock_outline_rounded,
                     size: 44, color: isThrottled ? Colors.red : AppTheme.primary),
                 const SizedBox(height: 14),
-                const Text('Felege Kidusan is locked',
+                const Text('Endrias FC is locked',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text('Enter your passcode to continue',
