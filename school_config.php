@@ -18,7 +18,7 @@
 // │  SECTION 1: ACTIVE THEME                                    │
 // │  Points to /themes/[name]/ for CSS, logos, and assets       │
 // └─────────────────────────────────────────────────────────────┘
-define('ACTIVE_THEME', 'fkss');
+define('ACTIVE_THEME', 'endrias');
 
 
 // ┌─────────────────────────────────────────────────────────────┐
