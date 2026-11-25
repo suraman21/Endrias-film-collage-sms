@@ -416,7 +416,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             box-shadow: 0 8px 20px rgba(148, 163, 184, 0.35);
         }
 
-
         /* Family Link workspace */
         .fam-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem}
         .fam-kpi{display:flex;gap:.6rem;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.7rem .8rem;transition:box-shadow .15s,transform .15s}
@@ -716,7 +715,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 <span id="famQueueBadge" class="ml-auto hidden text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-900"></span>
             </a>
 
-
             <button data-section="manage"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
                 <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
@@ -748,10 +746,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                 </span>
                 <span class="font-semibold">Groups</span>
             </a>
-
-
-
-
 
             <button type="button" onclick="return openDataSyncModal();"
                     class="mobile-touch-target flex items-center gap-3 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
@@ -1143,7 +1137,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                     <option value="direct">Direct</option>
                                 </select>
 
-
                                 <select id="filterStatus"
                                         class="text-xs border border-slate-200 rounded-xl px-2 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">Status (All)</option>
@@ -1449,13 +1442,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         <p class="text-[10px] text-slate-400 mt-1">Separate First, Father, and Grandfather names with spaces</p>
                                     </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            Christian Name (የክርስትና ስም)
-                                        </label>
-                                        <input type="text" name="baptismal_name"
-                                               class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-slate-200 text-xs placeholder:text-[11px] focus:ring-emerald-200 focus:border-emerald-400">
-                                    </div>
+                                    
 
                                     <div class="md:col-span-2">
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
@@ -1527,30 +1514,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                         </select>
                                     </div>
 
-                                    <div class="permanent-only">
-                                        <label class="block text-[11px] font-medium text-slate-700 mb-1">
-                                            <i class="fa-solid fa-cross text-emerald-500 mr-1"></i>
-                                            Spiritual Education (የመንፈሳዊ ትምህርት ደረጃ)
-                                        </label>
-                                        <select name="spiritual_education"
-                                                class="mobile-touch-target w-full px-3 py-2 rounded-xl border border-emerald-200 text-xs focus:ring-emerald-200 focus:border-emerald-400 bg-emerald-50">
-                                            <option value="">Select Level</option>
-                                            <option value="grade_1">1ኛ ክፍል (Grade 1)</option>
-                                            <option value="grade_2">2ኛ ክፍል (Grade 2)</option>
-                                            <option value="grade_3">3ኛ ክፍል (Grade 3)</option>
-                                            <option value="grade_4">4ኛ ክፍል (Grade 4)</option>
-                                            <option value="grade_5">5ኛ ክፍል (Grade 5)</option>
-                                            <option value="grade_6">6ኛ ክፍል (Grade 6)</option>
-                                            <option value="grade_7">7ኛ ክፍል (Grade 7)</option>
-                                            <option value="grade_8">8ኛ ክፍል (Grade 8)</option>
-                                            <option value="grade_9">9ኛ ክፍል (Grade 9)</option>
-                                            <option value="grade_10">10ኛ ክፍል (Grade 10)</option>
-                                            <option value="grade_11">11ኛ ክፍል (Grade 11)</option>
-                                            <option value="grade_12">12ኛ ክፍል (Grade 12)</option>
-                                            <option value="diploma">ዲፕሎማ (Diploma)</option>
-                                            <option value="degree">ዲግሪ (Degree)</option>
-                                        </select>
-                                    </div>
+                                    
 
                                     <div class="permanent-only md:col-span-2" data-conditional="class">
                                         <label class="block text-[11px] font-medium text-slate-700 mb-1">
@@ -1860,14 +1824,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                                            class="block w-full text-xs text-slate-600">
                                 </div>
 
-                                <div>
-                                    <label class="block font-medium text-slate-700 mb-1">
-                                        Spiritual Education Document
-                                    </label>
-                                    <input type="file" name="doc_spiritual"
-                                           accept=".pdf,.doc,.docx,image/*"
-                                           class="block w-full text-xs text-slate-600">
-                                </div>
+                                
 
                                 <div>
                                     <label class="block font-medium text-slate-700 mb-1">
@@ -1991,7 +1948,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
                     <div id="famDrawerBody" class="fam-drawer-body"></div>
                 </div>
             </div>
-
 
             <!-- MANAGE (edit, archive) -->
             <section id="section-manage" class="content-section">
@@ -2856,7 +2812,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
         if (fullName) setFormField(f, 'full_name_am', fullName);
         // Direct 1:1 mappings (student column -> form field)
         var direct = [
-            ['baptismal_name','baptismal_name'],
             ['gender','gender'],
             ['age_group','age_group'],
             ['current_section','current_section'],
@@ -2875,7 +2830,6 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
             ['block_number','block_number'],
             ['house_number','house_number'],
             ['education_level','education_level'],
-            ['spiritual_education','spiritual_education'],
             ['member_code','student_id']
         ];
         direct.forEach(function (pair) {
