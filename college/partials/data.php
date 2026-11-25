@@ -247,25 +247,25 @@ $EFC_HOME = [
     's3r2x' => ['en' => 'Learn from Int’l Emmy winner Habtamu Sefiw, veteran director Henok Ayele, Munich’s Prof. Andreas Sippel (Otto Falckenberg School), and French visual artist Sébastien Cailleux.', 'am' => 'ከዓለም አቀፍ ኤሚ አዋርድ አሸናፊው ሐብታሙ ሰፊው፣ ከሔኖክ አየለ፣ ከጀርመኑ አንድሬስ ሲፔል እና ከፈረንሳዊው��ባስቲያ�ን ካይሊውክስ ልምድ ይቅሰሙ።'],
     's3r3t' => ['en' => 'Proven Screen Alumni — From “Hagere” to EBS TV’s “Besintu”', 'am' => 'በቴሌቪዥንና በሲኒማ ያሸበረቁ ምሩቃን'],
     's3r3x' => ['en' => 'Alumni include 2018 E.C. double-winner Yodit Solomon ("Hagere") and child star Dagim Tezera ("Nati" on EBS TV sitcom Besintu).', 'am' => 'በ2018 ዓ.ም የ«ሀገሬ» ፊልም አሸናፊዋ ዮዲት ሰሎሞን እና የኢቢኤስ «በስንቱ» ድራማ ተዋናይ ህፃን ዳግም ተዘራ የኮሌጁ ፍሬዎች ናቸው።'],
-    ['hero_kicker' => 'ከምናብ እስከ ገቢር — በፊልም ጥበብ ዓለምን እንስራ !'],
-    ['fac_btn' => ['en' => 'Meet 6 Faculty & 5 Guest Mentors', 'am' => 'መምህራንን እና ተጋባዥ ባለሙያዎችን ይተዋወቁ']],
-    ['m_stats' => [
+    'hero_kicker' => 'ከምናብ እስከ ገቢር — በፊልም ጥበብ ዓለምን እንስራ !',
+    'fac_btn' => ['en' => 'Meet 6 Faculty & 5 Guest Mentors', 'am' => 'መምህራንን እና ተጋባዥ ባለሙያዎችን ይተዋወቁ'],
+    'm_stats' => [
         ['stat' => '8+ Yrs',  'key' => 'm1'],
         ['stat' => '250+',    'key' => 'm2'],
         ['stat' => '6 Tiers', 'key' => 'm3'],
         ['stat' => '0% Fee',  'key' => 'm4'],
-    ]],
-    ['s2_cards' => [
+    ],
+    's2_cards' => [
         ['icon' => 'camera',         'key' => 's2c1', 'descKey' => 's2c1d'],
         ['icon' => 'sparkles',       'key' => 's2c2', 'descKey' => 's2c2d'],
         ['icon' => 'graduation-cap', 'key' => 's2c3', 'descKey' => 's2c3d'],
         ['icon' => 'briefcase',      'key' => 's2c4', 'descKey' => 's2c4d'],
-    ]],
-    ['s3_rows' => [
+    ],
+    's3_rows' => [
         ['icon' => 'award', 'tKey' => 's3r1t', 'xKey' => 's3r1x'],
         ['icon' => 'users', 'tKey' => 's3r2t', 'xKey' => 's3r2x'],
         ['icon' => 'tv',    'tKey' => 's3r3t', 'xKey' => 's3r3x'],
-    ]],
+    ],
 ];
 
 // ── Shared chrome copy (Layout.tsx) ────────────────────────────────────────
@@ -289,19 +289,19 @@ $EFC_UI = [
     'tl4' => ['en' => '9-Month Audio-Visual Track', 'am' => 'የ9 ወር ኦዲዮ-ቪዥዋል ፕሮግራም'],
     'tl5' => ['en' => '3-Month Dual & 2-Month Digital/Summer', 'am' => 'የ3 ወር እና የ2 ወር ዲጂታል/ክረምት'],
     'tl6' => ['en' => '1-Month VIP (VFX & Motion Graphics)', 'am' => 'የ1 ወር VIP (VFX እና ሞሽን ግራፊክስ)'],
-    ['brand_name_am' => 'እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ'],
-    ['brand_plc' => 'Endrias Film College PLC'],
-    ['est_line' => 'EST. 2010 E.C. (2017/18) · TVET ACCREDITED'],
-    ['ann_pill' => '2019 E.C. INTAKE'],
-    ['spec_strip' => ['BLACKMAGIC 6K PRO & 5D MK IV', 'APUTURE / AMARAN LED STUDIO', 'EDUCOC REGISTRY #68 / #32']],
-    ['crest_plain' => ['TVET Levels I–IV', 'Direct via COC', '3 Direct Film Slots', '4 Kilo, Next to Wekma']],
-    ['s2_img_label' => 'PRACTICAL STUDIO TRAINING'],
-    ['s3_img_top' => 'ADDIS CINEMA COMPLEX · ALEM CINEMA · HAGER FIKIR'],
-    ['s3_img_award' => 'ENDI AWARD'],
-    ['s4_campushdr' => '4 KILO ROUNDABOUT · ARADA SUB-CITY, WOREDA 9'],
-    ['phone1' => '0900 003 919'],
-    ['phone2' => '0942 563 535'],
-    ['tel_handle' => '@endifilm'],
+    'brand_name_am' => 'እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ',
+    'brand_plc' => 'Endrias Film College PLC',
+    'est_line' => 'EST. 2010 E.C. (2017/18) · TVET ACCREDITED',
+    'ann_pill' => '2019 E.C. INTAKE',
+    'spec_strip' => ['BLACKMAGIC 6K PRO & 5D MK IV', 'APUTURE / AMARAN LED STUDIO', 'EDUCOC REGISTRY #68 / #32'],
+    'crest_plain' => ['TVET Levels I–IV', 'Direct via COC', '3 Direct Film Slots', '4 Kilo, Next to Wekma'],
+    's2_img_label' => 'PRACTICAL STUDIO TRAINING',
+    's3_img_top' => 'ADDIS CINEMA COMPLEX · ALEM CINEMA · HAGER FIKIR',
+    's3_img_award' => 'ENDI AWARD',
+    's4_campushdr' => '4 KILO ROUNDABOUT · ARADA SUB-CITY, WOREDA 9',
+    'phone1' => '0900 003 919',
+    'phone2' => '0942 563 535',
+    'tel_handle' => '@endifilm',
 ];
 
 
@@ -351,10 +351,10 @@ $EFC_PROGRAMS = [
     'coc_h3' => ['en' => 'Already Hold a 1-Year Filmmaking Certificate? Upgrade to a Level IV Diploma in 10 Months.', 'am' => 'ከእኛ ወይም ከሌላ ተቋም የ1 ዓመት ፊልም ሰርተፍኬት አለዎት? በ10 ወር ብቻ ወደ ደረጃ 4 ዲፕሎማ ያሳድጉ!'],
     'coc_p' => ['en' => 'Endrias Film College also provides free theoretical and practical COC exam preparation sessions for its alumni—students pay only the official 500 ETB government assessment fee with zero college markup.', 'am' => 'ኮሌጁ ተማሪዎቹ ለመንግስት የብቃት ምዘና (COC) ሲቀርቡ ነፃ የተግባርና የንድፈ-ሀሳብ ዝግጅት ያደርግላቸዋል፤ ተመዛኞች የሚከፍሉት የመንግስት የምዘና ክፍያ (500 ብር) ብቻ ነው።'],
     'coc_cta' => ['en' => 'Inquire About Diploma Bridge', 'am' => 'ስለ ዲፕሎማ ማሳደጊያ ይጠይቁ'],
-    ['tier_tabs' => [['id' => 'all', 'en' => 'All (6)', 'am' => 'ሁሉም (6)'], ['id' => 'diploma', 'en' => 'TVET Diploma', 'am' => 'ደረጃ 4 ዲፕሎማ'], ['id' => 'certificate', 'en' => '9–12 Mo Certificates', 'am' => 'የ9–12 ወር ሰርተፍኬት'], ['id' => 'short', 'en' => '2–3 Mo Short Tracks', 'am' => 'የ2–3 ወር አጫጭር'], ['id' => 'vip', 'en' => '1-Mo VIP & VFX', 'am' => 'የ1 ወር VIP / VFX']]],
-    ['discipline_tabs' => [['id' => 'all', 'en' => 'All Disciplines', 'am' => 'ሁሉም ዘርፎች'], ['id' => 'directing', 'en' => 'Directing, Acting & Story', 'am' => 'ዝግጅት፣ ትወና እና ጽሑፍ'], ['id' => 'camera', 'en' => 'Camera, Lighting & Photo', 'am' => 'ካሜራ፣ መብራትና ፎቶ'], ['id' => 'post', 'en' => 'Editing, Color & VFX', 'am' => 'ኤዲቲንግ እና VFX'], ['id' => 'craft', 'en' => 'Sound, Set Design & Makeup', 'am' => 'ድምፅ፣ ሴት ዲዛይንና ሜካፕ'], ['id' => 'digital', 'en' => 'AI, Graphics & Branding', 'am' => 'AI፣ ግራፊክስና ብራንዲንግ']]],
-    ['goal_options' => [['id' => 'degree', 'en' => 'Full Diploma + BA Degree Bridge (COC)', 'am' => 'ሙሉ ዲፕሎማ እና ወደ ዲግሪ መሸጋገሪያ (COC)'], ['id' => 'allround', 'en' => '1-Yr All-Round Director / Actor / Filmmaker', 'am' => 'በ1 ዓመት ሁለገብ የፊልም ባለሙያ መሆን'], ['id' => 'technical', 'en' => 'Camera, Lighting, Sound & Editing Tech Crew', 'am' => 'የካሜራ፣ መብራትና ኤዲቲንግ ቴክኒክ ባለሙያ'], ['id' => 'upskill', 'en' => 'Learn Any 2 Specific Courses in 3 Months', 'am' => 'በ3 ወር የመረጥኳቸውን 2 ኮርሶች መማር'], ['id' => 'creator', 'en' => 'Digital Content Creator or Youth Summer Camp', 'am' => 'ዲጂታል ኮንቴንት ፈጠራ ወይም የክረምት ታዳጊዎች'], ['id' => 'vfx', 'en' => '1-on-1 VIP Class (VFX / Motion Graphics)', 'am' => 'የግል VIP ስልጠና (VFX / ሞሽን ግራፊክስ)']]],
-    ['goal_map' => ['degree' => 'level-4-diploma', 'allround' => 'one-year-certificate', 'technical' => 'nine-month-audiovisual', 'upskill' => 'three-month-dual', 'creator' => 'two-month-digital-summer', 'vfx' => 'one-month-vip']],
+    'tier_tabs' => [['id' => 'all', 'en' => 'All (6)', 'am' => 'ሁሉም (6)'], ['id' => 'diploma', 'en' => 'TVET Diploma', 'am' => 'ደረጃ 4 ዲፕሎማ'], ['id' => 'certificate', 'en' => '9–12 Mo Certificates', 'am' => 'የ9–12 ወር ሰርተፍኬት'], ['id' => 'short', 'en' => '2–3 Mo Short Tracks', 'am' => 'የ2–3 ወር አጫጭር'], ['id' => 'vip', 'en' => '1-Mo VIP & VFX', 'am' => 'የ1 ወር VIP / VFX']],
+    'discipline_tabs' => [['id' => 'all', 'en' => 'All Disciplines', 'am' => 'ሁሉም ዘርፎች'], ['id' => 'directing', 'en' => 'Directing, Acting & Story', 'am' => 'ዝግጅት፣ ትወና እና ጽሑፍ'], ['id' => 'camera', 'en' => 'Camera, Lighting & Photo', 'am' => 'ካሜራ፣ መብራትና ፎቶ'], ['id' => 'post', 'en' => 'Editing, Color & VFX', 'am' => 'ኤዲቲንግ እና VFX'], ['id' => 'craft', 'en' => 'Sound, Set Design & Makeup', 'am' => 'ድምፅ፣ ሴት ዲዛይንና ሜካፕ'], ['id' => 'digital', 'en' => 'AI, Graphics & Branding', 'am' => 'AI፣ ግራፊክስና ብራንዲንግ']],
+    'goal_options' => [['id' => 'degree', 'en' => 'Full Diploma + BA Degree Bridge (COC)', 'am' => 'ሙሉ ዲፕሎማ እና ወደ ዲግሪ መሸጋገሪያ (COC)'], ['id' => 'allround', 'en' => '1-Yr All-Round Director / Actor / Filmmaker', 'am' => 'በ1 ዓመት ሁለገብ የፊልም ባለሙያ መሆን'], ['id' => 'technical', 'en' => 'Camera, Lighting, Sound & Editing Tech Crew', 'am' => 'የካሜራ፣ መብራትና ኤዲቲንግ ቴክኒክ ባለሙያ'], ['id' => 'upskill', 'en' => 'Learn Any 2 Specific Courses in 3 Months', 'am' => 'በ3 ወር የመረጥኳቸውን 2 ኮርሶች መማር'], ['id' => 'creator', 'en' => 'Digital Content Creator or Youth Summer Camp', 'am' => 'ዲጂታል ኮንቴንት ፈጠራ ወይም የክረምት ታዳጊዎች'], ['id' => 'vfx', 'en' => '1-on-1 VIP Class (VFX / Motion Graphics)', 'am' => 'የግል VIP ስልጠና (VFX / ሞሽን ግራፊክስ)']],
+    'goal_map' => ['degree' => 'level-4-diploma', 'allround' => 'one-year-certificate', 'technical' => 'nine-month-audiovisual', 'upskill' => 'three-month-dual', 'creator' => 'two-month-digital-summer', 'vfx' => 'one-month-vip'],
 ];
 
 // ── Faculty members (collegeData.ts FACULTY_MEMBERS) ──────────────────────
@@ -392,7 +392,7 @@ $EFC_FACULTY_UI = [
     's2_lead' => ['en' => 'Current trainees and alumni receive free admission to regular workshops connecting Addis Ababa classrooms to Munich, Paris, Nairobi, and Nollywood.', 'am' => 'የአሁንም ሆነ የቀድሞ ተማሪዎቻችን ያለምንም ክፍያ የሚሳተፉባቸው ተከታታይ ሙያዊ ወርክሾፖች።'],
     'mc_free' => ['en' => 'Free Admission for Endrias Students & Alumni', 'am' => 'ለኮሌጁ ተማሪዎች በነፃ የሚዘጋጅ'],
     'cta' => ['en' => 'Join Our Next Cohort & Masterclasses', 'am' => 'ቤተሰባችንን ይቀላቀሉ — አሁኑኑ ይመዝገቡ'],
-    ['mc_tabs' => [['id' => 'all', 'en' => 'All Workshops', 'am' => 'ሁሉም'], ['id' => 'international', 'en' => 'International Guests', 'am' => 'ዓለም አቀፍ እንግዶች'], ['id' => 'ai', 'en' => 'AI & Innovation', 'am' => 'AI እና ቴክኖሎጂ'], ['id' => 'industry', 'en' => 'Ethiopian DP Spotlight', 'am' => 'የሀገር ውስጥ ባለሙያዎች']]],
+    'mc_tabs' => [['id' => 'all', 'en' => 'All Workshops', 'am' => 'ሁሉም'], ['id' => 'international', 'en' => 'International Guests', 'am' => 'ዓለም አቀፍ እንግዶች'], ['id' => 'ai', 'en' => 'AI & Innovation', 'am' => 'AI እና ቴክኖሎጂ'], ['id' => 'industry', 'en' => 'Ethiopian DP Spotlight', 'am' => 'የሀገር ውስጥ ባለሙያዎች']],
 ];
 
 // ── Timeline milestones (collegeData.ts TIMELINE_MILESTONES) ──────────────
@@ -423,13 +423,13 @@ $EFC_ABOUT = [
     's4_eyebrow' => ['en' => 'Ecosystem & Diplomatic Collaborations', 'am' => 'ተቋማዊና ባህላዊ አጋርነቶች'],
     's4_h2' => ['en' => 'Connected to Ethiopia’s Leading Cultural & Film Institutions', 'am' => 'ከሀገር ውስጥና ዓለም አቀፍ የባህል ተቋማት ጋር ያለን ትስስር'],
     'cta' => ['en' => 'Schedule a 4 Kilo Campus Visit', 'am' => '4 ኪሎ ካምፓሳችንን ይጎብኙ'],
-    ['dossier' => [['labelEn' => 'Registered Legal Entity', 'labelAm' => 'ህጋዊ የድርጅት ስም', 'valEn' => 'Endrias Film College PLC', 'valAm' => 'እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ'], ['labelEn' => 'Master Registry & Permit Row', 'labelAm' => 'የዕውቅና መዝገብ ተራ ቁጥር', 'valEn' => 'Row #68 (Master) · Row #32 (Active Permit)', 'valAm' => 'ተ.ቁ 68 (ዋና መዝገብ) · ተ.ቁ 32 (የምዝገባ ፈቃድ)'], ['labelEn' => 'Accredited Stream & Levels', 'labelAm' => 'የሰለጠነበት ዘርፍ እና ደረጃ', 'valEn' => 'Video / Film (ቪድዮ ፊልም) · TVET Levels I–IV', 'valAm' => 'ቪድዮ ፊልም · ከደረጃ I እስከ IV (ዲፕሎማ)'], ['labelEn' => 'Jurisdiction & Woreda', 'labelAm' => 'ክፍለ ከተማ እና ወረዳ', 'valEn' => 'Arada Sub-City, Woreda 09 (4 Kilo)', 'valAm' => 'አራዳ ክፍለ ከተማ፣ ወረዳ 09 (4 ኪሎ)'], ['labelEn' => 'Authorized Regular TVET Intake', 'labelAm' => 'የተፈቀደ መደበኛ ሰልጣኝ ቁጥር', 'valEn' => '70 Day + 70 Evening (+ Short-Term Cohorts)', 'valAm' => 'በቀን 70 እና በማታ 70 (+ የአጫጭር ሰርተፍኬት ባቾች)'], ['labelEn' => 'Sister Production House', 'labelAm' => 'እህት የፕሮዳክሽን ተቋም', 'valEn' => 'Endrias Film Company / Production', 'valAm' => 'እንድርያስ ፊልም ካምፓኒ / ፕሮዳክሽን']]],
-    ['collabs' => [['icon' => 'award', 'titleEn' => 'Guma Award (ጉማ አዋርድ)', 'titleAm' => 'ጉማ አዋርድ (Guma Award)', 'descEn' => 'Official 3-film annual direct competition quota backed by free college equipment and faculty mentorship.', 'descAm' => 'በየዓመቱ 3 የተማሪ ፊልሞች በቀጥታ የሚወዳደሩበት ልዩ ተቋማዊ ስምምነት።'], ['icon' => 'globe-2', 'titleEn' => 'Alliance Éthio-Française & Goethe-Institut', 'titleAm' => 'አሊያንስ ኢትዮ-ፍራንሲስ እና ጎተ-ኢንስቲትዩት', 'descEn' => 'Co-hosted Obscura Cinema student screenings (with Nada Hubs & White Canvas) and Goethe documentary/grant forums.', 'descAm' => 'የተማሪዎች አጫጭር ፊልሞች ዕይታ፣ ውይይትና የዶክመንተሪ ስልጠና መድረኮች።'], ['icon' => 'building-2', 'titleEn' => 'Addis Ababa Culture & Cinema Bureaus', 'titleAm' => 'የአዲስ አበባ ባህልና ኪነ-ጥበብ ቢሮ እና ሲኒማ አስተዳደር', 'descEn' => 'Partnered on Cinema Empire heritage screenings of "Hirut Abatwa Man New?" and formalist critiques of 35mm classic "Aster".', 'descAm' => 'የ«ኂሩት አባቷ ማነው?» ዕይታ እና የ«አስቴር» ፊልም ቅርጻዊ ሂስ መድረክ ትብብር።'], ['icon' => 'camera', 'titleEn' => 'Endrias Film Company (Sister Studio)', 'titleAm' => 'እንድርያስ ፊልም ካምፓኒ (እህት ኩባንያ)', 'descEn' => 'Commercial production partner producing documentaries, TVCs, music videos, corporate films, and 3D animation.', 'descAm' => 'ዶክመንተሪ፣ የቴሌቪዥን ማስታወቂያ፣ ሙዚቃ ክሊፕና ፊልሞችን የሚያመርት እህት ተቋም።'], ['icon' => 'sparkles', 'titleEn' => 'Ethiopian Academy of Sciences & INSA', 'titleAm' => 'የኢትዮጵያ ሳይንስ አካዳሚ እና INSA', 'descEn' => 'Active student participation in national TV-drama dialogues and INSA Cyber Security Awareness short-film contests.', 'descAm' => 'በሀገር አቀፍ የፊልም ውይይቶችና የሳይበር ደህንነት አጭር ፊልም ውድድሮች ተሳትፎ።'], ['icon' => 'check-circle-2', 'titleEn' => 'Babul Kheyr Humanitarian Outreach', 'titleAm' => 'የበጎ አድራጎት ማህበራዊ ኃላፊነት (ባቡል ከይር)', 'descEn' => 'Graduating classes organize community service and fundraising initiatives alongside zero-fee job placement.', 'descAm' => 'ተመራቂ ተማሪዎች ከምርቃታቸው ጎን ለጎን የሚያከናውኑት የበጎ አድራጎት ተግባር።']]],
-    ['seal_card' => ['EST. 2010 E.C.', 'Endrias Film College PLC', 'Arada Sub-City · Woreda 09']],
-    ['color_chips' => ['#054677 CONSERVATORY NAVY', '#FF9000 CINEMA AMBER', '፠ GE’EZ ORNAMENTATION']],
-    ['seal_caption' => 'OFFICIAL SEAL (2026)'],
-    ['mark_caption' => 'CENTRAL LOGOMARK'],
-    ['dossier_badge' => 'VERIFIED RECORD'],
+    'dossier' => [['labelEn' => 'Registered Legal Entity', 'labelAm' => 'ህጋዊ የድርጅት ስም', 'valEn' => 'Endrias Film College PLC', 'valAm' => 'እንድርያስ የፊልም ኮሌጅ ኃ.የ.የግ.ማ'], ['labelEn' => 'Master Registry & Permit Row', 'labelAm' => 'የዕውቅና መዝገብ ተራ ቁጥር', 'valEn' => 'Row #68 (Master) · Row #32 (Active Permit)', 'valAm' => 'ተ.ቁ 68 (ዋና መዝገብ) · ተ.ቁ 32 (የምዝገባ ፈቃድ)'], ['labelEn' => 'Accredited Stream & Levels', 'labelAm' => 'የሰለጠነበት ዘርፍ እና ደረጃ', 'valEn' => 'Video / Film (ቪድዮ ፊልም) · TVET Levels I–IV', 'valAm' => 'ቪድዮ ፊልም · ከደረጃ I እስከ IV (ዲፕሎማ)'], ['labelEn' => 'Jurisdiction & Woreda', 'labelAm' => 'ክፍለ ከተማ እና ወረዳ', 'valEn' => 'Arada Sub-City, Woreda 09 (4 Kilo)', 'valAm' => 'አራዳ ክፍለ ከተማ፣ ወረዳ 09 (4 ኪሎ)'], ['labelEn' => 'Authorized Regular TVET Intake', 'labelAm' => 'የተፈቀደ መደበኛ ሰልጣኝ ቁጥር', 'valEn' => '70 Day + 70 Evening (+ Short-Term Cohorts)', 'valAm' => 'በቀን 70 እና በማታ 70 (+ የአጫጭር ሰርተፍኬት ባቾች)'], ['labelEn' => 'Sister Production House', 'labelAm' => 'እህት የፕሮዳክሽን ተቋም', 'valEn' => 'Endrias Film Company / Production', 'valAm' => 'እንድርያስ ፊልም ካምፓኒ / ፕሮዳክሽን']],
+    'collabs' => [['icon' => 'award', 'titleEn' => 'Guma Award (ጉማ አዋርድ)', 'titleAm' => 'ጉማ አዋርድ (Guma Award)', 'descEn' => 'Official 3-film annual direct competition quota backed by free college equipment and faculty mentorship.', 'descAm' => 'በየዓመቱ 3 የተማሪ ፊልሞች በቀጥታ የሚወዳደሩበት ልዩ ተቋማዊ ስምምነት።'], ['icon' => 'globe-2', 'titleEn' => 'Alliance Éthio-Française & Goethe-Institut', 'titleAm' => 'አሊያንስ ኢትዮ-ፍራንሲስ እና ጎተ-ኢንስቲትዩት', 'descEn' => 'Co-hosted Obscura Cinema student screenings (with Nada Hubs & White Canvas) and Goethe documentary/grant forums.', 'descAm' => 'የተማሪዎች አጫጭር ፊልሞች ዕይታ፣ ውይይትና የዶክመንተሪ ስልጠና መድረኮች።'], ['icon' => 'building-2', 'titleEn' => 'Addis Ababa Culture & Cinema Bureaus', 'titleAm' => 'የአዲስ አበባ ባህልና ኪነ-ጥበብ ቢሮ እና ሲኒማ አስተዳደር', 'descEn' => 'Partnered on Cinema Empire heritage screenings of "Hirut Abatwa Man New?" and formalist critiques of 35mm classic "Aster".', 'descAm' => 'የ«ኂሩት አባቷ ማነው?» ዕይታ እና የ«አስቴር» ፊልም ቅርጻዊ ሂስ መድረክ ትብብር።'], ['icon' => 'camera', 'titleEn' => 'Endrias Film Company (Sister Studio)', 'titleAm' => 'እንድርያስ ፊልም ካምፓኒ (እህት ኩባንያ)', 'descEn' => 'Commercial production partner producing documentaries, TVCs, music videos, corporate films, and 3D animation.', 'descAm' => 'ዶክመንተሪ፣ የቴሌቪዥን ማስታወቂያ፣ ሙዚቃ ክሊፕና ፊልሞችን የሚያመርት እህት ተቋም።'], ['icon' => 'sparkles', 'titleEn' => 'Ethiopian Academy of Sciences & INSA', 'titleAm' => 'የኢትዮጵያ ሳይንስ አካዳሚ እና INSA', 'descEn' => 'Active student participation in national TV-drama dialogues and INSA Cyber Security Awareness short-film contests.', 'descAm' => 'በሀገር አቀፍ የፊልም ውይይቶችና የሳይበር ደህንነት አጭር ፊልም ውድድሮች ተሳትፎ።'], ['icon' => 'check-circle-2', 'titleEn' => 'Babul Kheyr Humanitarian Outreach', 'titleAm' => 'የበጎ አድራጎት ማህበራዊ ኃላፊነት (ባቡል ከይር)', 'descEn' => 'Graduating classes organize community service and fundraising initiatives alongside zero-fee job placement.', 'descAm' => 'ተመራቂ ተማሪዎች ከምርቃታቸው ጎን ለጎን የሚያከናውኑት የበጎ አድራጎት ተግባር።']],
+    'seal_card' => ['EST. 2010 E.C.', 'Endrias Film College PLC', 'Arada Sub-City · Woreda 09'],
+    'color_chips' => ['#054677 CONSERVATORY NAVY', '#FF9000 CINEMA AMBER', '፠ GE’EZ ORNAMENTATION'],
+    'seal_caption' => 'OFFICIAL SEAL (2026)',
+    'mark_caption' => 'CENTRAL LOGOMARK',
+    'dossier_badge' => 'VERIFIED RECORD',
 ];
 
 // ── Endi Award categories (collegeData.ts ENDI_AWARD_CATEGORIES) ──────────
@@ -480,7 +480,7 @@ $EFC_SHOWCASE = [
     'al2_p' => ['en' => 'Trained in Endrias Film College’s Kiremt Children & Youth Acting Program, young actor Dagim Tezera rose to national household recognition playing "Nati" on EBS TV’s hit family sitcom Besintu.', 'am' => 'በኮሌጁ የክረምት የህፃናትና ታዳጊዎች የትወና ስልጠና ፕሮግራም ሰልጥኖ በኢቢኤስ ቴሌቪዥን ተወዳጅ በሆነው «በስንቱ» ድራማ ላይ «ናቲ» ሆኖ በመተወን ከፍተኛ አድናቆት አትርፏል።'],
     'al3_h3' => ['en' => 'Alliance Éthio-Française Showcase', 'am' => 'በአሊያንስ ኢትዮ-ፍራንሲስ የታዩ ፊልሞች'],
     'al3_p' => ['en' => 'Graduate short films "Miknyat" (ምክንያት), "Deg Lerasu" (ደግ ለራሱ), and "Nekut" (ነቁጥ) headlined the Obscura Cinema showcase at Alliance Éthio-Française alongside international actress Kidist Siyum Beza.', 'am' => 'በኮሌጁ ተመራቂዎች የተሰሩት «ምክንያት»፣ «ደግ ለራሱ» እና «ነቁጥ» የተሰኙ አጫጭር ፊልሞች በፒያሳ አሊያንስ ኢትዮ-ፍራንሲስ ለዕይታና ለውይይት ቀርበዋል።'],
-    ['alumni_icons' => ['film', 'tv', 'sparkles']],
+    'alumni_icons' => ['film', 'tv', 'sparkles'],
 ];
 
 // ── Sample job listings (collegeData.ts SAMPLE_JOB_LISTINGS) ──────────────
@@ -528,10 +528,10 @@ $EFC_CAREERS = [
     'copy' => ['en' => 'Copy Text', 'am' => 'ጽሑፉን ቅዳ'],
     'r_tel' => ['en' => 'Open @efcfilm Placement Desk', 'am' => 'ወደ @efcfilm ላክ'],
     'r_mail' => ['en' => 'Send via Official Email', 'am' => 'በኢሜይል ላክ'],
-    ['cat_tabs' => [['id' => 'all', 'en' => 'All Categories', 'am' => 'ሁሉም'], ['id' => 'broadcast', 'en' => 'TV & Broadcast', 'am' => 'ቴሌቪዥንና ሆስት'], ['id' => 'production', 'en' => 'Full Film Crew', 'am' => 'የፊልም ፕሮዳክሽን'], ['id' => 'camera', 'en' => 'Cinematography', 'am' => 'ሲኒማቶግራፊ'], ['id' => 'editing', 'en' => 'Editing & Digital', 'am' => 'ኤዲቲንግና ዲጂታል']]],
-    ['track_options' => ['Level IV Regular Diploma', '1-Year General Filmmaking Certificate', '9-Month Audio-Visual Certificate', '3-Month / 2-Month Specialized Track']],
-    ['pledge_am' => 'ኮሌጁ ለሚያመቻቻቸው ለሁሉም የስራ ትስስሮች ምንም አይነት ኮሚሽን የማይቀበል መሆኑን እያሳወቅን ይልቁንም እንደ አንድ ማህበራዊ ኃላፊነቱ ይወስደዋል።'],
-    ['depts' => ['@efcfilm · @al0254']],
+    'cat_tabs' => [['id' => 'all', 'en' => 'All Categories', 'am' => 'ሁሉም'], ['id' => 'broadcast', 'en' => 'TV & Broadcast', 'am' => 'ቴሌቪዥንና ሆስት'], ['id' => 'production', 'en' => 'Full Film Crew', 'am' => 'የፊልም ፕሮዳክሽን'], ['id' => 'camera', 'en' => 'Cinematography', 'am' => 'ሲኒማቶግራፊ'], ['id' => 'editing', 'en' => 'Editing & Digital', 'am' => 'ኤዲቲንግና ዲጂታል']],
+    'track_options' => ['Level IV Regular Diploma', '1-Year General Filmmaking Certificate', '9-Month Audio-Visual Certificate', '3-Month / 2-Month Specialized Track'],
+    'pledge_am' => 'ኮሌጁ ለሚያመቻቻቸው ለሁሉም የስራ ትስስሮች ምንም አይነት ኮሚሽን የማይቀበል መሆኑን እያሳወቅን ይልቁንም እንደ አንድ ማህበራዊ ኃላፊነቱ ይወስደዋል።',
+    'depts' => ['@efcfilm · @al0254'],
 ];
 
 // ── Admissions page copy (AdmissionsPage.tsx) ─────────────────────────────
@@ -570,6 +570,6 @@ $EFC_ADMISSIONS = [
     'g3_label' => ['en' => 'COC Competency Support:', 'am' => 'የCOC ምዘና ድጋፍ፦'],
     'g3' => ['en' => 'Free exam prep tutorials for Endrias graduates; candidates only pay the 500 ETB government COC fee.', 'am' => 'ነፃ የCOC መሰናዶ ትምህርት ይሰጣል፤ ተመዛኞች የመንግስት 500 ብር ብቻ ይከፍላሉ።'],
     'dir_main' => ['en' => 'Main Campus (ዋናው ካምፓስ)', 'am' => 'ዋናው ካምፓስ'],
-    ['edu_options' => ['Grade 10 / 12 Complete', '1-Year Filmmaking Certificate (+10-Mo Diploma Bridge)', 'University / College Student or Graduate', 'Working Media Professional / Content Creator', 'Youth / Kiremt Talent Trainee']],
-    ['slip_campus' => 'Campus: 4 Kilo Roundabout, Next to Wekma (Main Campus), Addis Ababa'],
+    'edu_options' => ['Grade 10 / 12 Complete', '1-Year Filmmaking Certificate (+10-Mo Diploma Bridge)', 'University / College Student or Graduate', 'Working Media Professional / Content Creator', 'Youth / Kiremt Talent Trainee'],
+    'slip_campus' => 'Campus: 4 Kilo Roundabout, Next to Wekma (Main Campus), Addis Ababa',
 ];
